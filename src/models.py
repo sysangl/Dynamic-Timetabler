@@ -157,6 +157,7 @@ class Subject(Activity):
 #
 #
 
-# class Settings(db.Model):
-#     default_block_length : Mapped[int] = mapped_column() # minutes
-#     starting_day = mapped_column(db.Integer)
+class Settings(db.Model):
+    default_block_length : Mapped[int] = mapped_column() # minutes
+    starting_day = mapped_column(db.Integer)
+    starting_hour = mapped_column(db.Integer, default=0)
