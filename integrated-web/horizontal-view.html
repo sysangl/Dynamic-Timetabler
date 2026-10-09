@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Timetable</title>
+</head>
+<body>
+    <style>
+        @import url("https://fonts.googleapis.com/css?family=Roboto");
+
+
+        body {
+            background-color: #1e1e1e;
+            font-family: "Roboto";
+            margin:0;
+        }
+        
+        #centred-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 90%;
+            height: 90%;
+            transform: translate(-50%,-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #timetable-container {
+            flex:1;
+            display: flex;
+            background: beige;
+            overflow: hidden;
+            border-radius: 5px;
+        }
+
+        #tt-legend {
+            display: flex;
+            flex-direction: column;
+            flex: 0 0 15%;
+            background: #f5f5f5;
+        }
+
+        #tt-topbar-days {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #c8c7c7;
+            color: #1e1e1e;
+            font-weight: bold;
+            font-size: 1.5rem;
+            padding: 10px;
+        }
+
+        .tt-weekday {
+            flex:1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e1e1e1;
+            color: black;
+            border-bottom: 1px solid #c0c0c0;
+        }
+
+        #tt-schedule {
+            flex: 1;
+            background: rgb(92, 144, 127);
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        #tt-topbar-timeline {
+            display: inline-flex;
+            width: fit-content;
+            flex-wrap: nowrap;
+            flex: content;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 10px 0;
+            background: #c8c7c7;
+        }
+
+        .timeline-number {
+            flex: 0 0 60px;
+        }
+
+        .timeline-number-pm {
+            flex: 0 0 60px;
+        }
+
+
+    </style>
+
+
+    <div id="centred-container">
+        <div style="font-size: 28px; color: #fff;">Dynamic Timetable</div>
+        <div id="timetable-container">
+            <div id="tt-legend">
+                <div id="tt-topbar-days">Days</div>
+                <div class="tt-weekday">Monday</div>
+                <div class="tt-weekday">Tuesday</div>
+                <div class="tt-weekday">Wednesday</div>
+                <div class="tt-weekday">Thursday</div>
+                <div class="tt-weekday">Friday</div>
+                <div class="tt-weekday">Saturday</div>
+                <div class="tt-weekday">Sunday</div>
+            </div>
+            
+            <div id="tt-schedule">
+                <div id="tt-topbar-timeline">
+                    <div class="timeline-number">1</div>
+                    <div class="timeline-number">2</div>
+                    <div class="timeline-number">3</div>
+                    <div class="timeline-number">4</div>
+                    <div class="timeline-number">5</div>
+                    <div class="timeline-number">6</div>
+                    <div class="timeline-number">7</div>
+                    <div class="timeline-number">8</div>
+                    <div class="timeline-number">9</div>
+                    <div class="timeline-number">10</div>
+                    <div class="timeline-number">11</div>
+                    <div class="timeline-number-pm">12</div>
+                    <div class="timeline-number-pm">13</div>
+                    <div class="timeline-number-pm">14</div>
+                    <div class="timeline-number-pm">15</div>
+                    <div class="timeline-number-pm">16</div>
+                    <div class="timeline-number-pm">17</div>
+                    <div class="timeline-number-pm">18</div>
+                    <div class="timeline-number-pm">19</div>
+                    <div class="timeline-number-pm">20</div>
+                    <div class="timeline-number-pm">21</div>
+                    <div class="timeline-number-pm">22</div>
+                    <div class="timeline-number-pm">23</div>
+                    <div class="timeline-number">24</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    </script>
+
+</body>
+</html>

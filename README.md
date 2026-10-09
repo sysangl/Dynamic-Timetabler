@@ -4,5 +4,11 @@ This project has 2 parts.
 
 The backend is where the work is done, it manages your timetables/routines, assigns priorities, and adjusts routines.
 
-
 The frontend project consists of a desktop app, a mobile app, and a web interface (possibly also a TUI). 
+
+This repo contains the source code and executable for the Dynamic Timetabler server.
+
+---
+
+The Dynamic Timetabler server contains a simple built-in web interface. To get started checkout `docs/Quickstart.md`.
+
