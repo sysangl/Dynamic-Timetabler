@@ -48,10 +48,16 @@ def create_app():
 
     @app.route("/")
     def redirect_to_web_app():
+        """
+        Default page is the timetable view
+        """
         return redirect("/timetable")
 
     @app.route("/<string:chosen_tab>")
     def serve_web_app(chosen_tab):
+        """
+        Probably not the best way to switch between tabs.
+        """
         app.logger.info(f"Switching to {chosen_tab}")
         with open("./integrated-web/horizontal-view.html","r") as f:
             result = f.read()

@@ -160,6 +160,12 @@ class Subject(Activity):
 #
 
 class Settings(db.Model):
+    """
+    The user's preferences and settings
+    Has one-to-one relationship with User table
+    """
+
+
     __tablename__ = "settings"
     id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
     default_block_length : Mapped[int] = mapped_column(default=30) # minutes
@@ -188,6 +194,12 @@ class Settings(db.Model):
 #
 
 class User(db.Model):
+    """
+    Stores users, so multiple people can use the same server to store different timetables.
+    Has a one-to-one relationship with Settings table
+    """
+
+
     __tablename__ = "users"
     id : Mapped[int] = mapped_column(INTEGER,primary_key=True, autoincrement=True)
     username : Mapped[str] = mapped_column(nullable=False, unique=True)

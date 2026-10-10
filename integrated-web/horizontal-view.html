@@ -387,6 +387,9 @@
         </ul>
     </div>
 
+    <!-- might add a dashboard screen later -->
+
+    <!-- This section is always in the background, but is only visible if none of the other sections match (it gets covered) -->
     <section id="not-found">
             <div style="position: absolute; font-size: 100px; color: #f5f5f5; margin: 50px; z-index: -1;">
                 404<br>
@@ -394,6 +397,7 @@
             </div>
     </section>
 
+    <!-- main timetable screen -->
     <section class="section{% if current_tab == 'timetable' %} active-section{% endif %}" id="timetable">
     <div class="centred-container">
         <div id="timetable-container">
@@ -421,6 +425,7 @@
     </section>
 
 
+    <!-- settings screen, need to find a way to autogenerate the settings -->
     <section class="section{% if current_tab == 'settings' %} active-section{% endif %}" id="settings">
         <div class="centred-container">
             <div class="settings-section-container">
@@ -452,6 +457,7 @@
         
         const settingsUrl = 'http://localhost:58362/server/user/1/settings'
 
+        // Sidebar toggle
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const containers = document.getElementsByClassName('centred-container');
@@ -464,6 +470,7 @@
             ham.classList.toggle('active');
         }
 
+        // currently useless cause tab switching relies on the url
         function switchTabTo(tab) {
             if (current_tab == tab) return;
             document.getElementById(current_tab).classList.toggle('active-section');
@@ -471,6 +478,7 @@
             current_tab = tab;
         }
 
+        // send a request to the server for the current user's settings, currently hardcoded to user 1
         async function fetchSettings(userId) {
             try {
                 console.log("Attempting to fetch settings")
@@ -494,6 +502,7 @@
             }
         }
 
+        // apply settings to timetable. need to automatically parse and apply these settings
         async function applySettings(settings = null) {
             if (!settings) settings = await fetchSettings();
             console.log(settings)
@@ -519,7 +528,7 @@
         const dayMs = 24 * 60 * 60 * 1000;
 
 
-
+        // clamp function
         function clamp(value, min, max) {
             if (value < min) {
                 return min
@@ -529,6 +538,7 @@
             }
         }
 
+        // generates the days on the left side of the timetable view
         function generateWeek() {
             console.log(startDay)
             document.getElementById("tt-legend").innerHTML = '<div id="tt-topbar-time">-</div>';
@@ -540,6 +550,7 @@
             }
         }
 
+        // generates the hours along the top of the timetable view
         function generateTimeline() {
             console.log(startHour)
             document.getElementById("tt-topbar-timeline").innerHTML = "";
@@ -559,6 +570,7 @@
             }
         }
 
+        // generates the grid that shows the hours and day boundaries
         function buildGrid() {
             const tl = document.getElementById('tt-topbar-timeline');
             const ts = document.getElementById('tt-schedule')
@@ -601,12 +613,14 @@
             return elapsed / dayMs;
         }
 
+        // moves the time marker (vertical red line)
         function alignTimeMarker() {
             const left = document.getElementById("tt-topbar-timeline").scrollWidth * scheduleProgress();
 
             document.getElementById("time-marker").style.left = left + "px";
         }
 
+        // scroll the schedule to make sure the time marker is visible
         function alignTimetimetableView() {
             const schedule = document.getElementById("tt-schedule-container")
             const marker = document.getElementById("time-marker")
@@ -618,12 +632,12 @@
         }
 
 
-
+        // so the time always has two numbers, eg. 09:00, 15:52, 01:28
         function formatTime(number) {
             return number < 10 ? '0' + number : number;
         }
 
-
+        // updates the time on the top-left corner of the timetable
         function updateTime() {
             const clock = document.getElementById('tt-topbar-time');
             const now = new Date();
@@ -632,8 +646,6 @@
 
             clock.innerHTML = hours + ':' + minutes
         }
-
-        //*move time marker every minute
         
 
     </script>
@@ -641,6 +653,8 @@
     <!-- settings script -->
     <script>
 
+        // takes the settings from the settings page and sends the values to the server to update
+        // TODO: need to only send values that have been altered
         async function saveSettings() {
             try {
                 console.log("Attempting to update settings")
@@ -681,16 +695,16 @@
     <!-- initialise -->
     <script>
         $(document).ready(async function () {
-            await applySettings();
-            generateWeek();
-            generateTimeline();
-            buildGrid();
-            document.getElementById('tt-topbar-timeline').style.width=document.getElementById('tt-topbar-timeline').scrollWidth+'px';
-            alignTimeMarker();
-            setInterval(alignTimeMarker, 60*1000);
-            updateTime();
-            setInterval(updateTime(), 5*1000);
-            alignTimetimetableView();
+            await applySettings(); // apply settings, make sure all variables are set
+            generateWeek(); // generate first column of the timetable
+            generateTimeline(); // generate top row of the timetable
+            buildGrid(); // generate grid
+            document.getElementById('tt-topbar-timeline').style.width=document.getElementById('tt-topbar-timeline').scrollWidth+'px'; // make sure the timeline has a continous bg
+            alignTimeMarker(); // make sure time marker is in the right place
+            setInterval(alignTimeMarker, 60*1000); // update the time marker every 60 seconds
+            updateTime(); // set the timetable corner clock
+            setInterval(updateTime(), 5*1000); // set the timetable corner clock
+            alignTimetimetableView(); // scroll timetable to the current time
         })
     </script>
 
