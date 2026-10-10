@@ -17,25 +17,30 @@ def initialise_routes(app: Flask):
 
     @app.route('/server/user/create', methods=['POST'])
     def create_user():
+        app.logger.info("Attempting to create user")
+        app.logger.info(f"Recieved - {request.data}")
         payload = request.get_json(silent=False)
         if not payload:
-            app.logger.log(0,"User creation failed - Missing JSON body")
+            app.logger.info("User creation failed - Missing JSON body")
             return jsonify({"error": "Missing JSON body"}), 400
 
         username = payload.get("username")
         if not username:
-            app.logger.log(0,"User creation failed - No username")
+            app.logger.info("User creation failed - No username")
             return jsonify({"error": "Field `username` is required"}), 400
 
         # check if a user with that username already exists
         if User.query.filter_by(username=username).first():
-            app.logger.log(0,"User creation failed - Username already taken")
+            app.logger.info("User creation failed - Username already taken")
             return (
                 jsonify({"error": f"Username '{username}' already taken"}),
                 409,
             ) # 409 is conflict coee
 
-        new_settings=Settings()
+        app.logger.info("Creating new user...")
+        new_settings=Settings(
+            
+        )
         new_user = User(
             username=username,
             display_name=payload.get("display_name"),

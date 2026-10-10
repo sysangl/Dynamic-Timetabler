@@ -406,6 +406,7 @@
 
     <!-- common script -->
     <script>
+        const settingsUrl = 'http://localhost:58362/server/user/1/settings'
 
         function toggleSidebar() {
             const sidebar = document.getElementById("sidebar");
@@ -425,6 +426,36 @@
             document.getElementById(tab).classList.toggle('active-section');
             current_tab = tab;
         }
+
+        async function fetchSettings(userId) {
+            try {
+                console.log("Attempting to fetch settings")
+                const response = await fetch(settingsUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept' : 'application/json'
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                return data["settings"];
+            } catch (err) {
+                console.error('Failed to fetch settings JSON:', err);
+                throw err;
+            }
+        }
+
+        async function updateSettings() {
+            const settings = await fetchSettings();
+            console.log(settings)
+            startDay = settings["starting_day"];
+            startHour = settings["starting_hour"];
+        }
     </script>
 
     <!-- timetable script -->
@@ -433,10 +464,11 @@
         // [mon,tue,wed,thur,fri,sat,sun]
         // stored as an index
         // e.g. if startDay = 2, day = wed
-        const startDay = 0;
+
+        var startDay = 3;
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         // when does the day start
-        const startHour = 5;
+        var startHour = 9;
         const dayMs = 24 * 60 * 60 * 1000;
 
         // eventually store this locally
@@ -452,6 +484,7 @@
         }
 
         function generateWeek() {
+            console.log(startDay)
             document.getElementById("tt-legend").innerHTML = '<div id="tt-topbar-time">-</div>';
             for (let dayIdx = startDay; dayIdx < 7; dayIdx++) {
                     document.getElementById("tt-legend").innerHTML+='<div class="tt-weekday">'+days[dayIdx]+'</div>';
@@ -462,6 +495,7 @@
         }
 
         function generateTimeline() {
+            console.log(startHour)
             document.getElementById("tt-topbar-timeline").innerHTML = "";
             for (let hour = startHour; hour < 24; hour++) {
                 if (hour >= 12 ) {
@@ -555,7 +589,18 @@
 
         //*move time marker every minute
         
-        $(document).ready(function () {
+
+    </script>
+
+    <!-- settings script -->
+    <script>
+
+    </script>
+
+    <!-- initialise -->
+    <script>
+        $(document).ready(async function () {
+            await updateSettings();
             generateWeek();
             generateTimeline();
             buildGrid();
@@ -566,11 +611,6 @@
             setInterval(updateTime(), 5*1000);
             alignTimetimetableView();
         })
-    </script>
-
-    <!-- settings script -->
-    <script>
-
     </script>
 
 </body>

@@ -5,18 +5,19 @@ from datetime import datetime
 from typing import List, Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.dialects.sqlite import (
     DATETIME,
     JSON,
-)
-from sqlalchemy.dialects.postgresql import (
-    UUID,
-    ARRAY,
-    TIMESTAMP,
     INTEGER
 )
+# from sqlalchemy.dialects.postgresql import (
+#     UUID,
+#     ARRAY,
+#     TIMESTAMP,
+#     INTEGER
+# )
 
 class Base(DeclarativeBase):
     pass
@@ -159,10 +160,19 @@ class Subject(Activity):
 #
 
 class Settings(db.Model):
-    id : Mapped[uuid.UUID] = mapped_column(primary_key=True)
-    default_block_length : Mapped[int] = mapped_column() # minutes
+    __tablename__ = "settings"
+    id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
+    default_block_length : Mapped[int] = mapped_column(default=30) # minutes
     starting_day : Mapped[int] = mapped_column(default=0)
     starting_hour : Mapped[int] = mapped_column(default=5)
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="settings",
+        uselist=False,          # one‑to‑one
+        foreign_keys="[User.settings_id]",
+        remote_side="[User.settings_id]"
+    )
 
     def serialise(self)->dict:
         return {
@@ -178,11 +188,33 @@ class Settings(db.Model):
 #
 
 class User(db.Model):
-    id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    __tablename__ = "users"
+    id : Mapped[int] = mapped_column(INTEGER,primary_key=True, autoincrement=True)
     username : Mapped[str] = mapped_column(nullable=False, unique=True)
     display_name : Mapped[Optional[str]] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
-    settings_id : Mapped[uuid.UUID] = mapped_column()
-    settings : Mapped[Settings] = relationship("Settings", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+    settings_id : Mapped[int] = mapped_column(
+        INTEGER, 
+        ForeignKey("settings.id", ondelete="CASCADE"),
+        nullable=False, 
+        unique=True
+    )
+    settings : Mapped[Settings] = relationship(
+        "Settings", 
+        back_populates="user",
+        single_parent=True,
+        uselist=False,
+        cascade="all, delete-orphan",
+        foreign_keys="[User.settings_id]",
+        remote_side="[Settings.id]"
+    )
+
+    # __table_args__ = (
+    #     UniqueConstraint(
+    #         "settings_id",
+    #         name="uq_user_settings_id"   # <-- give the constraint a stable name
+    #     ),
+    # )
 
     def serialise(self) -> dict:
         return {
