@@ -1,4 +1,3 @@
-set FLASK_APP=FLASK_APP
-flask db init
-flask db migrate -m "initial tables"
+set FLASK_APP=src.app
+flask db migrate -m ""
 flask db upgrade

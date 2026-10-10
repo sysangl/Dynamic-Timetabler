@@ -158,6 +158,7 @@ class Subject(Activity):
 #
 
 class Settings(db.Model):
+    id : Mapped[uuid.UUID] = mapped_column(primary_key=True)
     default_block_length : Mapped[int] = mapped_column() # minutes
-    starting_day = mapped_column(db.Integer)
-    starting_hour = mapped_column(db.Integer, default=0)
+    starting_day : Mapped[int] = mapped_column()
+    starting_hour : Mapped[int] = mapped_column(default=0)
