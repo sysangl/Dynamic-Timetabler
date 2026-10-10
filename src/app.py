@@ -1,5 +1,5 @@
 import os, psycopg2
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from sqlalchemy import create_engine
 from src.routes import initialise_routes
@@ -47,10 +47,15 @@ def create_app():
     Migrate(app,db)
 
     @app.route("/")
-    def serve_web_app():
+    def redirect_to_web_app():
+        return redirect("/timetable")
+
+    @app.route("/<string:chosen_tab>")
+    def serve_web_app(chosen_tab):
+        app.logger.info(f"Switching to {chosen_tab}")
         with open("./integrated-web/horizontal-view.html","r") as f:
             result = f.read()
-        return result
+        return render_template_string(result,current_tab=chosen_tab)
 
     @app.route("/health")
     def health():

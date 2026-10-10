@@ -34,6 +34,7 @@
         }
         
         .centred-container {
+            background: var(--bg-colour-1);
             padding: 50px;
             display: flex;
             flex-direction: column;
@@ -55,6 +56,7 @@
 
         .active-section {
             display: initial;
+            z-index: 100;
         }
 
     </style>
@@ -83,9 +85,14 @@
             color: #f5f5f5;
             font-size: 40px;
             align-content: center;
+            text-align: center;
+            justify-content: center;
             right: 0;
         }
 
+        .topbar-spacer {
+            flex-grow: 100;
+        }
 
         .ham {
             cursor: pointer;
@@ -327,10 +334,28 @@
 
         .settings-option-name {
             font-size: 16px;
+            display: flex;
         }
 
         .settings-option {
             font-size: 16px;
+        }
+
+        .settings-flex-seperator {
+            flex-grow: 100;
+        }
+
+        .settings-number-input {
+
+        }
+
+        #settings-save-button {
+            padding: 10px;
+            border-radius: 4px;
+            color: #f5f5f5;
+            background: rgb(110, 170, 110);
+            text-align: center;
+            font-size: 30px;
         }
 
     </style>
@@ -351,18 +376,25 @@
             </svg>
         </div>
         <div id="topbar-title">Dynamic Timetabler</div>
-
+        <div class="topbar-spacer"></div>
         <div id="topbar-user"><span class="fa fa-user"></span></div>
     </div>
 
     <div id="sidebar">
         <ul>
-            <a class="sidebar-button" href="#" onclick="switchTabTo('timetable')"><li><span class="fa fa-calendar"></span> Timetable</li></a>
-            <a class="sidebar-button" href="#" onclick="switchTabTo('settings')"><li><span class="fa fa-cog"></span> Settings</li></a>
+            <a class="sidebar-button" href="/timetable" onclick="switchTabTo('timetable')"><li><span class="fa fa-calendar"></span> Timetable</li></a>
+            <a class="sidebar-button" href="/settings" onclick="switchTabTo('settings')"><li><span class="fa fa-cog"></span> Settings</li></a>
         </ul>
     </div>
 
-    <section class="section active-section" id="timetable">
+    <section id="not-found">
+            <div style="position: absolute; font-size: 100px; color: #f5f5f5; margin: 50px; z-index: -1;">
+                404<br>
+                <span style="font-size: 40px;">Sorry this page does not exist.</span>
+            </div>
+    </section>
+
+    <section class="section{% if current_tab == 'timetable' %} active-section{% endif %}" id="timetable">
     <div class="centred-container">
         <div id="timetable-container">
             <div id="tt-legend">
@@ -389,28 +421,40 @@
     </section>
 
 
-    <section class="section" id="settings">
+    <section class="section{% if current_tab == 'settings' %} active-section{% endif %}" id="settings">
         <div class="centred-container">
             <div class="settings-section-container">
                 <ul class="settings-list">
                     <li class="settings-section-title">Timetable</li>
                     <li class="settings-description">When does your week start (default : Monday)</li>
-                    <li class="settings-option-name">Starting Day</li>
+                    <li class="settings-option-name">Starting Day <div class="settings-flex-seperator"></div> <input data-optionName="starting_day" id="starting-day-input" class="settings-number-input settings-option" type="number" /></li>
                     <li class="settings-description">When does your day start (default : 5am)</li>
-                    <li class="settings-option-name">Starting Hour</li>
+                    <li class="settings-option-name">Starting Hour <div class="settings-flex-seperator"></div> <input data-optionName="starting_hour" id="starting-hour-input" class="settings-number-input settings-option" type="number" /></li>
                 </ul>
             </div>
+
+            <div class="settings-section-container">
+                <a href="#" onclick="saveSettings()">
+                    <div id="settings-save-button">
+                        SAVE
+                    </div>
+                </a>
+            </div>
+
         </div>
 
     </section>
 
     <!-- common script -->
     <script>
+        // eventually store this locally
+        var current_tab = 'timetable';
+        
         const settingsUrl = 'http://localhost:58362/server/user/1/settings'
 
         function toggleSidebar() {
-            const sidebar = document.getElementById("sidebar");
-            const containers = document.getElementsByClassName("centred-container");
+            const sidebar = document.getElementById('sidebar');
+            const containers = document.getElementsByClassName('centred-container');
             const ham = document.querySelector('.ham');
 
             sidebar.classList.toggle('expanded');
@@ -450,11 +494,14 @@
             }
         }
 
-        async function updateSettings() {
-            const settings = await fetchSettings();
+        async function applySettings(settings = null) {
+            if (!settings) settings = await fetchSettings();
             console.log(settings)
-            startDay = settings["starting_day"];
-            startHour = settings["starting_hour"];
+            startDay = settings['starting_day'];
+            startHour = settings['starting_hour'];
+
+            document.getElementById('starting-day-input').value = startDay;
+            document.getElementById('starting-hour-input').value = startHour;
         }
     </script>
 
@@ -471,8 +518,7 @@
         var startHour = 9;
         const dayMs = 24 * 60 * 60 * 1000;
 
-        // eventually store this locally
-        var current_tab = 'timetable';
+
 
         function clamp(value, min, max) {
             if (value < min) {
@@ -595,12 +641,47 @@
     <!-- settings script -->
     <script>
 
+        async function saveSettings() {
+            try {
+                console.log("Attempting to update settings")
+
+                const settings_options = document.getElementsByClassName("settings-option");
+                var options_data = {};
+                for (let option of settings_options) {
+                    options_data[option.getAttribute("data-optionName")] = option.value;
+                }
+
+                console.log(options_data);
+
+                const response = await fetch(settingsUrl+"/update", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type' : 'application/json',
+                        'Accept' : 'application/json'
+                    },
+                    body: JSON.stringify(options_data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                applySettings(data["settings"]);
+            } catch (err) {
+                console.error('Failed to update settings: ', err);
+                throw err;
+            }
+        }
+
+
     </script>
 
     <!-- initialise -->
     <script>
         $(document).ready(async function () {
-            await updateSettings();
+            await applySettings();
             generateWeek();
             generateTimeline();
             buildGrid();
