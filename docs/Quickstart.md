@@ -14,3 +14,10 @@ This project requires Python 3.13 to run.
    Currently I have no instructions for Linux, but it should be similar (`export FLASK_APP=src.app && flask run...).
 
 5. To view the web interface, open a web browser and enter `http://localhost:58362` (or whatever you set the port to)
+
+Creating a new user
+I haven't created a web interface to create a user yet, so if you want to create a user you need to run
+```
+curl.exe -X POST http://localhost:58362/server/user/create -H "Content-Type: application/json" --data-raw '{\"username\":\"test_user\",\"display_name\":\"TEST\"}' -v
+```
+The username and display_name fields can be whatever you want. For linux, the command is the same, just remove the .exe from curl.
