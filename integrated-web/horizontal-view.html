@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
 </head>
 <body>
+    <!-- common css -->
     <style>
         @import url("https://fonts.googleapis.com/css?family=Roboto");
 
@@ -32,7 +33,7 @@
             height: 100vh;
         }
         
-        #centred-container {
+        .centred-container {
             padding: 50px;
             display: flex;
             flex-direction: column;
@@ -44,7 +45,7 @@
             margin-left: 0;
         }
 
-        #centred-container.pushed {
+        .centred-container.pushed {
             margin-left: var(--sidebar-width);
         }
 
@@ -57,6 +58,118 @@
         }
 
     </style>
+
+    <!-- menus css -->
+    <style>
+        #topbar {
+            position: sticky;
+            width: 100%;
+            height: 60px;
+            background: var(--highlight-colour);
+            display: flex;
+            align-content: center;
+        }
+
+        #topbar-title {
+            font-size: 1.6rem;
+            font-family: "Roboto";
+            color: #e1e1e1;
+            left: 15px;
+            align-content: center;
+        }
+
+        #topbar-user {
+            width: 60px;
+            color: #f5f5f5;
+            font-size: 40px;
+            align-content: center;
+            right: 0;
+        }
+
+
+        .ham {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 400ms;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .hamRotate.active {
+            transform: rotate(45deg);
+        }
+
+        .line {
+            fill:none;
+            transition: stroke-dasharray 400ms, stroke-dashoffset 400ms;
+            stroke:#e1e1e1;
+            stroke-width:4;
+            stroke-linecap:round;
+        }
+
+        .ham4 .top {
+            stroke-dasharray: 40 121;
+        }
+        .ham4 .bottom {
+            stroke-dasharray: 40 121;
+        }
+        .ham4.active .top {
+            stroke-dashoffset: -68px;
+        }
+        .ham4.active .bottom {
+            stroke-dashoffset: -68px;
+        }
+
+        #sidebar {
+            position: absolute;
+            left: 0;
+            top: 60px;
+            width: 0;
+            height: calc(100% - 60px);
+            background: #454545;
+            overflow: hidden;
+            transition: width 0.3s ease;
+            z-index: 5;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #sidebar.expanded {
+            width: var(--sidebar-width);
+        }
+
+        #sidebar ul {
+            margin: 0;
+            list-style-type: none;
+            left: 0;
+            padding: 0;
+        }
+
+        #sidebar ul a li {
+            width: var(--sidebar-width);
+            padding: 15px;
+            left: 0;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255,255,255, 0.5);
+            background-color: rgba(255,255,255,0);
+            transition: background-color 0.2s ease;
+        }
+
+        #sidebar ul a li:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .sidebar-button {
+            color: #f5f5f5;
+            text-decoration: none;
+            font-size: 20px;
+        }
+
+
+    </style>
+
+    <!-- timetable css -->
     <style>
 
         #timetable-container {
@@ -183,107 +296,14 @@
 
     </style>
 
+    <!-- settings css -->
     <style>
-        #topbar {
-            position: sticky;
-            width: 100%;
-            height: 60px;
-            background: var(--highlight-colour);
-            display: flex;
-            align-content: center;
-        }
-
-        #topbar-title {
-            font-size: 1.6rem;
-            font-family: "Roboto";
-            color: #e1e1e1;
-            left: 15px;
-            align-content: center;
-        }
-
-
-        .ham {
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            transition: transform 400ms;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        .hamRotate.active {
-            transform: rotate(45deg);
-        }
-
-        .line {
-            fill:none;
-            transition: stroke-dasharray 400ms, stroke-dashoffset 400ms;
-            stroke:#e1e1e1;
-            stroke-width:4;
-            stroke-linecap:round;
-        }
-
-        .ham4 .top {
-            stroke-dasharray: 40 121;
-        }
-        .ham4 .bottom {
-            stroke-dasharray: 40 121;
-        }
-        .ham4.active .top {
-            stroke-dashoffset: -68px;
-        }
-        .ham4.active .bottom {
-            stroke-dashoffset: -68px;
-        }
-
-        #sidebar {
-            position: absolute;
-            left: 0;
-            top: 60px;
-            width: 0;
-            height: calc(100% - 60px);
-            background: #454545;
-            overflow: hidden;
-            transition: width 0.3s ease;
-            z-index: 5;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        #sidebar.expanded {
-            width: var(--sidebar-width);
-        }
-
-        #sidebar ul {
-            list-style-type: none;
-            padding-left: 10px;
-        }
-
-        #sidebar ul li {
-            height: 40px;
-            width: var(--sidebar-width);
-            padding-left: 10px;
-        }
-
-        .sidebar-button {
-
-            color: #f5f5f5;
-            background-color: rgba(255,255,255,0);
-            transition: background-color 0.2s ease;
-            text-decoration: none;
-            font-size: 20px;
-        }
-
-        .sidebar-button:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-        }
 
     </style>
 
 
     <div id="topbar">
         <div>
-
             <svg class="ham hamRotate ham4" viewBox="0 0 100 100" width="60" onclick="toggleSidebar()">
             <path
                     class="line top"
@@ -295,20 +315,21 @@
                     class="line bottom"
                     d="m 30,67 h 40 c 0,0 8.5,0.149796 8.5,-8.5 0,-8.649796 -8.5,-8.5 -8.5,-8.5 h -20 v 20" />
             </svg>
-
         </div>
         <div id="topbar-title">Dynamic Timetabler</div>
+
+        <div id="topbar-user"><span class="fa fa-user"></span></div>
     </div>
 
     <div id="sidebar">
         <ul>
-            <li><a class="sidebar-button" href="#" onclick="switchTabTo('timetable')"><span class="fa fa-calendar"></span> Timetable</a></li>
-            <li><a class="sidebar-button" href="#" onclick="switchTabTo('settings')"><span class="fa fa-cog"></span> Settings</a></li>
+            <a class="sidebar-button" href="#" onclick="switchTabTo('timetable')"><li><span class="fa fa-calendar"></span> Timetable</li></a>
+            <a class="sidebar-button" href="#" onclick="switchTabTo('settings')"><li><span class="fa fa-cog"></span> Settings</li></a>
         </ul>
     </div>
 
     <section class="section active-section" id="timetable">
-    <div id="centred-container">
+    <div class="centred-container">
         <div id="timetable-container">
             <div id="tt-legend">
                 <div id="tt-topbar-time">-</div>
@@ -335,11 +356,41 @@
 
 
     <section class="section" id="settings">
-    <div id="centred-container">
-        Settings
-    </div>
+        <div class="centred-container">
+            <div>
+                <ul>
+                    <li>Timetable</li>
+                    <li>Starting Day</li>
+                </ul>
+            </div>
+        </div>
+
     </section>
 
+    <!-- common script -->
+    <script>
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const containers = document.getElementsByClassName("centred-container");
+            const ham = document.querySelector('.ham');
+
+            sidebar.classList.toggle('expanded');
+            for (let container of containers) {
+                container.classList.toggle('pushed');
+            }
+            ham.classList.toggle('active');
+        }
+
+        function switchTabTo(tab) {
+            if (current_tab == tab) return;
+            document.getElementById(current_tab).classList.toggle('active-section');
+            document.getElementById(tab).classList.toggle('active-section');
+            current_tab = tab;
+        }
+    </script>
+
+    <!-- timetable script -->
     <script>
         // what is the start of the week
         // [mon,tue,wed,thur,fri,sat,sun]
@@ -449,22 +500,7 @@
             schedule.scrollLeft = scroll;
         }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById("sidebar");
-            const container = document.getElementById("centred-container");
-            const ham = document.querySelector('.ham');
 
-            sidebar.classList.toggle('expanded');
-            container.classList.toggle('pushed');
-            ham.classList.toggle('active');
-        }
-
-        function switchTabTo(tab) {
-            if (current_tab == tab) return;
-            document.getElementById(current_tab).classList.toggle('active-section');
-            document.getElementById(tab).classList.toggle('active-section');
-            current_tab = tab;
-        }
 
         function formatTime(number) {
             return number < 10 ? '0' + number : number;
@@ -493,6 +529,11 @@
             setInterval(updateTime(), 5*1000);
             alignTimetimetableView();
         })
+    </script>
+
+    <!-- settings script -->
+    <script>
+
     </script>
 
 </body>
