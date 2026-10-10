@@ -2,6 +2,7 @@ import os, psycopg2
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from sqlalchemy import create_engine
+from src.routes import initialise_routes
 from src.models import (
     db,
     ToDo,
@@ -9,7 +10,9 @@ from src.models import (
     Block,
     ClassBlock,
     Activity,
-    Subject
+    Subject,
+    User,
+    Settings
 )
 
 
@@ -48,6 +51,7 @@ def create_app():
 
 app = create_app()
 
+initialise_routes(app)
 
 
 

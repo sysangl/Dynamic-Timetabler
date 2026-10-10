@@ -5,10 +5,11 @@ from datetime import datetime
 from typing import List, Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.dialects.sqlite import (
     DATETIME,
-    JSON
+    JSON,
 )
 from sqlalchemy.dialects.postgresql import (
     UUID,
@@ -160,5 +161,34 @@ class Subject(Activity):
 class Settings(db.Model):
     id : Mapped[uuid.UUID] = mapped_column(primary_key=True)
     default_block_length : Mapped[int] = mapped_column() # minutes
-    starting_day : Mapped[int] = mapped_column()
-    starting_hour : Mapped[int] = mapped_column(default=0)
+    starting_day : Mapped[int] = mapped_column(default=0)
+    starting_hour : Mapped[int] = mapped_column(default=5)
+
+    def serialise(self)->dict:
+        return {
+            "id": str(self.id),
+            "default_block_length": self.default_block_length,
+            "starting_day": self.starting_day,
+            "starting_hour": self.starting_hour,
+        }
+
+
+# Other
+#
+#
+
+class User(db.Model):
+    id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    username : Mapped[str] = mapped_column(nullable=False, unique=True)
+    display_name : Mapped[Optional[str]] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
+    settings_id : Mapped[uuid.UUID] = mapped_column()
+    settings : Mapped[Settings] = relationship("Settings", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+    def serialise(self) -> dict:
+        return {
+            "id" : self.id,
+            "username": self.username,
+            "display_name": self.display_name,
+            # embed the Settings payload (or ``None`` if it ever becomes optional)
+            "settings": self.settings.serialise() if self.settings else None,
+        }

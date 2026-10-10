@@ -298,6 +298,40 @@
 
     <!-- settings css -->
     <style>
+        #settings {
+            color: #f5f5f5;
+        }
+
+        .settings-section-container {
+            border-radius: 2px;
+            background-color: #252525;
+            padding: 10px;
+        }
+
+        .settings-list {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .settings-section-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .settings-description {
+            margin-top: 10px;
+            color: #c0c0c0;
+            font-size: 14px;
+        }
+
+        .settings-option-name {
+            font-size: 16px;
+        }
+
+        .settings-option {
+            font-size: 16px;
+        }
 
     </style>
 
@@ -357,10 +391,13 @@
 
     <section class="section" id="settings">
         <div class="centred-container">
-            <div>
-                <ul>
-                    <li>Timetable</li>
-                    <li>Starting Day</li>
+            <div class="settings-section-container">
+                <ul class="settings-list">
+                    <li class="settings-section-title">Timetable</li>
+                    <li class="settings-description">When does your week start (default : Monday)</li>
+                    <li class="settings-option-name">Starting Day</li>
+                    <li class="settings-description">When does your day start (default : 5am)</li>
+                    <li class="settings-option-name">Starting Hour</li>
                 </ul>
             </div>
         </div>
@@ -396,7 +433,7 @@
         // [mon,tue,wed,thur,fri,sat,sun]
         // stored as an index
         // e.g. if startDay = 2, day = wed
-        const startDay = 6;
+        const startDay = 0;
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         // when does the day start
         const startHour = 5;
