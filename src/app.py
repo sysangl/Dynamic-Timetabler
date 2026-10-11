@@ -2,7 +2,7 @@ import os, psycopg2
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from sqlalchemy import create_engine
-from src.routes import initialise_routes
+from src.route_init import initialise_routes
 from src.models import (
     db,
     ToDo,
@@ -33,6 +33,7 @@ dictConfig({
     }
 })
 
+# For production
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
 
 
@@ -45,23 +46,6 @@ def create_app():
 
     db.init_app(app)
     Migrate(app,db)
-
-    @app.route("/")
-    def redirect_to_web_app():
-        """
-        Default page is the timetable view
-        """
-        return redirect("/timetable")
-
-    @app.route("/<string:chosen_tab>")
-    def serve_web_app(chosen_tab):
-        """
-        Probably not the best way to switch between tabs.
-        """
-        app.logger.info(f"Switching to {chosen_tab}")
-        with open("./integrated-web/horizontal-view.html","r") as f:
-            result = f.read()
-        return render_template_string(result,current_tab=chosen_tab)
 
     @app.route("/health")
     def health():

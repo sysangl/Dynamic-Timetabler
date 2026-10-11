@@ -204,6 +204,7 @@ class User(db.Model):
     id : Mapped[int] = mapped_column(INTEGER,primary_key=True, autoincrement=True)
     username : Mapped[str] = mapped_column(nullable=False, unique=True)
     display_name : Mapped[Optional[str]] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
+    is_admin : Mapped[bool] = mapped_column(nullable=False, default=False)
 
     settings_id : Mapped[int] = mapped_column(
         INTEGER, 
@@ -233,6 +234,7 @@ class User(db.Model):
             "id" : self.id,
             "username": self.username,
             "display_name": self.display_name,
+            "is_admin": self.is_admin,
             # embed the Settings payload (or ``None`` if it ever becomes optional)
             "settings": self.settings.serialise() if self.settings else None,
         }
