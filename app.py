@@ -2,8 +2,8 @@ import os, psycopg2
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from sqlalchemy import create_engine
-from src.route_init import initialise_routes
-from src.models import (
+from route_init import initialise_routes
+from models import (
     db,
     ToDo,
     Task,
@@ -64,7 +64,5 @@ app = create_app()
 
 initialise_routes(app)
 
-
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="localhost", port=58246)

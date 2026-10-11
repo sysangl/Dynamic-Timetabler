@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, render_template, abort
-from src.models import (
+from models import (
     db,
     ToDo,
     Task,

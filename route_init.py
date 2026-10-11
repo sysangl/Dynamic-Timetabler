@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import uuid
-from src.models import (
+from routes import settings as settings_route, users as users_route
+from models import (
     db,
     ToDo,
     Task,
@@ -11,10 +12,8 @@ from src.models import (
     User,
     Settings
 )
-from src.routes import (
+from routes import (
     app as app_route,
-    users as users_route,
-    settings as settings_route,
 )
 
 def initialise_routes(app: Flask):
