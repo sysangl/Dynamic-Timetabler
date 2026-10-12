@@ -1,4 +1,4 @@
-import os, psycopg2
+import os, toml
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from sqlalchemy import create_engine
@@ -29,12 +29,10 @@ dictConfig({
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
 
 
-def create_app():
+def create_app(config:dict):
     app = Flask("Dynamic Timetabler")
-    # os.getenv("DYNTIM_DATABASE_URI","")
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///dynamic-timable.db"
-
+    app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
 
     db.init_app(app)
     Migrate(app,db)
@@ -52,9 +50,15 @@ def create_app():
 
     return app
 
-app = create_app()
 
-initialise_routes(app)
+
+def run(config_path: str = 'config/default.toml'):
+    with open(config_path, 'r') as f:
+        config = toml.load(f)
+    app = create_app(config)
+
+    initialise_routes(app)
+    app.run(debug=config['server']['debug'], host=config['server']['host'], port=config['server']['port'])
 
 if __name__ == "__main__":
-    app.run(debug=True, host="localhost", port=58362)
+    run("config/testing.toml")

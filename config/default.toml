@@ -1,0 +1,4 @@
+[server]
+debug = false
+host = "localhost"
+port = 58362

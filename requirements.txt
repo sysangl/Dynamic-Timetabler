@@ -1,5 +1,5 @@
 flask
 flask-sqlalchemy
 flask-migrate
-psycopg2
 psycopg[binary]
+toml

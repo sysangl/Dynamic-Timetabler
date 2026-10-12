@@ -34,8 +34,14 @@ class ToDo(db.Model):
     """
     The most basic thing, essentially just a ToDo list.
     """
-    id : Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid6())
+    id : Mapped[int] = mapped_column(INTEGER, primary_key=True, autoincrement=True)
     title : Mapped[str] = mapped_column(nullable=False)
+
+    def serialise(self)->dict:
+        return {
+            'id' : str(self.id),
+            'title' : self.title
+        }
 
 class Task(ToDo):
     """
@@ -46,7 +52,14 @@ class Task(ToDo):
     #start_datetime : Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
     # sqlite - Dev
     start_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
-    
+
+    def serialise(self)->dict:
+        return {
+            'id' : str(self.id),
+            'title' : self.title,
+            'description' : str(self.description),
+            'start_datetime' : self.start_datetime,
+        }
 class Block(Task):
     """
     Occupies a span of time.
@@ -55,7 +68,15 @@ class Block(Task):
     #end_datetime : Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
     # sqlite - Dev
     end_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
-    
+    def serialise(self)->dict:
+        return {
+            'id' : str(self.id),
+            'title' : self.title,
+            'description' : str(self.description),
+            'start_datetime' : self.start_datetime,
+            'end_datetime' : self.end_datetime,
+        }
+
 class ClassBlock(Block):
     """
     
@@ -147,6 +168,21 @@ class Activity(db.Model):
 
     # time spent doing this activity in minutes
     time_spent : Mapped[int] = mapped_column(default=0)
+
+    def serialise(self)->dict:
+        return {
+            'id' : self.id,
+            'priority' : self.priority,
+            'repeat_mode' : self.repeat_mode,
+            'repeat_interval' : self.repeat_interval,
+            'frequency' : self.frequency,
+            'even_frequency_spacing' : self.even_frequency_spacing,
+            'min_length' : self.min_length,
+            'max_length' : self.max_length,
+            'min_time' : self.min_time,
+            'max_time' : self.max_time
+            
+        }
 
 # i wanted to name this 'Class' but that would probably confusing for me
 class Subject(Activity):

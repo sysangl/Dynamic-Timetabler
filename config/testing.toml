@@ -1,0 +1,10 @@
+[engine]
+engine_only = true
+
+[server]
+debug = true
+host = "localhost"
+port = 58362
+
+[database]
+uri = "sqlite:///dynamic-timable.db"
