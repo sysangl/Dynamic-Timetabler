@@ -96,14 +96,16 @@ class Activity(db.Model):
 
     id : Mapped[uuid.UUID] = mapped_column(primary_key = True, default=uuid.uuid4)
 
+    name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
+    description : Mapped[str] = mapped_column(nullable=False, default="")
     # set the priority of this acitivity
     # lower priority means this activity's blocks can be moved around
-    priority : Mapped[int] = mapped_column(nullable = False)
+    priority : Mapped[int] = mapped_column(nullable = False,default=0)
 
     # 0 - no repeat/oneshot
     # 1 - repeat every X
     # 2 - use frequency
-    repeat_mode : Mapped[int] = mapped_column(nullable = False)
+    repeat_mode : Mapped[int] = mapped_column(nullable = False,default=0)
 
     # repeat_interval -> [0,0,0,0,0]
     # repeat every [hour, day, week, month, year]
@@ -172,6 +174,8 @@ class Activity(db.Model):
     def serialise(self)->dict:
         return {
             'id' : self.id,
+            'name' : self.name,
+            'description' : self.description,
             'priority' : self.priority,
             'repeat_mode' : self.repeat_mode,
             'repeat_interval' : self.repeat_interval,
@@ -180,14 +184,15 @@ class Activity(db.Model):
             'min_length' : self.min_length,
             'max_length' : self.max_length,
             'min_time' : self.min_time,
-            'max_time' : self.max_time
-            
+            'max_time' : self.max_time,
+            'time_limit_reset' : self.time_limit_reset,
+            'time_spent' : self.time_spent
         }
 
 # i wanted to name this 'Class' but that would probably confusing for me
-class Subject(Activity):
-    teacher : Mapped[str] = mapped_column(nullable=False)
-    classroom : Mapped[Optional[str]] = mapped_column()
+# class Subject(Activity):
+#     teacher : Mapped[str] = mapped_column(nullable=False)
+#     classroom : Mapped[Optional[str]] = mapped_column()
 
 
 

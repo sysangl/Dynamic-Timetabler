@@ -1,14 +1,6 @@
 from flask import Flask, jsonify, request, render_template, abort
 from models import (
-    db,
-    ToDo,
-    Task,
-    Block,
-    ClassBlock,
-    Activity,
-    Subject,
-    User,
-    Settings
+    db
 )
 
 # helper func

@@ -1,44 +1,72 @@
 from flask import Flask, request, jsonify
 from models import (
     db,
-    ToDo,
-    Task,
-    Block,
-    ClassBlock,
     Activity,
-    Subject,
-    User,
-    Settings
 )
 
 def create_routes(app: Flask):
-    pass
+    @app.route('/server/activities', methods=['GET'])
+    def get_activities():
+        activities = Activity.query.all()
+        return {'activities':[activity.serialise() for activity in activities]}, 200
 
-    # @app.route('/activities', methods=['GET'])
-    # def get_activities():
-    #     activities = Activity.query.all()
-    #     return {'activities':[activity.serialise() for activity in activities]}
-
-    # @app.route('/activities/<uuid:id>',methods=['GET'])
-    # def get_activity(id):
-    #     activity:Activity = Activity.query.filter_by(id=id).first()
-    #     result = activity.serialise() if activity else -1
-    #     return result
+    @app.route('/server/activities/<int:id>',methods=['GET'])
+    def get_activity(id):
+        activity = Activity.query.filter_by(id=id).first()
+        if not activity:
+            return {'error':f'Activity with id "{id}" does not exist'}, 404
+        result = activity.serialise() if activity else -1
+        return jsonify(result)
+        
 
 
-    # @app.route('/activities', methods=['POST'])
-    # def create_activity():
-    #     data = request.get_json()
+    @app.route('/server/activities/create', methods=['PUT'])
+    def create_activity():
+        data = request.get_json()
+        app.logger.info(f"Attempting to create an activity from: {data}")
 
-    #     db.session.add(activity)
-    #     db.session.commit()
+        activity = Activity(
+            priority = data['priority'], # type: ignore
+            repeat_mode     = data['repeat_mode'], # type: ignore
+            repeat_interval = data['repeat_interval'], # type: ignore
+            frequency       = data['frequency'], # type: ignore
+            even_frequency_spacing = data['even_frequency_spacing'], # type: ignore
+            min_length       = data['min_length'], # type: ignore
+            max_length       = data['max_length'], # type: ignore
+            min_time         = data['min_time'], # type: ignore
+            max_time         = data['max_time'], # type: ignore
+            time_limit_reset = data['time_limit_reset'], # type: ignore
+            time_spent       = data['time_spent'] # type: ignore
+        )
 
-    #     return jsonify(activity.serialise())
+        db.session.add(activity)
+        db.session.commit()
 
-    # @app.route('/activities/<uuid:id>', methods=['PUT'])
-    # def update_activity(id):
-    #     pass
+        return jsonify(activity.serialise())
 
-    # @app.route('/activities/<uuid:id>', methods=['DELETE'])
-    # def delete_activity(id):
-    #     pass
+    @app.route('/server/activities/<int:id>', methods=['PUT'])
+    def update_activity(id):
+
+        data = request.get_json()
+        activity = Activity.query.filter_by(id=id).first()
+        if not activity:
+            return {'error':f'Activity with id "{id}" does not exist'}, 404
+        for key in data.keys():
+            try:
+                activity.__setattr__(key, data[key])
+            except Exception as e:
+                return {'error' : f'Invalid key : {str(e)}'}, 500
+
+        db.session.commit()
+        return jsonify(activity.serialise())
+        
+
+    @app.route('/server/activities/<int:id>', methods=['DELETE'])
+    def delete_activity(id):
+        activity = Activity.query.filter_by(id=id).first()
+        if not activity:
+            return {'error':f'Activity with id "{id}" does not exist'}, 404
+        assert type(activity) is Activity
+        db.session.delete(activity)
+        db.session.commit()
+        return {'success': f'Activity {activity.name} ({activity.id}) deleted successfully'}, 200

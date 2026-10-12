@@ -7,4 +7,4 @@ host = "localhost"
 port = 58362
 
 [database]
-uri = "sqlite:///dynamic-timable.db"
+uri = "sqlite:///dynamic-timetable.db"

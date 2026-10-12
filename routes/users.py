@@ -1,12 +1,6 @@
 from flask import Flask, jsonify, request
 from models import (
     db,
-    ToDo,
-    Task,
-    Block,
-    ClassBlock,
-    Activity,
-    Subject,
     User,
     Settings
 )

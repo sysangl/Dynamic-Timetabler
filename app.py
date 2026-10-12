@@ -6,6 +6,7 @@ from route_init import initialise_routes
 from models import (
     db
 )
+from config import Config
 
 from logging.config import dictConfig
 
@@ -28,8 +29,9 @@ dictConfig({
 # For production
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
 
-
-def create_app(config:dict):
+def create_app():
+    with open("config/testing.toml", 'r') as f:
+        config = toml.load(f)
     app = Flask("Dynamic Timetabler")
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
@@ -51,14 +53,9 @@ def create_app(config:dict):
     return app
 
 
-
-def run(config_path: str = 'config/default.toml'):
-    with open(config_path, 'r') as f:
+if __name__ == "__main__":
+    with open("config/testing.toml", 'r') as f:
         config = toml.load(f)
-    app = create_app(config)
-
+    app = create_app()
     initialise_routes(app)
     app.run(debug=config['server']['debug'], host=config['server']['host'], port=config['server']['port'])
-
-if __name__ == "__main__":
-    run("config/testing.toml")
