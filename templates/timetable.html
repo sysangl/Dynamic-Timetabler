@@ -6,7 +6,7 @@
         display: flex;
         background: beige;
         overflow: hidden;
-        border-radius: 5px;
+        /* border-radius: 5px; */
         flex-direction: row;
     }
 
@@ -67,7 +67,7 @@
     .timeline-number-pm {
         flex: 0 0 100px;
         white-space: nowrap;
-        color: #f5f5f5;
+        color: var(--text-colour-1);
         padding-left: 5px;
     }
 
@@ -166,7 +166,6 @@
     // generates the days on the left side of the timetable view
     function generateWeek() {
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        console.log(startDay)
         document.getElementById("tt-legend").innerHTML = '<div id="tt-topbar-time">-</div>';
         for (let dayIdx = startDay; dayIdx < 7; dayIdx++) {
                 document.getElementById("tt-legend").innerHTML+='<div class="tt-weekday">'+days[dayIdx]+'</div>';
@@ -178,7 +177,6 @@
 
     // generates the hours along the top of the timetable view
     function generateTimeline() {
-        console.log(startHour)
         document.getElementById("tt-topbar-timeline").innerHTML = "";
         for (let hour = startHour; hour < 24; hour++) {
             if (hour >= 12 ) {

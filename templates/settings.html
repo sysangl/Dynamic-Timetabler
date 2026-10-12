@@ -1,7 +1,7 @@
 <!-- settings css -->
 <style>
     #settings {
-        color: #f5f5f5;
+        color: var(--text-colour-1);
     }
 
     .settings-section-container {
@@ -41,12 +41,17 @@
     }
 
     #settings-save-button {
+        width: 100%;
         padding: 10px;
         border-radius: 4px;
-        color: #f5f5f5;
+        color: var(--text-colour-1);
         background: rgb(110, 170, 110);
         text-align: center;
         font-size: 30px;
+    }
+
+    #settings-save-button:hover {
+        background: rgb(91, 144, 91);
     }
 
 </style>
@@ -56,19 +61,15 @@
 <div class="settings-section-container">
     <ul class="settings-list">
         <li class="settings-section-title">Timetable</li>
-        <li class="settings-description">When does your week start (default : Monday)</li>
-        <li class="settings-option-name">Starting Day <div class="settings-flex-seperator"></div> <input data-optionName="starting_day" id="starting-day-input" class="settings-number-input settings-option" type="number" /></li>
+        <li class="settings-description">When does your week start (default : 0 - Monday)</li>
+        <li class="settings-option-name">Starting Day <div class="settings-flex-seperator"></div> <input data-optionName="starting_day" id="starting-day-input" class="settings-number-input settings-option" type="number" min="0" max="6" size="2"/></li>
         <li class="settings-description">When does your day start (default : 5am)</li>
-        <li class="settings-option-name">Starting Hour <div class="settings-flex-seperator"></div> <input data-optionName="starting_hour" id="starting-hour-input" class="settings-number-input settings-option" type="number" /></li>
+        <li class="settings-option-name">Starting Hour <div class="settings-flex-seperator"></div> <input data-optionName="starting_hour" id="starting-hour-input" class="settings-number-input settings-option" type="number" min="0" max="24" size="2"/></li>
     </ul>
 </div>
 
 <div class="settings-section-container">
-    <a href="#" onclick="saveSettings()">
-        <div id="settings-save-button">
-            SAVE
-        </div>
-    </a>
+    <input id="settings-save-button" type="submit" value="SAVE" onclick="saveSettings()"></input>
 </div>
 
 

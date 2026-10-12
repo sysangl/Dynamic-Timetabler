@@ -4,15 +4,7 @@ from flask_migrate import Migrate
 from sqlalchemy import create_engine
 from route_init import initialise_routes
 from models import (
-    db,
-    ToDo,
-    Task,
-    Block,
-    ClassBlock,
-    Activity,
-    Subject,
-    User,
-    Settings
+    db
 )
 
 from logging.config import dictConfig
@@ -65,4 +57,4 @@ app = create_app()
 initialise_routes(app)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="localhost", port=58246)
+    app.run(debug=True, host="localhost", port=58362)

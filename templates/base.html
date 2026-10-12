@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Timetable</title>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="icon" href="{{url_for('static', filename='favicon.ico')}}"/>
+    <script src="{{url_for('static',filename='js/jquery-4.0.0.min.js')}}"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='fontawesome-free-7.3.1-web/css/all.min.css')}}"/>
 </head>
 <body>
     <!-- common script -->
@@ -80,8 +79,13 @@
 
         });
 
-        // ADD AN INTERVAL CLEARER
+        function clearFragmentInterval(name) {
+            clearInterval(window.pageIntervals.persistent[name]);
+        }
         
+        window.pageIntervals = window.pageIntervals || {};
+        window.pageIntervals.temporary = window.pageIntervals.temporary || [];
+        window.pageIntervals.persistent = window.pageIntervals.persistent || {};
 
 
     </script>
@@ -90,13 +94,17 @@
 
     <!-- common css -->
     <style>
-        @import url("https://fonts.googleapis.com/css?family=Roboto");
-        @import url('https://fonts.googleapis.com/css2?family=Aleo:ital,wght@0,100..900;1,100..900&display=swap');
+        @font-face {
+            font-family: Aleo;
+            src: url("{{url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf')}}");
+        }
 
         :root {
             --sidebar-width: 200px;
             --highlight-colour: rgb(137, 15, 165);
             --bg-colour-1: #1e1e1e;
+            --text-colour-1: #f5f5f5;
+            --font-1: 'Aleo';
 
         }
 
@@ -106,10 +114,11 @@
 
         body {
             background-color: var(--bg-colour-1);
-            font-family: "Aleo";
+            font-family: var(--font-1);
             margin:0;
             overscroll-behavior: none;
             height: 100vh;
+            color: var(--text-colour-1);
         }
         
         #content {
@@ -129,6 +138,10 @@
             margin-left: var(--sidebar-width);
         }
 
+        input, button {
+            border: 0;
+        }
+
     </style>
 
     <!-- menus css -->
@@ -144,7 +157,7 @@
 
         #topbar-title {
             font-size: 1.6rem;
-            font-family: "Roboto";
+            font-family: var(--font-1);
             color: #e1e1e1;
             left: 15px;
             align-content: center;
@@ -152,7 +165,7 @@
 
         #topbar-user {
             width: 60px;
-            color: #f5f5f5;
+            color: var(--text-colour-1);
             font-size: 40px;
             align-content: center;
             text-align: center;
@@ -232,7 +245,7 @@
             border-bottom: 0 1px solid rgba(255,255,255, 0.5);
             background-color: rgba(255,255,255,0);
             transition: background-color 0.2s ease;
-            color: #f5f5f5;
+            color: var(--text-colour-1);
             text-decoration: none;
             font-size: 20px;
         }
@@ -261,7 +274,7 @@
         </div>
         <div id="topbar-title">Dynamic Timetabler</div>
         <div class="topbar-spacer"></div>
-        <div id="topbar-user"><span class="fa fa-user"></span></div>
+        <div id="topbar-user"><span class="fa-solid fa-circle-user"></span></div>
     </div>
 
     <nav id="sidebar">
