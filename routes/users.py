@@ -41,13 +41,9 @@ def create_routes(app: Flask):
             ) # 409 is conflict coee
 
         app.logger.info("Creating new user...")
-        new_settings=Settings(
-            
-        )
         new_user = User(
             username=username, # type: ignore
             display_name=payload.get("display_name"), # type: ignore
-            settings=new_settings # type: ignore
         )
 
         try:

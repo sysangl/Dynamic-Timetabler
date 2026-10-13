@@ -1,0 +1,53 @@
+#settings {
+    color: var(--text-colour-1);
+}
+
+.settings-section-container {
+    border-radius: 2px;
+    background-color: #252525;
+    padding: 10px;
+}
+
+.settings-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.settings-section-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.settings-description {
+    margin-top: 10px;
+    color: #c0c0c0;
+    font-size: 14px;
+}
+
+.settings-option-name {
+    font-size: 16px;
+    display: flex;
+}
+
+.settings-option {
+    font-size: 16px;
+}
+
+.settings-flex-seperator {
+    flex-grow: 100;
+}
+
+#settings-save-button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+    color: var(--text-colour-1);
+    background: rgb(110, 170, 110);
+    text-align: center;
+    font-size: 30px;
+}
+
+#settings-save-button:hover {
+    background: rgb(91, 144, 91);
+}

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, abort
+from flask import Flask, jsonify, request, render_template, abort,redirect
 from models import (
     db
 )
@@ -13,7 +13,10 @@ def is_ajax():
 
 def create_routes(app: Flask):
 
-    @app.route("/app/")
+    @app.route("/app")
+    def redirect_to_homepage():
+        return redirect('/app/timetable')
+
     @app.route("/app/<string:page>")
     def serve(page: str = "timetable"):
         """

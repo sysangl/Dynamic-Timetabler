@@ -1,6 +1,7 @@
 import os, toml
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
+from jinja2 import ChoiceLoader, FileSystemLoader
 from sqlalchemy import create_engine
 from route_init import initialise_routes
 from models import (
@@ -35,9 +36,16 @@ def create_app():
     app = Flask("Dynamic Timetabler")
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
+    assert app.jinja_loader is not None
+    assert app.static_folder is not None
+    app.jinja_env.loader = ChoiceLoader([
+        app.jinja_loader,
+        FileSystemLoader(app.static_folder)
+        ])
 
     db.init_app(app)
     Migrate(app,db)
+
 
     @app.route("/health")
     def health():

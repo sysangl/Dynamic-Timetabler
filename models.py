@@ -1,9 +1,8 @@
 
 # types
-import uuid
+import uuid, zoneinfo,time
 from datetime import datetime
 from typing import List, Optional
-
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -24,8 +23,6 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 
-
-
 # Time table blocking
 # What appears on and what is stored in the timetable
 #
@@ -36,11 +33,18 @@ class ToDo(db.Model):
     """
     id : Mapped[int] = mapped_column(INTEGER, primary_key=True, autoincrement=True)
     title : Mapped[str] = mapped_column(nullable=False)
+    completed : Mapped[bool] = mapped_column(nullable=False, default=False)
+
+    def __init__(self, title : str) -> None:
+        super().__init__()
+        self.title = title
+
 
     def serialise(self)->dict:
         return {
             'id' : str(self.id),
-            'title' : self.title
+            'title' : self.title,
+            'completed' : self.completed,
         }
 
 class Task(ToDo):
@@ -52,26 +56,47 @@ class Task(ToDo):
     #start_datetime : Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
     # sqlite - Dev
     start_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
+    def __init__(self, 
+                title:str, 
+                start_datetime: datetime,
+                description:str = "", 
+                ) -> None:
+        super().__init__(title)
+        self.description = description
+        self.start_datetime = start_datetime
+
 
     def serialise(self)->dict:
         return {
             'id' : str(self.id),
             'title' : self.title,
             'description' : str(self.description),
+            'completed' : self.completed,
             'start_datetime' : self.start_datetime,
         }
 class Block(Task):
     """
     Occupies a span of time.
     """
-    # postgreSQL - Production
-    #end_datetime : Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
-    # sqlite - Dev
     end_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    def __init__(self, 
+                title:str, 
+                start_datetime: dict,
+                end_datetime: dict,
+                description:str = "", 
+                ) -> None:
+        super().__init__(title=title, start_datetime=datetime(**start_datetime), description=description)
+        # postgreSQL - Production
+        #end_datetime : Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
+        # sqlite - Dev
+        self.end_datetime = datetime(**end_datetime)
+    
     def serialise(self)->dict:
         return {
             'id' : str(self.id),
             'title' : self.title,
+            'completed' : self.completed,
             'description' : str(self.description),
             'start_datetime' : self.start_datetime,
             'end_datetime' : self.end_datetime,
@@ -93,7 +118,6 @@ class Activity(db.Model):
     Base Activity that drives auto timetable generation
     """
     __tablename__ = "activities"
-
     id : Mapped[uuid.UUID] = mapped_column(primary_key = True, default=uuid.uuid4)
 
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
@@ -171,6 +195,38 @@ class Activity(db.Model):
     # time spent doing this activity in minutes
     time_spent : Mapped[int] = mapped_column(default=0)
 
+    def __init__(self,
+                name:str,
+                description:str="",
+                priority:int=0,
+                repeat_mode:int=0,
+                repeat_interval:list[int]=[0,0,0,0,0],
+                frequency:list[int]=[0,0,0,0,0],
+                even_frequency_spacing:bool=True,
+                min_length:int=45,
+                max_length:int=-1,
+                min_time:int=-1,
+                max_time:int=-1,
+                time_limit_reset:list[int]=[0,0,0,0,0],
+                **extra
+                ) -> None:
+        super().__init__()
+        self.name = name
+        self.description = description
+        self.priority = priority
+        self.repeat_mode = repeat_mode
+        self.repeat_interval = repeat_interval
+        self.frequency = frequency
+        self.even_frequency_spacing = even_frequency_spacing
+        self.min_length = min_length
+        self.max_length = max_length
+        self.min_time = min_time
+        self.max_time = max_time
+        self.time_limit_reset = time_limit_reset
+        self.extra = extra
+
+
+
     def serialise(self)->dict:
         return {
             'id' : self.id,
@@ -205,9 +261,6 @@ class Settings(db.Model):
     The user's preferences and settings
     Has one-to-one relationship with User table
     """
-
-
-    __tablename__ = "settings"
     id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
     default_block_length : Mapped[int] = mapped_column(default=30) # minutes
     starting_day : Mapped[int] = mapped_column(default=0)
@@ -220,6 +273,19 @@ class Settings(db.Model):
         foreign_keys="[User.settings_id]",
         remote_side="[User.settings_id]"
     )
+
+    __tablename__ = "settings"
+    def __init__(self,
+                default_block_length :int = 30,
+                starting_day:int = 0,
+                starting_hour:int = 5
+                ) -> None:
+        super().__init__()
+        self.default_block_length = default_block_length
+        self.starting_day = starting_day
+        self.starting_hour = starting_hour
+
+
 
     def serialise(self)->dict:
         return {
@@ -262,6 +328,17 @@ class User(db.Model):
         foreign_keys="[User.settings_id]",
         remote_side="[Settings.id]"
     )
+
+    def __init__(self,
+                username : str,
+                display_name : str | None = None,
+                is_admin : bool = False,
+                ) -> None:
+        super().__init__()
+        self.username = username
+        self.display_name = display_name or username
+        self.is_admin = is_admin
+        self.settings = Settings()
 
     # __table_args__ = (
     #     UniqueConstraint(

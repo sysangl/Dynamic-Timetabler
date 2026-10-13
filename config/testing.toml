@@ -1,3 +1,6 @@
+[general]
+timezone = "AEST"
+
 [engine]
 engine_only = true
 

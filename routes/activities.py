@@ -8,7 +8,7 @@ def create_routes(app: Flask):
     @app.route('/server/activities', methods=['GET'])
     def get_activities():
         activities = Activity.query.all()
-        return {'activities':[activity.serialise() for activity in activities]}, 200
+        return jsonify({'activities':[activity.serialise() for activity in activities]}), 200
 
     @app.route('/server/activities/<int:id>',methods=['GET'])
     def get_activity(id):
@@ -17,27 +17,30 @@ def create_routes(app: Flask):
             return {'error':f'Activity with id "{id}" does not exist'}, 404
         result = activity.serialise() if activity else -1
         return jsonify(result)
-        
-
 
     @app.route('/server/activities/create', methods=['PUT'])
     def create_activity():
         data = request.get_json()
         app.logger.info(f"Attempting to create an activity from: {data}")
 
-        activity = Activity(
-            priority = data['priority'], # type: ignore
-            repeat_mode     = data['repeat_mode'], # type: ignore
-            repeat_interval = data['repeat_interval'], # type: ignore
-            frequency       = data['frequency'], # type: ignore
-            even_frequency_spacing = data['even_frequency_spacing'], # type: ignore
-            min_length       = data['min_length'], # type: ignore
-            max_length       = data['max_length'], # type: ignore
-            min_time         = data['min_time'], # type: ignore
-            max_time         = data['max_time'], # type: ignore
-            time_limit_reset = data['time_limit_reset'], # type: ignore
-            time_spent       = data['time_spent'] # type: ignore
-        )
+        try:
+            activity = Activity(
+                **data
+                # name = data['name'],
+                # description = data['description'],
+                # priority = data['priority'], # type: ignore
+                # repeat_mode     = data['repeat_mode'], # type: ignore
+                # repeat_interval = data['repeat_interval'], # type: ignore
+                # frequency       = data['frequency'], # type: ignore
+                # even_frequency_spacing = data['even_frequency_spacing'], # type: ignore
+                # min_length       = data['min_length'], # type: ignore
+                # max_length       = data['max_length'], # type: ignore
+                # min_time         = data['min_time'], # type: ignore
+                # max_time         = data['max_time'], # type: ignore
+                # time_limit_reset = data['time_limit_reset'], # type: ignore
+            )
+        except TypeError as e:
+            return jsonify({'error':'Recieved invalid datatype in a field.'})
 
         db.session.add(activity)
         db.session.commit()
@@ -69,4 +72,4 @@ def create_routes(app: Flask):
         assert type(activity) is Activity
         db.session.delete(activity)
         db.session.commit()
-        return {'success': f'Activity {activity.name} ({activity.id}) deleted successfully'}, 200
+        return jsonify({'success': f'Activity {activity.name} ({activity.id}) deleted successfully'}), 200
