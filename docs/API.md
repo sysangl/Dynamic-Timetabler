@@ -50,7 +50,8 @@ Invoke-WebRequest -Uri 'http://localhost:58362/server/timetable/blocks/create' `
             "title" : "Test Block",
             "description" : "Testing block, useless for now",
             "start_datetime" : {"year":2026, "month":10, "day":13, "hour":6, "minute":21},
-            "end_datetime" : {"year":2026, "month":10, "day":14, "hour":9, "minute":26}
+            "end_datetime" : {"year":2026, "month":10, "day":14, "hour":9, "minute":26},
+            "colour" : "#734984"
       }' `
       -Verbose
 ```

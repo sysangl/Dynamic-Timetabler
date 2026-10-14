@@ -62,8 +62,8 @@ def create_app():
 
 
 if __name__ == "__main__":
-    with open("config/testing.toml", 'r') as f:
-        config = toml.load(f)
+    Config.load_config("config/testing.toml")
+    config = Config.config
     app = create_app()
     initialise_routes(app)
     app.run(debug=config['server']['debug'], host=config['server']['host'], port=config['server']['port'])

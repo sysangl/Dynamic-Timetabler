@@ -69,7 +69,7 @@ def create_routes(app: Flask):
         db.session.add(created_item)
         db.session.commit()
 
-        return jsonify(created_item.serialise())
+        return jsonify(created_item.serialise()), 202
 
     @app.route('/server/timetable/<string:item>/<int:id>', methods=['PUT'])
     def update_timetable_item(item,id):
@@ -89,11 +89,22 @@ def create_routes(app: Flask):
         
 
     @app.route('/server/timetable/<string:item>/<int:id>', methods=['DELETE'])
-    def delete_timetable_item(id):
-        activity = Activity.query.filter_by(id=id).first()
-        if not activity:
-            return {'error':f'Activity with id "{id}" does not exist'}, 404
-        assert type(activity) is Activity
-        db.session.delete(activity)
+    def delete_timetable_item(item, id):
+        item_class = None
+        match item:
+            case 'todos':
+                item_class = ToDo
+            case 'tasks':
+                item_class = Task
+            case 'blocks':
+                item_class = Block
+            case _:
+                app.logger.warning(f'"{item}" is not a valid timetable item')
+                return {'error': f'"{item}" is not a valid timetable item'}, 404
+        item_to_delete = item_class.query.filter_by(id=id).first()
+        if not item_to_delete:
+            return {'error':f'{item} with id "{id}" does not exist'}, 404
+        assert type(item_to_delete) is not None
+        db.session.delete(item_to_delete)
         db.session.commit()
-        return jsonify({'success': f'Activity {activity.name} ({activity.id}) deleted successfully'}), 200
+        return jsonify({'success': f'{item} {item_to_delete.title} ({item_to_delete.id}) deleted successfully'}), 200

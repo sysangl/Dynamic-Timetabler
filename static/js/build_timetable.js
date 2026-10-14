@@ -10,13 +10,18 @@ function clamp(value, min, max) {
 
 // generates the days on the left side of the timetable view
 function generateWeek() {
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    window.dayContainers = {};
     document.getElementById("tt-legend").innerHTML = '<div id="tt-topbar-time">-</div>';
     for (let dayIdx = startDay; dayIdx < 7; dayIdx++) {
-            document.getElementById("tt-legend").innerHTML+='<div class="tt-weekday">'+days[dayIdx]+'</div>';
+        document.getElementById("tt-legend").innerHTML+=`<div id="day-${days[dayIdx]}" class="tt-weekday"> ${days[dayIdx]} </div>`;
+        document.getElementById("tt-schedule").innerHTML+=`<div id="day-container-${days[dayIdx]}" class="day-container"></div>`;
+
     }
     for (let dayIdx = 0; dayIdx < startDay; dayIdx++) {
         document.getElementById("tt-legend").innerHTML+='<div class="tt-weekday">'+days[dayIdx]+'</div>';
+        document.getElementById("tt-schedule").innerHTML+=`<div id="day-container-${days[dayIdx]}" class="day-container"></div>`;
+
     }
 }
 

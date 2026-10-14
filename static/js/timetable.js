@@ -1,0 +1,82 @@
+async function getTimetableBlocks() {
+    const itemClasses = ['todos','tasks','blocks']
+    var payload = {};
+    for (let index = 0; index < itemClasses.length; index++) {
+        const itemClass = itemClasses[index];
+
+        const response = await fetch(`/server/timetable/${itemClass}`, {
+            method: 'GET',
+            headers: {
+                'Accept' : 'application/json'
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
+        const data = await response.json()
+        payload[itemClass] = data[itemClass]
+    }
+
+    console.log(payload)
+    return payload
+
+}
+
+async function buildTimetableBlocks() {
+    const blocks = await getTimetableBlocks();
+    const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+    blocks['blocks'].forEach(block => {
+        const startDatetime = new Date(block['start_datetime'])
+        const endDatetime = new Date(block['end_datetime'])
+        const day=days[startDatetime.getDay()]
+        days.forEach( dayContainer => {
+            if (day==dayContainer) {
+                console.log(`Adding ${block['title']} to ${day} with offset ${calcBlockPlacement(startDatetime)}`)
+                const dc=document.getElementById(`day-container-${dayContainer}`);
+                dc.innerHTML+=`
+                <div id="timetable-block-${block['id']}" style=" \
+                    width: ${calcBlockLength(block)}px; \
+                    background: ${block['colour']}; \
+                    left:${calcBlockPlacement(block)}px; \
+                    " class="timetable-block">\
+                        <p>
+                        <span class="block-title">${block['title']}</span><br> \
+                        <span class="block-time">${formatTime(startDatetime.getHours())}:${formatTime(startDatetime.getMinutes())} - ${formatTime(endDatetime.getHours())}:${formatTime(endDatetime.getMinutes())}</span> \
+                        <p> \
+                    </div>`
+            }
+        }
+        )
+    });
+}
+
+function calcBlockPlacement(block) {
+    const date = new Date(block['start_datetime']);
+    const now = new Date();
+    const blockStartDate = date;
+    const dayStart = new Date(now.getFullYear() , now.getMonth(), now.getDate(), startHour, 0, 0, 0)
+    const blockStart = new Date(now.getFullYear() , now.getMonth(), now.getDate(), blockStartDate.getHours(), blockStartDate.getMinutes())
+    const dayMs = 24 * 60 * 60 * 1000;
+    let elapsed = blockStart-dayStart;
+    if (elapsed<0) elapsed += dayMs;
+
+    const progress= elapsed / dayMs;
+    return document.getElementById("tt-topbar-timeline").scrollWidth * progress;
+}
+
+function calcBlockLength(block) {
+    const startDatetime = new Date(block['start_datetime'])
+    const endDatetime = new Date(block['end_datetime'])
+    let blockTimeLength = endDatetime-startDatetime;
+    const dayMs = 24 * 60 * 60 * 1000;
+    if (blockTimeLength<0) blockTimeLength += dayMs;
+    console.log(`block time length ${blockTimeLength}`)
+
+    const dayPercentage = blockTimeLength/dayMs;
+    console.log(`day percent ${dayPercentage}`)
+    console.log(`block length ${document.getElementById("tt-topbar-timeline").scrollWidth * dayPercentage}`)
+    return document.getElementById("tt-topbar-timeline").scrollWidth * dayPercentage
+}
+
+buildTimetableBlocks();

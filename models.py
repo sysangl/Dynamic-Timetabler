@@ -1,6 +1,6 @@
 
 # types
-import uuid, zoneinfo,time
+import uuid, zoneinfo,time, pytz, toml
 from datetime import datetime
 from typing import List, Optional
 from flask_sqlalchemy import SQLAlchemy
@@ -11,6 +11,7 @@ from sqlalchemy.dialects.sqlite import (
     JSON,
     INTEGER
 )
+from config import Config
 # from sqlalchemy.dialects.postgresql import (
 #     UUID,
 #     ARRAY,
@@ -22,7 +23,6 @@ class Base(DeclarativeBase):
     pass
 
 db = SQLAlchemy(model_class=Base)
-
 # Time table blocking
 # What appears on and what is stored in the timetable
 #
@@ -47,24 +47,24 @@ class ToDo(db.Model):
             'completed' : self.completed,
         }
 
-class Task(ToDo):
+class Task(db.Model):
     """
     A ToDo with more information and can be set for a certain date and time
     """
+    id : Mapped[int] = mapped_column(INTEGER, primary_key=True, autoincrement=True)
+    title : Mapped[str] = mapped_column(nullable=False)
+    completed : Mapped[bool] = mapped_column(nullable=False, default=False)
     description : Mapped[str] = mapped_column(default="")
-    # postgreSQL - Production
-    #start_datetime : Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
-    # sqlite - Dev
     start_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
     reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
     def __init__(self, 
                 title:str, 
-                start_datetime: datetime,
+                start_datetime: dict,
                 description:str = "", 
                 ) -> None:
-        super().__init__(title)
+        self.title = title
         self.description = description
-        self.start_datetime = start_datetime
+        self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone(Config.config["general"]["timezone"]))
 
 
     def serialise(self)->dict:
@@ -75,22 +75,31 @@ class Task(ToDo):
             'completed' : self.completed,
             'start_datetime' : self.start_datetime,
         }
-class Block(Task):
+class Block(db.Model):
     """
     Occupies a span of time.
     """
+    id : Mapped[int] = mapped_column(INTEGER, primary_key=True, autoincrement=True)
+    title : Mapped[str] = mapped_column(nullable=False)
+    completed : Mapped[bool] = mapped_column(nullable=False, default=False)
+    description : Mapped[str] = mapped_column(default="")
+    start_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
     end_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    colour : Mapped[str] = mapped_column(nullable=False, default="#e1e1e1")
     def __init__(self, 
                 title:str, 
                 start_datetime: dict,
                 end_datetime: dict,
                 description:str = "", 
+                colour:str = ""
                 ) -> None:
-        super().__init__(title=title, start_datetime=datetime(**start_datetime), description=description)
-        # postgreSQL - Production
-        #end_datetime : Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
-        # sqlite - Dev
-        self.end_datetime = datetime(**end_datetime)
+        self.title = title
+        self.description = description
+        self.start_datetime = datetime(**start_datetime, tzinfo=pytz.timezone(Config.config["general"]["timezone"]))
+        self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(Config.config["general"]["timezone"]))
+        self.colour = colour
+        
     
     def serialise(self)->dict:
         return {
@@ -100,6 +109,7 @@ class Block(Task):
             'description' : str(self.description),
             'start_datetime' : self.start_datetime,
             'end_datetime' : self.end_datetime,
+            'colour' : self.colour
         }
 
 class ClassBlock(Block):

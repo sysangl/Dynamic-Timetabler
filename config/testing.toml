@@ -1,5 +1,5 @@
 [general]
-timezone = "AEST"
+timezone = "Australia/Melbourne"
 
 [engine]
 engine_only = true

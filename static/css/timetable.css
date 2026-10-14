@@ -81,8 +81,9 @@
 }
 
 #tt-schedule {
+    display: flex;
     flex:1;
-    flex-shrink: 0;
+    flex-grow: 1;
     width: max-content;
     border-bottom: 1px solid #c0c0c0;
     overflow-x: visible;
@@ -120,6 +121,35 @@
 }
 
 .day-container {
-    flex: 1;
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    width: 100%;
+    justify-content: center;
     /* height: ; */
+}
+
+.timetable-block {
+    flex-grow: 1;
+    position: absolute;
+    padding: 5px;
+    background: #3b3d68;
+    overflow: hidden;
+}
+
+.block-title {
+    display: inline-block;
+    white-space: nowrap;
+    color: var(--text-colour-1);
+    text-overflow: clip;
+    overflow: hidden;
+    font-size: 18px;
+}
+
+.block-time {
+    color: #c8c7c7;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: hidden; 
+    font-size: 14px;
 }
