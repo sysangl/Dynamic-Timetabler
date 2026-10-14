@@ -97,8 +97,8 @@ function makeBlockElement(block) {
         }
     } else {
         const currentStart = Math.max(startMins, scheduleStartMins);
-        const currentEnd = Math.min(endMins, scheduleEndMins);
-        const currentLength = minsInDay + scheduleEndMins - currentStart;
+        const currentEnd = Math.min(endMins, minsInDay + scheduleEndMins);
+        const currentLength = currentEnd - currentStart;
 
         if (currentLength > 0) {
             const currentEl = buildPieceElement(block, currentStart, currentLength, tl);
@@ -108,7 +108,7 @@ function makeBlockElement(block) {
         if (endMins > scheduleEndMins) {
             const nextDayIdx = (dayIdx + 1) % 7;
             const overflowMins = endMins - minsInDay;
-            const overflowEl = buildPieceElement(block,scheduleEndMins,overflowMins-sc,tl);
+            const overflowEl = buildPieceElement(block,scheduleEndMins,overflowMins-scheduleEndMins,tl);
             pieces.push({dayIdx: nextDayIdx, el: overflowEl})
         }
 
