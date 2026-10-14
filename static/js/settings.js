@@ -50,5 +50,6 @@ async function initSettings() {
     await applySettings();
 }
 initSettings();
+
 // window.pageInits = window.pageInits || {};
 // window.pageInits.settings = initSettings;

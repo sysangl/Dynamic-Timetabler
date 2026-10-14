@@ -10,15 +10,15 @@ function clamp(value, min, max) {
 
 // generates the days on the left side of the timetable view
 function generateWeek() {
+    console.log('Generating Week')
     const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     window.dayContainers = {};
     document.getElementById("tt-legend").innerHTML = '<div id="tt-topbar-time">-</div>';
-    for (let dayIdx = startDay; dayIdx < 7; dayIdx++) {
+    for (let dayIdx = window.settings['start_day']; dayIdx < 7; dayIdx++) {
         document.getElementById("tt-legend").innerHTML+=`<div id="day-${days[dayIdx]}" class="tt-weekday"> ${days[dayIdx]} </div>`;
         document.getElementById("tt-schedule").innerHTML+=`<div id="day-container-${days[dayIdx]}" class="day-container"></div>`;
-
     }
-    for (let dayIdx = 0; dayIdx < startDay; dayIdx++) {
+    for (let dayIdx = 0; dayIdx < window.settings['start_day']; dayIdx++) {
         document.getElementById("tt-legend").innerHTML+='<div class="tt-weekday">'+days[dayIdx]+'</div>';
         document.getElementById("tt-schedule").innerHTML+=`<div id="day-container-${days[dayIdx]}" class="day-container"></div>`;
 
@@ -28,14 +28,14 @@ function generateWeek() {
 // generates the hours along the top of the timetable view
 function generateTimeline() {
     document.getElementById("tt-topbar-timeline").innerHTML = "";
-    for (let hour = startHour; hour < 24; hour++) {
+    for (let hour = window.settings['start_hour']; hour < 24; hour++) {
         if (hour >= 12 ) {
             document.getElementById("tt-topbar-timeline").innerHTML+='<div class="timeline-number-pm"> '+hour+'</div>';
         } else {
             document.getElementById("tt-topbar-timeline").innerHTML+='<div class="timeline-number"> '+hour+'</div>';
         }
     }
-    for (let hour = 0; hour < startHour; hour++) {
+    for (let hour = 0; hour < window.settings['start_hour']; hour++) {
         if (hour >= 12 ) {
             document.getElementById("tt-topbar-timeline").innerHTML+='<div class="timeline-number-pm"> '+hour+'</div>';
         } else {
@@ -66,6 +66,10 @@ function buildGrid() {
     let dlHtml = '';
     for (let i=0; i<7; i++) dlHtml += '<div></div>';
     dl.innerHTML = dlHtml;
+
+    const dayWidth = tl.scrollWidth;
+    const dayContainers = document.querySelectorAll('.day-container');
+    dayContainers.forEach(col => col.style.width = dayWidth + 'px');
 }
 
 // gives the progress through the day. returns a float from 0 to 1
@@ -80,7 +84,7 @@ function dayProgress() {
 // gives the progress through the schedule (starts at startHour instead of 00:00)
 function scheduleProgress() {
     const now = new Date();
-    const start = new Date(now.getFullYear() , now.getMonth(), now.getDate(), startHour, 0, 0, 0)
+    const start = new Date(now.getFullYear() , now.getMonth(), now.getDate(), window.settings['start_hour'], 0, 0, 0)
     const dayMs = 24 * 60 * 60 * 1000;
     let elapsed = now - start;
     if (elapsed<0) elapsed += dayMs;
@@ -122,16 +126,9 @@ function updateTime() {
     clock.innerHTML = hours + ':' + minutes
 }
 
-// apply settings to timetable. need to automatically parse and apply these settings
-async function applySettings(settings = null) {
-    if (!settings) settings = await fetchSettings();
-    console.log(settings)
-    startDay = settings['starting_day'];
-    startHour = settings['starting_hour'];
-}
 
 async function initTimetable() {
-    await applySettings();
+    window.settings = await fetchSettings(1);
     generateWeek(); // generate first column of the timetable
     generateTimeline(); // generate top row of the timetable
     buildGrid(); // generate grid

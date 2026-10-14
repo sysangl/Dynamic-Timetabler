@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify
+from sqlalchemy.orm import joinedload
+from datetime import datetime
 from models import (
     db,
     ToDo,
@@ -8,6 +10,21 @@ from models import (
 )
 
 def create_routes(app: Flask):
+    @app.route('/server/timetable', methods=['GET'])
+    def get_timetable():
+        todos = ToDo.query.all()
+        tasks = Task.query.all()
+        blocks = Block.query.all()
+
+        payload = {
+            "todos": [todo.serialise() for todo in todos],
+            "tasks": [task.serialise() for task in tasks],
+            "blocks": [block.serialise() for block in blocks]
+        }
+
+        return jsonify(payload)
+
+
     @app.route('/server/timetable/<string:item>', methods=['GET'])
     def get_timetable_items(item):
         item_class = None

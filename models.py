@@ -73,7 +73,7 @@ class Task(db.Model):
             'title' : self.title,
             'description' : str(self.description),
             'completed' : self.completed,
-            'start_datetime' : self.start_datetime,
+            'start_datetime' : self.start_datetime.isoformat(),
         }
 class Block(db.Model):
     """
@@ -86,7 +86,7 @@ class Block(db.Model):
     start_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
     reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
     end_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
-    colour : Mapped[str] = mapped_column(nullable=False, default="#e1e1e1")
+    colour : Mapped[str] = mapped_column(nullable=False, default="#75547e")
     def __init__(self, 
                 title:str, 
                 start_datetime: dict,
@@ -107,8 +107,8 @@ class Block(db.Model):
             'title' : self.title,
             'completed' : self.completed,
             'description' : str(self.description),
-            'start_datetime' : self.start_datetime,
-            'end_datetime' : self.end_datetime,
+            'start_datetime' : self.start_datetime.isoformat(),
+            'end_datetime' : self.end_datetime.isoformat(),
             'colour' : self.colour
         }
 
@@ -301,8 +301,8 @@ class Settings(db.Model):
         return {
             "id": str(self.id),
             "default_block_length": self.default_block_length,
-            "starting_day": self.starting_day,
-            "starting_hour": self.starting_hour,
+            "start_day": self.starting_day,
+            "start_hour": self.starting_hour,
         }
 
 

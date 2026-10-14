@@ -9,20 +9,14 @@ function toggleSidebar() {
     ham.classList.toggle('active');
 }
 
-
 document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.page===initialPage))
-
-var persistentSettings = null;
-const settingsUrl = 'http://localhost:58362/server/user/1/settings'
-
-
 
 // send a request to the server for the current user's settings, currently hardcoded to user 1
 async function fetchSettings(userId) {
-    if (persistentSettings == null) {
+    if (window.settings == null) {
         try {
             console.log("Attempting to fetch settings")
-            const response = await fetch(settingsUrl, {
+            const response = await fetch(`http://localhost:58362/server/user/${userId}/settings`, {
                 method: 'GET',
                 headers: {
                     'Accept' : 'application/json'
@@ -34,8 +28,7 @@ async function fetchSettings(userId) {
             }
 
             const data = await response.json();
-
-            persistentSettings = data["settings"];
+            window.settings = data["settings"];
             return data["settings"];
         } catch (err) {
             console.error('Failed to fetch settings JSON:', err);
@@ -43,7 +36,7 @@ async function fetchSettings(userId) {
         }
     } else {
         console.log("Using cached settings")
-        return persistentSettings;
+        return window.settings;
     }
 
 }
@@ -69,6 +62,8 @@ function clearFragmentInterval(name) {
     clearInterval(window.pageIntervals.persistent[name]);
 }
 
+
+(async () => {window.settings = await fetchSettings(1);});
 window.pageIntervals = window.pageIntervals || {};
 window.pageIntervals.temporary = window.pageIntervals.temporary || [];
 window.pageIntervals.persistent = window.pageIntervals.persistent || {};
