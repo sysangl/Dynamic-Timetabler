@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dynamic-timetabler"
+name = "dynamic_timetabler_niko"
 version = "0.0.2"                     # bump this whenever you release a new tag
 description = "A Flask‑based timetable manager"
 readme = "README.md"
