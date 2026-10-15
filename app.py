@@ -1,4 +1,5 @@
 # import os, toml, multiprocessing
+import sys, os
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
@@ -31,14 +32,27 @@ dictConfig({
 # For production
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
 
+def resource_path(relative_path):
+    """
+    Return the absolute path to a resource, whether the app is
+    running from a PyInstaller bundle or from source.
+    """
+    if getattr(sys, 'frozen', False):          # PyInstaller bundle
+        base_path = sys._MEIPASS             # type: ignore # temporary extraction folder
+    else:
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(base_path, relative_path)
+
 def create_app():
+    TEMPLATE_ROOT = resource_path('templates')
+    STATIC_ROOT = resource_path('static')
     home_dir = Path.home()
     project_dir = home_dir / ".dynamic-timetabler"
     project_dir.mkdir(parents=True, exist_ok=True)
     db_file = project_dir / "dynamic-timetabler.sqlite"
     sqlite_uri = f"sqlite:///{db_file.resolve().as_posix()}"
 
-    app = Flask("Dynamic Timetabler")
+    app = Flask("Dynamic Timetabler", template_folder=TEMPLATE_ROOT, static_folder=STATIC_ROOT)
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
     app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
@@ -55,8 +69,7 @@ def create_app():
     assert app.static_folder is not None
     assert app.jinja_loader is not None
     app.jinja_env.loader = ChoiceLoader([
-        app.jinja_loader,
-        FileSystemLoader(app.static_folder)
+        FileSystemLoader([TEMPLATE_ROOT,STATIC_ROOT])
         ])
 
 

@@ -2,10 +2,15 @@
 
 
 a = Analysis(
-    ['installer.py'],
+    ['run.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ('templates','templates'),
+        ('static','static'),
+        ('routes','routes'),
+        ('config','config'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -22,7 +27,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='installer',
+    name='run',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
