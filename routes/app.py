@@ -22,7 +22,7 @@ def create_routes(app: Flask):
         """
         Serves a erither a full page or a fragment (AJAX)
         """
-        if page not in {"timetable", "settings"}:
+        if page not in {"timetable", "settings", "management"}:
             abort(404)
 
         if is_ajax():

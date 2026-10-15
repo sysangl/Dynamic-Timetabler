@@ -1,14 +1,17 @@
-// clamp function
+/**
+ * Clamps a number
+ * @param {number} value 
+ * @param {number} min 
+ * @param {number} max 
+ * @returns {number}
+ */
 function clamp(value, min, max) {
-    if (value < min) {
-        return min
-    }
-    if (value > max) {
-        return max
-    }
+    return Math.max(Math.min(value,max), min)
 }
 
-// generates the days on the left side of the timetable view
+/**
+ * Generates the days and their respective containers
+ */
 function generateWeek() {
     console.log('Generating Week')
     const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -25,7 +28,9 @@ function generateWeek() {
     }
 }
 
-// generates the hours along the top of the timetable view
+/**
+ * Generates the numbers on the top timeline
+ */
 function generateTimeline() {
     document.getElementById("tt-topbar-timeline").innerHTML = "";
     for (let hour = window.settings['start_hour']; hour < 24; hour++) {
@@ -44,7 +49,9 @@ function generateTimeline() {
     }
 }
 
-// generates the grid that shows the hours and day boundaries
+/**
+ * Generates the grids that identify day and hour boundaries
+ */
 function buildGrid() {
     const tl = document.getElementById('tt-topbar-timeline');
     const ts = document.getElementById('tt-schedule')
@@ -72,7 +79,10 @@ function buildGrid() {
     dayContainers.forEach(col => col.style.width = dayWidth + 'px');
 }
 
-// gives the progress through the day. returns a float from 0 to 1
+/**
+ * Gives the current progress through the day as a value from (0.0 - 1.0)
+ * @returns {number}
+ */
 function dayProgress() {
     const now = new Date();
     const start = new Date(now.getFullYear() , now.getMonth(), now.getDate());
@@ -81,7 +91,10 @@ function dayProgress() {
     return msSinceMidnight / dayMs;
 }
 
-// gives the progress through the schedule (starts at startHour instead of 00:00)
+/**
+ * Gives the progress through the schedule (starting from the set startHour instead of 0:00)
+ * @returns {number}
+ */
 function scheduleProgress() {
     const now = new Date();
     const start = new Date(now.getFullYear() , now.getMonth(), now.getDate(), window.settings['start_hour'], 0, 0, 0)
@@ -92,14 +105,18 @@ function scheduleProgress() {
     return elapsed / dayMs;
 }
 
-// moves the time marker (vertical red line)
+
+/**
+ * Moves the current time marker
+ */
 function alignTimeMarker() {
     const left = document.getElementById("tt-topbar-timeline").scrollWidth * scheduleProgress();
-
     document.getElementById("time-marker").style.left = left + "px";
 }
 
-// scroll the schedule to make sure the time marker is visible
+/**
+ * Scroll the value so the timemarker is visible
+ */
 function alignTimetimetableView() {
     const schedule = document.getElementById("tt-schedule-container")
     const marker = document.getElementById("time-marker")
@@ -111,12 +128,17 @@ function alignTimetimetableView() {
 }
 
 
-// so the time always has two numbers, eg. 09:00, 15:52, 01:28
+/**
+ * Formats a number so it is always 2 digits (7 -> 07, 12 -> 12)
+ * @param {number} number 
+ */
 function formatTime(number) {
     return number < 10 ? '0' + number : number;
 }
 
-// updates the time on the top-left corner of the timetable
+/**
+ * Update the clock on the top left corner of the timetable
+ */
 function updateTime() {
     const clock = document.getElementById('tt-topbar-time');
     const now = new Date();

@@ -62,7 +62,7 @@ def create_routes(app: Flask):
         
 
 
-    @app.route('/server/timetable/<string:item>/create', methods=['PUT'])
+    @app.route('/server/timetable/<string:item>/create', methods=['POST'])
     def create_timetable_item(item):
         data = request.get_json()
         app.logger.info(f"Attempting to create an {item} from: {data}")

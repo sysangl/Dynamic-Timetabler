@@ -1,9 +1,14 @@
 const contentDiv = document.getElementById('content');
 const buttons = document.querySelectorAll('.sidebar-btn');
 
-// helper func, loads the fragments and puts it into #content
+/**
+ * Helper function. Loads a page fragment and pushes it to #content
+ * @param {string} page 
+ * @param {boolean} push 
+ * @returns 
+ */
 async function loadPage(page, push = true) {
-    if(!['timetable','settings'].includes(page)) page = 'unknown';
+    if(!['timetable','settings','management'].includes(page)) page = 'unknown';
     if(currentPage==page) return;
 
     // getch fragment 

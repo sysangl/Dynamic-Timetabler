@@ -1,4 +1,6 @@
-// Sidebar toggle
+/**
+ * Toggles the sidebar
+ */
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const container = document.getElementById('content');
@@ -11,8 +13,13 @@ function toggleSidebar() {
 
 document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.page===initialPage))
 
-// send a request to the server for the current user's settings, currently hardcoded to user 1
-async function fetchSettings(userId) {
+/**
+ * Fetches the supplied user's settings. If not supplied, defaults to 1.
+ * If settings have already been fetched, use cache settings.
+ * @param {number} userId 
+ * @returns {JSON}
+ */
+async function fetchSettings(userId=1) {
     if (window.settings == null) {
         try {
             console.log("Attempting to fetch settings")

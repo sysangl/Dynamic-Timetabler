@@ -1,3 +1,8 @@
+
+/**
+ *  Fetches all timetable items (unfiltered)
+ * 
+ */
 async function fetchPayload() {
     const response = await fetch('/server/timetable', {
         method : 'GET',
@@ -113,7 +118,6 @@ function makeBlockElement(block) {
         }
 
     }
-    console.log(pieces)
     return pieces
 
 
@@ -159,7 +163,6 @@ async function renderTimetable() {
         const pieces = makeBlockElement(block);
         // fragments[dayIdx].appendChild(el);
         for (const {dayIdx, el} of pieces) {
-            console.log(`appending child to dayIdx ${dayIdx}`)
             fragments[dayIdx].appendChild(el);
         }
     }
