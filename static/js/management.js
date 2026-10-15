@@ -41,6 +41,9 @@ async function createBlock() {
         if (!response.ok) {
             throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
+
+        const data = await response.json()
+        console.log(data)
     } catch (err) {
         console.error('Failed to create block: ', err);
         throw err;

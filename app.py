@@ -1,14 +1,14 @@
-import os, toml
+# import os, toml, multiprocessing
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from jinja2 import ChoiceLoader, FileSystemLoader
-from sqlalchemy import create_engine
-from route_init import initialise_routes
+# from sqlalchemy import create_engine
+# from route_init import initialise_routes
 from models import (
     db
 )
 from config import Config
-
+from pathlib import Path
 from logging.config import dictConfig
 
 dictConfig({
@@ -31,11 +31,16 @@ dictConfig({
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
 
 def create_app():
-    with open("config/testing.toml", 'r') as f:
-        config = toml.load(f)
+    home_dir = Path.home()
+    project_dir = home_dir / ".dynamic-timetabler"
+    project_dir.mkdir(parents=True, exist_ok=True)
+    db_file = project_dir / "dynamic-timetabler.sqlite"
+    sqlite_uri = f"sqlite:///{db_file.resolve().as_posix()}"
+
     app = Flask("Dynamic Timetabler")
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
-    app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
+    #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
+    app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
     assert app.jinja_loader is not None
     assert app.static_folder is not None
     app.jinja_env.loader = ChoiceLoader([
@@ -45,7 +50,6 @@ def create_app():
 
     db.init_app(app)
     Migrate(app,db)
-
 
     @app.route("/health")
     def health():
@@ -59,11 +63,3 @@ def create_app():
             print(table.name)
 
     return app
-
-
-if __name__ == "__main__":
-    Config.load_config("config/testing.toml")
-    config = Config.config
-    app = create_app()
-    initialise_routes(app)
-    app.run(debug=config['server']['debug'], host=config['server']['host'], port=config['server']['port'])
