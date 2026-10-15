@@ -1,28 +1,42 @@
+# --------------------------------------------------------------
+# Build system – modern setuptools (>=61.0) + wheel
+# --------------------------------------------------------------
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# --------------------------------------------------------------
+# Project metadata (PEP‑621)
+# --------------------------------------------------------------
 [project]
-name = "dynamic_timetabler_niko"
-version = "0.0.2"                     # bump this whenever you release a new tag
+name = "dynamic-timetabler-niko"
+version = "0.0.2"
 description = "A Flask‑based timetable manager"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}               # adjust if you use a different license
+license = {text = "MIT"}
 authors = [
     {name = "Niko", email = "Niko3636@proton.me"},
 ]
 maintainers = [
     {name = "Niko", email = "Niko3636@proton.me"},
 ]
-keywords = ["timetable"]
+keywords = ["timetable", "flask", "sqlalchemy"]
 classifiers = [
     "Framework :: Flask",
-    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",   # highest released version
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 
+# --------------------------------------------------------------
+# Runtime dependencies
+# --------------------------------------------------------------
 dependencies = [
     "flask>=2.0",
     "flask-migrate>=4.0",
@@ -30,9 +44,11 @@ dependencies = [
     "sqlalchemy>=2.0",
     "pytz>=2023.3",
     "toml>=0.10",
-    "python-dotenv>=1.0 ; extra == \"dev\"",
 ]
 
+# --------------------------------------------------------------
+# Optional / development dependencies
+# --------------------------------------------------------------
 [project.optional-dependencies]
 dev = [
     # linting / formatting
@@ -48,30 +64,57 @@ dev = [
     "mypy>=1.0",
 ]
 
+# --------------------------------------------------------------
+# Console script – lets you run `dynamic-timetabler` from the CLI
+# --------------------------------------------------------------
 [project.scripts]
 dynamic-timetabler = "run:app"
 
+# --------------------------------------------------------------
+# Setuptools‑specific sections (package discovery & data files)
+# --------------------------------------------------------------
+
+# Discover every folder that contains an __init__.py (or every folder at the
+# repository root when you have no explicit packages).  The `exclude`
+# prevents accidental inclusion of test helpers.
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["*"]
 exclude = ["tests*"]
 
+# -----------------------------------------------------------------
+# Include non‑Python files (static assets, Jinja templates, docs, …)
+# -----------------------------------------------------------------
+# The wildcard key “*” means “apply to every package that is discovered”.
+# The glob patterns are relative to the package root.
 [tool.setuptools.package-data]
-# The key is the *top‑level* package name – in this repo the code lives in
-# the root directory, so we use an empty string ("") to refer to that package.
-"" = [
+"*" = [
     "static/**",          # everything under static/
-    "templates/**",       # everything under templates/
+    "templates/**",       # all Jinja templates
     "config/*.toml",      # any .toml config files you ship
     "docs/*.md",          # markdown documentation
-    "engine/*.py",        # optional helpers you keep outside the main package
-    "routes/*.py",
+    "engine/*.py",        # optional helper modules
+    "routes/*.py",        # route files that live outside a package
 ]
 
-
+# -----------------------------------------------------------------
+# Exclude test artefacts and build artefacts from the wheel
+# -----------------------------------------------------------------
 [tool.setuptools.exclude-package-data]
-"" = ["tests*", "*/__pycache__/*", "*.pyc", "*.pyo", "*.orig","build*","dist*","migrations*"]
+"*" = [
+    "tests*",
+    "*/__pycache__/*",
+    "*.pyc",
+    "*.pyo",
+    "*.orig",
+    "build*",
+    "dist*",
+    "migrations*",
+]
 
+# --------------------------------------------------------------
+# Tool‑specific configurations (black, ruff, mypy, pytest)
+# --------------------------------------------------------------
 [tool.black]
 line-length = 88
 target-version = ["py39"]

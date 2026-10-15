@@ -1,0 +1,49 @@
+Metadata-Version: 2.4
+Name: dynamic-timetabler-niko
+Version: 0.0.2
+Summary: A Flask‑based timetable manager
+Author-email: Niko <Niko3636@proton.me>
+Maintainer-email: Niko <Niko3636@proton.me>
+License: MIT
+Keywords: timetable,flask,sqlalchemy
+Classifier: Framework :: Flask
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE.md
+Requires-Dist: flask>=2.0
+Requires-Dist: flask-migrate>=4.0
+Requires-Dist: flask-sqlalchemy>=3.0
+Requires-Dist: sqlalchemy>=2.0
+Requires-Dist: pytz>=2023.3
+Requires-Dist: toml>=0.10
+Provides-Extra: dev
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: ruff>=0.0.278; extra == "dev"
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: tox>=4.0; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+Dynamic: license-file
+
+This project has 2 parts.
+- Timetabler Backend/API
+- Timetabler Frontend/GUI
+
+The backend is where the work is done, it manages your timetables/routines, assigns priorities, and adjusts routines.
+
+The frontend project consists of a desktop app, a mobile app, and a web interface (possibly also a TUI). 
+
+This repo contains the source code and executable for the Dynamic Timetabler server.
+
+---
+
+The Dynamic Timetabler server contains a simple built-in web interface. To get started checkout `docs/Quickstart.md`.
+

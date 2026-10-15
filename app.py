@@ -1,6 +1,7 @@
 # import os, toml, multiprocessing
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
+from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
 from jinja2 import ChoiceLoader, FileSystemLoader
 # from sqlalchemy import create_engine
 # from route_init import initialise_routes
@@ -41,15 +42,23 @@ def create_app():
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
     app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
-    assert app.jinja_loader is not None
+    
+    db.init_app(app)
+    Migrate(app,db)
+    with app.app_context():
+        db.create_all()
+        # db_init(directory="migrations", template="flask")
+        # db_migrate(message="initial", directory="migrations")
+        # db_upgrade(directory="migrations")
+    
+
     assert app.static_folder is not None
+    assert app.jinja_loader is not None
     app.jinja_env.loader = ChoiceLoader([
         app.jinja_loader,
         FileSystemLoader(app.static_folder)
         ])
 
-    db.init_app(app)
-    Migrate(app,db)
 
     @app.route("/health")
     def health():

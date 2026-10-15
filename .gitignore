@@ -5,3 +5,4 @@ instance/
 migrations/
 build/
 dist/
+dynamic_timetable_niko-*/
