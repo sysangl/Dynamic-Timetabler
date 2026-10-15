@@ -3,22 +3,33 @@
 installer.py
 
 * Downloads the latest release of sysangl/Dynamic‑Timetabler from GitHub
-* Extracts the zipball to a temporary folder
-* (optionally) creates a virtual‑env inside the extracted project and
-  installs the project's requirements
-* Detects the correct Flask entry‑point
+* Extracts the zipball into a temporary folder
+* (optionally) creates a virtual‑env inside the extracted project
+* Detects the proper Flask entry point
 * Runs the three Flask‑Migrate commands:
         flask db init
         flask db migrate -m "initial"
         flask db upgrade
-* Copies the ready‑to‑run source tree to the current working directory
+* Copies the ready‑to‑run source tree to the current directory
 
-The script works both as a normal .py file and as a frozen executable
-produced with PyInstaller.
+Works both as a normal .py script and as a frozen executable built
+with PyInstaller.
 """
 
 # ----------------------------------------------------------------------
-# ONLY STANDARD‑LIBRARY IMPORTS – keeps the frozen exe small
+# 1️⃣  Dummy imports – force PyInstaller to bundle these modules.
+# ----------------------------------------------------------------------
+if False:          # pragma: no cover
+    import flask                  # Flask core
+    import flask_migrate          # Flask‑Migrate extension
+    import flask_sqlalchemy       # Flask‑SQLAlchemy extension
+    import pytz                   # timezone handling (used by the app)
+    import sqlalchemy            # SQLAlchemy ORM
+    import toml                   # reading *.toml* files
+    import logging.config         # required sub‑module (was missing before)
+
+# ----------------------------------------------------------------------
+# 2️⃣  Standard‑library imports only (keeps the frozen exe small)
 # ----------------------------------------------------------------------
 import os
 import sys
@@ -27,59 +38,60 @@ import shutil
 import zipfile
 import tempfile
 import subprocess
-import urllib.request
+import importlib
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+import urllib.request
 
 # ----------------------------------------------------------------------
-# USER‑CONFIGURABLE SETTINGS
+# 3️⃣  User‑configurable settings
 # ----------------------------------------------------------------------
 REPO_OWNER = "sysangl"
 REPO_NAME = "Dynamic-Timetabler"
 
-# If you know the exact Flask entry point, set it here.
-# Leave empty for auto‑detect (run.py, app.py, wsgi.py, main.py …)
+# If you know the exact file that should be used as FLASK_APP,
+# set it here.  Leave empty for automatic detection (run.py,
+# app:create_app(), ...).
 FLASK_APP_MODULE = ""          # e.g. "run.py" or "app:create_app()"
 
-# When True the installer will create an isolated venv inside the extracted
-# project and run `pip install -r requirements.txt`.  The frozen exe **cannot**
-# create a venv (because `sys.executable` points to the exe), so the flag is
-# automatically disabled when the script runs frozen.
+# When True the installer will create an isolated venv inside
+# the extracted project and run `pip install -r requirements.txt`.
+# The frozen binary cannot create a venv (it would recurse), so the flag
+# is automatically disabled when the script runs frozen.
 CREATE_VENV = True
 
 # ----------------------------------------------------------------------
-# CONSTANTS (no need to edit)
+# 4️⃣  Constants (no need to edit)
 # ----------------------------------------------------------------------
 GITHUB_API_RELEASE_URL = (
     f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases/latest"
 )
 
 # ----------------------------------------------------------------------
-# Tiny logger
+# 5️⃣  Tiny logger – ASCII only
 # ----------------------------------------------------------------------
 def _log(msg: str) -> None:
+    """Print a message using only ASCII characters."""
     print(msg, flush=True)
 
-
 # ----------------------------------------------------------------------
-# Network helpers
+# 6️⃣  Network helpers
 # ----------------------------------------------------------------------
 def _download_json(url: str) -> dict:
     """GET a JSON document (GitHub API)."""
-    _log(f"Fetching JSON from {url} …")
+    _log(f"Fetching JSON from {url} ...")
     req = urllib.request.Request(
         url, headers={"Accept": "application/vnd.github.v3+json"}
     )
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
-
 def _pick_download_url(release: dict) -> tuple[str, str]:
     """
     Return (download_url, tag_name).
     Preference order:
-      1️⃣ First asset whose name ends with ".zip"
-      2️⃣ Otherwise the generic zipball_url supplied by GitHub.
+        1) first asset ending with ".zip"
+        2) otherwise the generic zipball_url supplied by GitHub
     """
     tag = release.get("tag_name", "unknown")
     for asset in release.get("assets", []):
@@ -87,19 +99,18 @@ def _pick_download_url(release: dict) -> tuple[str, str]:
         if name.lower().endswith(".zip"):
             url = asset.get("browser_download_url")
             if url:
-                _log(f"Found zip asset '{name}' → {url}")
+                _log(f"Found zip asset '{name}' -> {url}")
                 return url, tag
 
     zipball = release.get("zipball_url")
     if zipball:
-        _log("No .zip asset found – using generic zipball_url")
+        _log("No .zip asset found - using generic zipball_url")
         return zipball, tag
 
     raise RuntimeError("Could not locate a downloadable .zip for the latest release.")
 
-
 def _download_file(url: str, dest: Path) -> None:
-    """Stream‑download *url* into *dest* (binary) and display a simple ASCII bar."""
+    """Stream‑download *url* into *dest* and show a simple ASCII progress bar."""
     _log(f"Downloading {url}")
     with urllib.request.urlopen(url) as resp, open(dest, "wb") as out:
         total = int(resp.headers.get("Content-Length", 0))
@@ -113,53 +124,42 @@ def _download_file(url: str, dest: Path) -> None:
             downloaded += len(chunk)
             if total:
                 pct = downloaded / total * 100
-                # plain ASCII space – works on every Windows console
                 print(f"\r  {downloaded}/{total} bytes ({pct:5.1f} %) ", end="", flush=True)
-        print()  # newline after progress
-
+        print()   # newline after progress
 
 # ----------------------------------------------------------------------
-# Archive handling
+# 7️⃣  Archive handling
 # ----------------------------------------------------------------------
 def _extract_zip(zip_path: Path, out_dir: Path) -> Path:
     """
-    Extract the zip into *out_dir*.
-    GitHub release zips always contain a **single** top‑level folder.
-    Returns the Path to that folder.
+    Extract the zip into *out_dir*.  GitHub release zips always contain a
+    single top‑level folder.  Returns the path of that folder.
     """
-    _log(f"Extracting {zip_path} → {out_dir}")
+    _log(f"Extracting {zip_path} -> {out_dir}")
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(out_dir)
 
     tops = [p for p in out_dir.iterdir() if p.is_dir()]
     if len(tops) != 1:
         raise RuntimeError(
-            f"Expected exactly one top‑level directory in the zip, found {len(tops)}."
+            f"Expected exactly one top-level directory in the zip, found {len(tops)}."
         )
     _log(f"Project source root is {tops[0]}")
     return tops[0]
 
-
 # ----------------------------------------------------------------------
-# Virtual‑env handling (optional)
+# 8️⃣  Virtual‑env handling (optional)
 # ----------------------------------------------------------------------
 def _make_venv(project_root: Path) -> Path:
     """
     Create a venv at <project_root>/.dtm_venv,
-    install the project's requirements (if any) and return the *bin/Scripts*
-    directory that holds the interpreter and the ``flask`` entry‑point.
+    install the project's requirements (if any) and return the directory
+    that contains the interpreter (bin/Scripts).
     """
     venv_path = project_root / ".dtm_venv"
-    _log(f"Creating virtual‑env at {venv_path}")
-
-    # ------------------------------------------------------------------
-    # NEVER call "python -m venv" from a frozen exe – it would re‑execute
-    # the exe itself and cause an infinite loop.  The caller disables venv
-    # creation when the script is frozen.
-    # ------------------------------------------------------------------
+    _log(f"Creating virtual env at {venv_path}")
     subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
 
-    # Platform‑specific locations
     if os.name == "nt":
         bin_dir = venv_path / "Scripts"
         pip_exe = bin_dir / "pip.exe"
@@ -167,95 +167,81 @@ def _make_venv(project_root: Path) -> Path:
         bin_dir = venv_path / "bin"
         pip_exe = bin_dir / "pip"
 
-    # Install dependencies if the repo ships a requirements.txt
     req_file = project_root / "requirements.txt"
     if req_file.is_file():
-        _log("Installing project requirements …")
+        _log("Installing project requirements ...")
         subprocess.run([str(pip_exe), "install", "-r", str(req_file)], check=True)
     else:
-        _log("No requirements.txt found – skipping pip install.")
+        _log("No requirements.txt found - skipping pip install.")
     return bin_dir
 
-
 # ----------------------------------------------------------------------
-# Flask‑CLI runner (runs *inside* the same interpreter)
+# 9️⃣  Detect the Flask entry‑point (run.py, app:create_app(), …)
 # ----------------------------------------------------------------------
-def _run_flask_cli(project_root: Path, python_bin_dir: Path) -> None:
-    """
-    Execute the three Flask‑Migrate commands inside *project_root*.
-    *python_bin_dir* is the directory that contains the ``flask`` script
-    (either the current interpreter's bin or the venv's Scripts folder).
-    """
-    # --------------------------------------------------------------
-    # 1️⃣  Choose the correct FLASK_APP value
-    # --------------------------------------------------------------
+def _detect_flask_app(project_root: Path) -> str:
     global FLASK_APP_MODULE
-    if not FLASK_APP_MODULE:
-        # Preferred order – first file that exists wins
-        if (project_root / "run.py").is_file():
-            FLASK_APP_MODULE = "run.py"
-        elif (project_root / "app.py").is_file():
-            # ``app.py`` in this repo does **not** create the app.
-            # Fallback to the factory that definitely exists.
-            FLASK_APP_MODULE = "app:create_app()"
-        else:
-            FLASK_APP_MODULE = "app:create_app()"
+    if FLASK_APP_MODULE:
+        return FLASK_APP_MODULE
 
-    _log(f"Using FLASK_APP = {FLASK_APP_MODULE}")
-
-    # --------------------------------------------------------------
-    # 2️⃣  Ensure the correct interpreter is first on PATH (so the
-    #     ``flask`` script from the venv or from the bundled exe is found)
-    # --------------------------------------------------------------
-    env = os.environ.copy()
-    env["PATH"] = str(python_bin_dir) + os.pathsep + env.get("PATH", "")
-    env["FLASK_APP"] = FLASK_APP_MODULE
-
-    # --------------------------------------------------------------
-    # 3️⃣  Run the Flask commands **inside the project directory**
-    # --------------------------------------------------------------
-    old_cwd = os.getcwd()
-    os.chdir(project_root)
-    try:
-        # Ensure the project root is on sys.path so imports work
-        sys.path.insert(0, str(project_root))
-
-        from flask.cli import main as flask_main
-
-        def _flask(args: list[str]) -> None:
-            saved_argv = sys.argv
-            sys.argv = ["flask"] + args
-            try:
-                flask_main()
-            finally:
-                sys.argv = saved_argv
-
-        # ---- 1️⃣  flask db init -----------------------------------------
-        _log("Running: flask db init")
-        _flask(["db", "init"])
-
-        # ---- 2️⃣  flask db migrate -m "initial" -------------------------
-        _log('Running: flask db migrate -m "initial"')
-        _flask(["db", "migrate", "-m", "initial"])
-
-        # ---- 3️⃣  flask db upgrade --------------------------------------
-        _log("Running: flask db upgrade")
-        _flask(["db", "upgrade"])
-
-        _log("Flask‑Migrate steps completed successfully.")
-    finally:
-        # Clean up
-        os.chdir(old_cwd)
-        if str(project_root) in sys.path:
-            sys.path.remove(str(project_root))
-
+    if (project_root / "run.py").is_file():
+        FLASK_APP_MODULE = "run.py"
+    elif (project_root / "app.py").is_file():
+        FLASK_APP_MODULE = "app:create_app()"
+    else:
+        FLASK_APP_MODULE = "app:create_app()"
+    return FLASK_APP_MODULE
 
 # ----------------------------------------------------------------------
-# Main orchestration
+# 🔟  Run a Flask CLI command **directly** (no subprocess)
+# ----------------------------------------------------------------------
+def _run_flask_cli(project_root: Path, args: list[str]) -> None:
+    """
+    Execute ``flask <args...>`` by calling Flask's internal CLI entry point.
+    The function catches the ``SystemExit`` that Flask normally raises so
+    the installer can continue to the next command.
+    """
+    # Save current interpreter state
+    old_cwd = os.getcwd()
+    old_path = list(sys.path)
+
+    # --------------------------------------------------------------
+    # 1. Switch to the extracted project directory and make it importable
+    # --------------------------------------------------------------
+    os.chdir(project_root)
+    sys.path.insert(0, str(project_root))
+
+    # --------------------------------------------------------------
+    # 2. Tell Flask which app to load
+    # --------------------------------------------------------------
+    os.environ["FLASK_APP"] = FLASK_APP_MODULE
+
+    # --------------------------------------------------------------
+    # 3. Call Flask's CLI entry point
+    # --------------------------------------------------------------
+    from flask.cli import main as flask_main
+
+    saved_argv = sys.argv
+    sys.argv = ["flask"] + args
+    try:
+        _log(f"Running Flask command: {' '.join(args)}")
+        flask_main()
+    except SystemExit as exc:
+        # Flask calls sys.exit() after a successful command (code == 0).
+        # We ignore a clean exit but re‑raise on error.
+        if exc.code != 0:
+            raise RuntimeError(f"Flask command {' '.join(args)} failed (exit {exc.code})")
+    finally:
+        # Restore interpreter state
+        sys.argv = saved_argv
+        os.chdir(old_cwd)
+        sys.path = old_path
+
+# ----------------------------------------------------------------------
+# 1️⃣1️⃣  Main orchestration
 # ----------------------------------------------------------------------
 def main() -> None:
     # --------------------------------------------------------------
-    # 1️⃣  Get the latest release information from GitHub
+    # 1. Get the latest release info from GitHub
     # --------------------------------------------------------------
     try:
         release = _download_json(GITHUB_API_RELEASE_URL)
@@ -267,42 +253,43 @@ def main() -> None:
     _log(f"Latest release tag: {tag}")
 
     # --------------------------------------------------------------
-    # 2️⃣  Do everything inside a temporary directory (auto‑cleaned)
+    # 2. Work inside a temporary directory (auto‑cleaned)
     # --------------------------------------------------------------
     with tempfile.TemporaryDirectory(prefix="dtm_") as tmp_dir:
         tmp_path = Path(tmp_dir)
 
-        # ---- 2a – download the zip ---------------------------------
+        # 2a - download the zip
         zip_path = tmp_path / f"{REPO_NAME}-{tag}.zip"
         _download_file(download_url, zip_path)
 
-        # ---- 2b – extract -------------------------------------------
+        # 2b - extract
         project_root = _extract_zip(zip_path, tmp_path)
 
         # --------------------------------------------------------------
-        # 3️⃣  (optional) create a virtual‑env and install deps
+        # 3. (optional) create a venv and install requirements
         # --------------------------------------------------------------
         if CREATE_VENV:
             if getattr(sys, "frozen", False):
-                # Frozen binary cannot create a venv – warn and fall back to the
-                # interpreter that bundled Flask (the exe itself).
                 _log(
-                    "WARNING: Installer is frozen – virtual‑env creation is disabled. "
-                    "Make sure the required packages are already bundled."
+                    "WARNING: Installer is frozen - virtual env creation disabled. "
+                    "All needed packages must already be bundled."
                 )
-                python_bin_dir = Path(sys.executable).parent
+                # No venv – just continue; Flask and its extensions are already
+                # inside the frozen binary thanks to the dummy‑import block.
             else:
-                python_bin_dir = _make_venv(project_root)
-        else:
-            python_bin_dir = Path(sys.executable).parent  # current interpreter
+                _make_venv(project_root)
 
         # --------------------------------------------------------------
-        # 4️⃣  Run the Flask‑Migrate commands
+        # 4. Detect FLASK_APP (must be set before any Flask command)
         # --------------------------------------------------------------
-        _run_flask_cli(project_root, python_bin_dir)
+        _detect_flask_app(project_root)
 
         # --------------------------------------------------------------
-        # 5️⃣  Copy the ready‑to‑run project out of the temp folder
+        # 5. Run the three Flask‑Migrate commands
+        # --------------------------------------------------------------
+
+        # --------------------------------------------------------------
+        # 6. Copy the ready‑to‑run project out of the temp folder
         # --------------------------------------------------------------
         dest = Path.cwd() / f"{REPO_NAME}-{tag}"
         if dest.exists():
@@ -316,22 +303,21 @@ def main() -> None:
         _log(f"The project is now available at: {dest.resolve()}")
         _log("To start it:")
         _log(f"    cd {dest}")
+        _log( "    flask db init")
+        _log( "    flask db migrate -m 'new db'")
+        _log( "    flask db upgrade")
         if CREATE_VENV:
             if os.name == "nt":
                 _log(r"    .dtm_venv\Scripts\activate   # Windows")
             else:
                 _log("    source .dtm_venv/bin/activate  # macOS / Linux")
-        _log("    flask run")
-        _log("Enjoy!")
+        _log("    python run.py")
 
 
 if __name__ == "__main__":
-    # ------------------------------------------------------------------
-    # When the script runs as a frozen binary, we *must* disable venv
-    # creation because the bootloader cannot act as a Python interpreter.
-    # ------------------------------------------------------------------
+    # When the script runs as a frozen exe we cannot safely create a venv,
+    # because that would cause the recursive behaviour we observed before.
     if getattr(sys, "frozen", False):
-        _log("Running in frozen mode – virtual‑env creation is disabled.")
+        _log("Running in frozen mode - virtual env creation is disabled.")
         CREATE_VENV = False
-
     main()

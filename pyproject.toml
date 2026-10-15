@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dynamic-timetabler"
+version = "0.0.2"                     # bump this whenever you release a new tag
+description = "A Flask‑based timetable manager"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}               # adjust if you use a different license
+authors = [
+    {name = "Niko", email = "Niko3636@proton.me"},
+]
+maintainers = [
+    {name = "Niko", email = "Niko3636@proton.me"},
+]
+keywords = ["timetable"]
+classifiers = [
+    "Framework :: Flask",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "flask>=2.0",
+    "flask-migrate>=4.0",
+    "flask-sqlalchemy>=3.0",
+    "sqlalchemy>=2.0",
+    "pytz>=2023.3",
+    "toml>=0.10",
+    "python-dotenv>=1.0 ; extra == \"dev\"",
+]
+
+[project.optional-dependencies]
+dev = [
+    # linting / formatting
+    "black>=23.0",
+    "ruff>=0.0.278",
+
+    # testing
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "tox>=4.0",
+
+    # type checking (optional but useful)
+    "mypy>=1.0",
+]
+
+[project.scripts]
+dynamic-timetabler = "run:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+# The key is the *top‑level* package name – in this repo the code lives in
+# the root directory, so we use an empty string ("") to refer to that package.
+"" = [
+    "static/**",          # everything under static/
+    "templates/**",       # everything under templates/
+    "config/*.toml",      # any .toml config files you ship
+    "docs/*.md",          # markdown documentation
+    "engine/*.py",        # optional helpers you keep outside the main package
+    "routes/*.py",
+]
+
+
+[tool.setuptools.exclude-package-data]
+"" = ["tests*", "*/__pycache__/*", "*.pyc", "*.pyo", "*.orig","build*","dist*","migrations*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+skip-string-normalization = false
+
+[tool.ruff]
+select = ["E", "F", "W", "C90"]
+ignore = ["E501"]               # let black handle line length
+target-version = "py39"
+
+[tool.mypy]
+python_version = 3.9
+ignore_missing_imports = true
+strict = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=."
+testpaths = ["tests"]
