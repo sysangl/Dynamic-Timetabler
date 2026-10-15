@@ -1,4 +1,13 @@
+[general]
+timezone = "Australia/Melbourne"
+
+[engine]
+engine_only = true
+
 [server]
 debug = false
 host = "localhost"
 port = 58362
+
+[database]
+uri = "sqlite:///dynamic-timetable.db"

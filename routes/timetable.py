@@ -6,7 +6,7 @@ from models import (
     ToDo,
     Task,
     Block,
-    Activity,
+    Activity
 )
 
 def create_routes(app: Flask):

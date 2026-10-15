@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from models import (
     db,
-    Activity,
+    Activity
 )
 
 def create_routes(app: Flask):

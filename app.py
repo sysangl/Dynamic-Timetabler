@@ -9,7 +9,7 @@ from jinja2 import ChoiceLoader, FileSystemLoader
 from models import (
     db
 )
-from config import Config
+from config import get_config, reload_config
 from pathlib import Path
 from logging.config import dictConfig
 

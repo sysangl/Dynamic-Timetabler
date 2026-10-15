@@ -11,7 +11,7 @@ from sqlalchemy.dialects.sqlite import (
     JSON,
     INTEGER
 )
-from config import Config
+from config import get_config, reload_config
 # from sqlalchemy.dialects.postgresql import (
 #     UUID,
 #     ARRAY,
@@ -64,7 +64,7 @@ class Task(db.Model):
                 ) -> None:
         self.title = title
         self.description = description
-        self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone(Config.config["general"]["timezone"]))
+        self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
 
 
     def serialise(self)->dict:
@@ -96,8 +96,8 @@ class Block(db.Model):
                 ) -> None:
         self.title = title
         self.description = description
-        self.start_datetime = datetime(**start_datetime, tzinfo=pytz.timezone(Config.config["general"]["timezone"]))
-        self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(Config.config["general"]["timezone"]))
+        self.start_datetime = datetime(**start_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
+        self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
         self.colour = colour
         
     
