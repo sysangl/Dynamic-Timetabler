@@ -64,13 +64,17 @@ def create_app():
         # db_init(directory="migrations", template="flask")
         # db_migrate(message="initial", directory="migrations")
         # db_upgrade(directory="migrations")
-    
+        from models import User
+        db.session.add(User(username="default_user", display_name="Default User"))
+        db.session.commit()
+
 
     assert app.static_folder is not None
     assert app.jinja_loader is not None
     app.jinja_env.loader = ChoiceLoader([
         FileSystemLoader([TEMPLATE_ROOT,STATIC_ROOT])
         ])
+
 
 
     @app.route("/health")
