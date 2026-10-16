@@ -22,6 +22,10 @@ A timetable/calendar/routine planner (although they're all basically the same th
 
 Missed a task? The algorithm will sort it out and reschedule it for a different time.
 
+# Algorithm details
+
+Main limitation of this project would probably the Graph Colouring Problem, but since the only constraints on each block (for now) is just the times, it shouldn't cause too many issues. I attempt to create a simulated annealing algorithm, but if it doesn't work nicely I'll try to make a neural network instead.
+
 # Features!
 
 > DONE    = Finished! May still be updated to fix bugs. <br>

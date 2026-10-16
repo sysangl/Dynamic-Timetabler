@@ -19,6 +19,7 @@ body {
     overscroll-behavior: none;
     height: 100vh;
     color: var(--text-colour-1);
+    overflow-x: hidden;
 }
 
 #content {

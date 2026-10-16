@@ -160,8 +160,9 @@ async function initTimetable() {
     updateTime(); // set the timetable corner clock
     window.pageIntervals.temporary.push(setInterval(updateTime(), 5*1000)); // set the timetable corner clock
     alignTimetimetableView(); // scroll timetable to the current time
+    document.getElementById('timetable-container').dispatchEvent(new Event('finishedBuilding'))
 }
 
 initTimetable();
-
+renderTimetableListener()
 // window.pageInits.timetable = initTimetable;
