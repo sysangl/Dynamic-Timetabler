@@ -13,9 +13,9 @@ from models import (
 
 def initialise_routes(app: Flask):
     logging.getLogger('server').info("Initialising Routes")
+    settings_route.create_routes(app)
     app_route.create_routes(app)
     users_route.create_routes(app)
-    settings_route.create_routes(app)
     activities_route.create_routes(app)
     timetable_route.create_routes(app)
 

@@ -14,6 +14,74 @@ async function fetchPayload() {
     return response.json()
 }
 
+const popupMenu = document.getElementById('popup-menu');
+const container = document.getElementById('tt-schedule-container')
+const backdrop  = document.getElementById('backdrop')
+
+/**
+ * 
+ * @param {HTMLDivElement} target 
+ * @returns 
+ */
+function showPopupMenu(target) {
+    const alreadyOpen = popupMenu.classList.contains('open') && target === popupMenu._currentTarget;
+    if (alreadyOpen) {
+        closePopupMenu();
+        return;
+    }
+    const bRect = target.getBoundingClientRect()
+    popupMenu.style.top = `${bRect.bottom + window.scrollY}px`;
+    popupMenu.style.left = `${bRect.left + window.scrollX}px`;
+    popupMenu._currentTarget = target;
+    popupMenu.classList.add('open');
+    backdrop.classList.add('active');
+}
+
+function closePopupMenu() {
+    popupMenu.classList.remove('open');
+    backdrop.classList.remove('active');
+    if (popupMenu._currentTarget) {
+        delete popupMenu._currentTarget
+    }
+}
+
+container.addEventListener('click', (e)=>{
+    const block = e.target.closest('.timetable-block');
+    if (!block) return;
+    e.stopPropagation();
+    showPopupMenu(block);
+})
+
+backdrop.addEventListener('click', closePopupMenu)
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && popupMenu.classList.contains('open')) {
+    closePopupMenu();
+  }
+});
+
+async function deleteBlock() {
+    const block = popupMenu._currentTarget
+    const blockId = block.dataset.blockId
+    block.remove()
+    console.log(`Deleting block ${blockId}`)
+    const response = await fetch(`/server/timetable/blocks/${blockId}`,{
+        'method' : 'DELETE'
+    })
+    closePopupMenu();
+}
+
+function editBlock() {
+    console.log("Edit")
+}
+
+function completeBlock() {
+    console.log("complete")
+}
+
+function markRescheduleBlock() {
+    console.log('mark resc')
+}
 
 /**
  * 
@@ -38,6 +106,7 @@ function buildPieceElement(block, startMins, lengthMins, tl) {
     el.style.setProperty('--left', `${leftPx}px`);
     el.style.setProperty('--width', `${widthPx}px`);
     el.style.setProperty('--bg-colour', block.colour);
+    el.dataset.blockId = block.id;
 
     const titleSpan = document.createElement('span');
     titleSpan.className = 'block-title';
@@ -145,3 +214,5 @@ async function renderTimetable() {
 }
 
 renderTimetable().catch(err => console.error('Timetable render failed:', err))
+window.addEventListener('resize', closePopupMenu);
+window.addEventListener('scroll', closePopupMenu);

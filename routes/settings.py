@@ -9,7 +9,6 @@ import logging
 db_logger = logging.getLogger("database")
 app_logger = logging.getLogger("app")
 
-
 def create_routes(app: Flask):
     @app.route('/server/user/<int:user_id>/settings/update', methods=['POST'])
     def update_settings(user_id: int):
@@ -68,6 +67,7 @@ def create_routes(app: Flask):
         """
         Returns the user's settings
         """
+        app_logger.info(f"Fetching settings for User {user_id}")
         user = User.query.filter_by(id=user_id).first()
         if user is None:
             return jsonify({"error": f"User {user_id} not found"}), 404

@@ -11,7 +11,6 @@ from models import (
 )
 from helpers.config import get_config, reload_config
 from pathlib import Path
-from helpers.graceful_shutdown import enable_graceful_shutdown_logging
 from helpers.paths import resource_path
 
 # For production
@@ -30,30 +29,12 @@ def create_app():
 
     app = Flask("Dynamic Timetabler", template_folder=TEMPLATE_ROOT, static_folder=STATIC_ROOT)
 
-    enable_graceful_shutdown_logging(app)
-
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
     app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
     
     db.init_app(app)
     Migrate(app,db)
-    with app.app_context():
-        db.create_all()
-        # db_init(directory="migrations", template="flask")
-        # db_migrate(message="initial", directory="migrations")
-        # db_upgrade(directory="migrations")
-        from models import User
-        server_logger.info("Checking for default user")
-        default_user = db.session.query(User).filter(User.username=="default_user")
-        if not default_user:
-            server_logger.info("Creating default user")
-            try:
-                db.session.add(User(username="default_user", display_name="Default User"))
-                db.session.commit()
-            except Exception:
-                server_logger.exception("Failed to create default user")
-                exit(-1)
 
 
     server_logger.info(f"Starting a server on 'http://{config['server']['host']}:{config['server']['host']}'")
@@ -81,6 +62,25 @@ def create_app():
         FileSystemLoader([TEMPLATE_ROOT,STATIC_ROOT])
         ])
 
+    with app.app_context():
+        db.create_all()
+        # db_init(directory="migrations", template="flask")
+        # db_migrate(message="initial", directory="migrations")
+        # db_upgrade(directory="migrations")
+        from models import User
+        server_logger.info("Checking for default user")
+        app.logger.info("Checking for default user")
+        default_user = User.query.filter(User.username=="default_user").first()
+        if not default_user:
+            server_logger.info("Creating default user")
+            app.logger.info("Creating default user")
+            try:
+                db.session.add(User(username="default_user", display_name="Default User"))
+                db.session.commit()
+            except Exception:
+                server_logger.exception("Failed to create default user")
+                app.logger.info("Failed to create default user")
+                exit(-1)
 
 
     @app.route("/health")

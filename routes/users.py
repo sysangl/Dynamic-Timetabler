@@ -6,13 +6,22 @@ from models import (
 )
 import logging
 
+
 app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
-
 def create_routes(app: Flask):
     """
     Create routes that deal with the user
     """
+    @app.route('/server/users/health',methods=['GET'])
+    def user_healthcheck():
+        return jsonify({'status':'ok'})
+
+
+    @app.route('/server/users', methods=['GET'])
+    def get_users():
+        users = User.query.all()
+        return jsonify({'users':[user.serialise() for user in users]}), 200
 
     @app.route('/server/user/create', methods=['POST'])
     def create_user():

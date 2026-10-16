@@ -37,7 +37,7 @@ Missed a task? The algorithm will sort it out and reschedule it for a different 
 | WIP     | Event/Activity/Block Management                                                                                               |
 | FUTURE  | User management                                                                                                               |
 | FUTURE  | Dynamic Table Engine (auto generating timetables, dynamic routines)                                                           |
-| WORKING | Web Interface                                                                                                                 |
+| WORKING | Web Interface (Basic timetable view, settings page and a basic block creation page)                                           |
 | WORKING | Portable (Currently works as an .exe or python project. The source code *should* work on most platforms that support python.) |
 |         |                                                                                                                               |
 |         |                                                                                                                               |
