@@ -3,6 +3,10 @@ from models import (
     db,
     Activity
 )
+import logging
+
+app_logger = logging.getLogger('app')
+db_logger = logging.getLogger('database')
 
 def create_routes(app: Flask):
     @app.route('/server/activities', methods=['GET'])
@@ -22,6 +26,7 @@ def create_routes(app: Flask):
     def create_activity():
         data = request.get_json()
         app.logger.info(f"Attempting to create an activity from: {data}")
+        app_logger.info(f"Attempting to create an activity from: {data}")
 
         try:
             activity = Activity(
@@ -42,9 +47,15 @@ def create_routes(app: Flask):
         except TypeError as e:
             return jsonify({'error':'Recieved invalid datatype in a field.'})
 
-        db.session.add(activity)
-        db.session.commit()
-
+        try:
+            db_logger.info(f'Attempting to create Activity:{activity.name}')
+            db.session.add(activity)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            db_logger.exception(f'Database error while trying to create Activity instance')
+            return jsonify({'error':f'Database error while trying to create Activity instance'})
+        db_logger.info(f'Successfully created Activity:{activity.name} (id:{activity.id})')
         return jsonify(activity.serialise())
 
     @app.route('/server/activities/<int:id>', methods=['PUT'])
@@ -70,6 +81,12 @@ def create_routes(app: Flask):
         if not activity:
             return {'error':f'Activity with id "{id}" does not exist'}, 404
         assert type(activity) is Activity
-        db.session.delete(activity)
-        db.session.commit()
+        try:
+            db_logger.info(f'Attempting to delete Activity:{activity.name}:({id})')
+            db.session.delete(activity)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            return jsonify({'error':f'Database error while trying to delete Activity:{activity.name} (id:{id})'})
+        db_logger.info(f'Successfully deleted Activity:{activity.name}:({id})')
         return jsonify({'success': f'Activity {activity.name} ({activity.id}) deleted successfully'}), 200

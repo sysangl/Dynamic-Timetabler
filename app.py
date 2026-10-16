@@ -1,5 +1,5 @@
 # import os, toml, multiprocessing
-import sys, os
+import sys, os, logging
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
@@ -9,50 +9,29 @@ from jinja2 import ChoiceLoader, FileSystemLoader
 from models import (
     db
 )
-from config import get_config, reload_config
+from helpers.config import get_config, reload_config
 from pathlib import Path
-from logging.config import dictConfig
-
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
+from helpers.graceful_shutdown import enable_graceful_shutdown_logging
+from helpers.paths import resource_path
 
 # For production
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
 
-def resource_path(relative_path):
-    """
-    Return the absolute path to a resource, whether the app is
-    running from a PyInstaller bundle or from source.
-    """
-    if getattr(sys, 'frozen', False):          # PyInstaller bundle
-        base_path = sys._MEIPASS             # type: ignore # temporary extraction folder
-    else:
-        base_path = os.path.abspath(os.path.dirname(__file__))
-    return os.path.join(base_path, relative_path)
-
 def create_app():
     TEMPLATE_ROOT = resource_path('templates')
     STATIC_ROOT = resource_path('static')
+    config = get_config()
     home_dir = Path.home()
     project_dir = home_dir / ".dynamic-timetabler"
     project_dir.mkdir(parents=True, exist_ok=True)
     db_file = project_dir / "dynamic-timetabler.sqlite"
     sqlite_uri = f"sqlite:///{db_file.resolve().as_posix()}"
+    server_logger = logging.getLogger('server')
 
     app = Flask("Dynamic Timetabler", template_folder=TEMPLATE_ROOT, static_folder=STATIC_ROOT)
+
+    enable_graceful_shutdown_logging(app)
+
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
     app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
@@ -65,8 +44,35 @@ def create_app():
         # db_migrate(message="initial", directory="migrations")
         # db_upgrade(directory="migrations")
         from models import User
-        db.session.add(User(username="default_user", display_name="Default User"))
-        db.session.commit()
+        server_logger.info("Checking for default user")
+        default_user = db.session.query(User).filter(User.username=="default_user")
+        if not default_user:
+            server_logger.info("Creating default user")
+            try:
+                db.session.add(User(username="default_user", display_name="Default User"))
+                db.session.commit()
+            except Exception:
+                server_logger.exception("Failed to create default user")
+                exit(-1)
+
+
+    server_logger.info(f"Starting a server on 'http://{config['server']['host']}:{config['server']['host']}'")
+
+    app.logger.info( "=======================================================================")
+    app.logger.info(r"        ___                             _      ")     
+    app.logger.info(r"       /   \_   _ _ __   __ _ _ __ ___ (_) ___ ")
+    app.logger.info(r"      / /\ / | | | '_ \ / _` | '_ ` _ \| |/ __|")
+    app.logger.info(r"     / /_//| |_| | | | | (_| | | | | | | | (__ ")
+    app.logger.info(r"    /___,'  \__, |_| |_|\__,_|_| |_| |_|_|\___|")
+    app.logger.info(r"            |___/                              ")
+    app.logger.info(r"                  _____ _                _        _     _           ")
+    app.logger.info(r"                 /__   (_)_ __ ___   ___| |_ __ _| |__ | | ___ _ __ ")
+    app.logger.info(r"                   / /\/ | '_ ` _ \ / _ \ __/ _` | '_ \| |/ _ \ '__|")
+    app.logger.info(r"                  / /  | | | | | | |  __/ || (_| | |_) | |  __/ |   ")
+    app.logger.info(r"                  \/   |_|_| |_| |_|\___|\__\__,_|_.__/|_|\___|_|   ")
+    app.logger.info(r"                                                                    ")
+    app.logger.info(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['host']}/app/timetable ")
+    app.logger.info( "=======================================================================")
 
 
     assert app.static_folder is not None

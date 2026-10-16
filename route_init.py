@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify
-import uuid
+from flask import Flask
+import logging
 from routes import (
     settings as settings_route,
     users as users_route,
@@ -12,6 +12,7 @@ from models import (
 )
 
 def initialise_routes(app: Flask):
+    logging.getLogger('server').info("Initialising Routes")
     app_route.create_routes(app)
     users_route.create_routes(app)
     settings_route.create_routes(app)

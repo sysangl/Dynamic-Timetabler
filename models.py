@@ -1,6 +1,6 @@
 
 # types
-import uuid, zoneinfo,time, pytz, toml
+import uuid, pytz, logging
 from datetime import datetime
 from typing import List, Optional
 from flask_sqlalchemy import SQLAlchemy
@@ -11,7 +11,7 @@ from sqlalchemy.dialects.sqlite import (
     JSON,
     INTEGER
 )
-from config import get_config, reload_config
+from helpers.config import get_config, reload_config
 # from sqlalchemy.dialects.postgresql import (
 #     UUID,
 #     ARRAY,
@@ -27,6 +27,8 @@ db = SQLAlchemy(model_class=Base)
 # What appears on and what is stored in the timetable
 #
 
+db_logger = logging.getLogger('database')
+
 class ToDo(db.Model):
     """
     The most basic thing, essentially just a ToDo list.
@@ -37,8 +39,11 @@ class ToDo(db.Model):
 
     def __init__(self, title : str) -> None:
         super().__init__()
-        self.title = title
-
+        try:
+            self.title = title
+        except Exception:
+            db_logger.exception("Failed to create ToDo instance")
+            raise
 
     def serialise(self)->dict:
         return {
@@ -62,10 +67,13 @@ class Task(db.Model):
                 start_datetime: dict,
                 description:str = "", 
                 ) -> None:
-        self.title = title
-        self.description = description
-        self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
-
+        try:
+            self.title = title
+            self.description = description
+            self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
+        except Exception:
+            db_logger.exception("Failed to create Task instance")
+            raise
 
     def serialise(self)->dict:
         return {
@@ -94,12 +102,16 @@ class Block(db.Model):
                 description:str = "", 
                 colour:str = ""
                 ) -> None:
-        self.title = title
-        self.description = description
-        self.start_datetime = datetime(**start_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
-        self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
-        # self.multiday = self.start_datetime.date().isocalendar
-        self.colour = colour
+        try:
+            self.title = title
+            self.description = description
+            self.start_datetime = datetime(**start_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
+            self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
+            # self.multiday = self.start_datetime.date().isocalendar
+            self.colour = colour
+        except Exception:
+            db_logger.exception("Failed to create Block instance")
+            raise
         
     
     def serialise(self)->dict:
@@ -221,20 +233,24 @@ class Activity(db.Model):
                 time_limit_reset:list[int]=[0,0,0,0,0],
                 **extra
                 ) -> None:
-        super().__init__()
-        self.name = name
-        self.description = description
-        self.priority = priority
-        self.repeat_mode = repeat_mode
-        self.repeat_interval = repeat_interval
-        self.frequency = frequency
-        self.even_frequency_spacing = even_frequency_spacing
-        self.min_length = min_length
-        self.max_length = max_length
-        self.min_time = min_time
-        self.max_time = max_time
-        self.time_limit_reset = time_limit_reset
-        self.extra = extra
+        try:
+            super().__init__()
+            self.name = name
+            self.description = description
+            self.priority = priority
+            self.repeat_mode = repeat_mode
+            self.repeat_interval = repeat_interval
+            self.frequency = frequency
+            self.even_frequency_spacing = even_frequency_spacing
+            self.min_length = min_length
+            self.max_length = max_length
+            self.min_time = min_time
+            self.max_time = max_time
+            self.time_limit_reset = time_limit_reset
+            self.extra = extra
+        except Exception:
+            db_logger.exception("Failed to create Activity instance")
+            raise
 
 
 
@@ -291,11 +307,14 @@ class Settings(db.Model):
                 starting_day:int = 0,
                 starting_hour:int = 5
                 ) -> None:
-        super().__init__()
-        self.default_block_length = default_block_length
-        self.starting_day = starting_day
-        self.starting_hour = starting_hour
-
+        try:
+            super().__init__()
+            self.default_block_length = default_block_length
+            self.starting_day = starting_day
+            self.starting_hour = starting_hour
+        except Exception:
+            db_logger.exception("Failed to create Settings instance")
+            raise
 
 
     def serialise(self)->dict:
@@ -345,11 +364,15 @@ class User(db.Model):
                 display_name : str | None = None,
                 is_admin : bool = False,
                 ) -> None:
-        super().__init__()
-        self.username = username
-        self.display_name = display_name or username
-        self.is_admin = is_admin
-        self.settings = Settings()
+        try:
+            super().__init__()
+            self.username = username
+            self.display_name = display_name or username
+            self.is_admin = is_admin
+            self.settings = Settings()
+        except Exception:
+            db_logger.exception("Failed to create User instance")
+            raise
 
     # __table_args__ = (
     #     UniqueConstraint(

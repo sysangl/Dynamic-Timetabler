@@ -4,11 +4,13 @@ from models import (
     User,
     Settings
 )
+import logging
 
+db_logger = logging.getLogger("database")
+app_logger = logging.getLogger("app")
 
 
 def create_routes(app: Flask):
-
     @app.route('/server/user/<int:user_id>/settings/update', methods=['POST'])
     def update_settings(user_id: int):
         """
@@ -22,6 +24,7 @@ def create_routes(app: Flask):
 
         app.logger.info("Attempting to update settings")
         app.logger.info(f"Recieved - {request.data}")
+        app_logger.info(f"Attempting to update settings for User {user_id}")
 
         user = User.query.filter_by(id=user_id).first()
         if user is None:
@@ -53,10 +56,11 @@ def create_routes(app: Flask):
 
         try:
             db.session.commit()
-        except Exception as e:
+        except Exception:
             db.session.rollback()
+            db_logger.exception(f'Database error while updating settings for User (id:{user_id})')
             return jsonify({"error":"Database error while updating settings"}), 500
-
+        app_logger.info(f'Successfully updated settings for User (id:{user_id})')
         return jsonify({"settings":settings.serialise()}), 200
 
     @app.route('/server/user/<int:user_id>/settings', methods=['GET'])

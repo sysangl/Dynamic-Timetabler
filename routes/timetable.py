@@ -8,6 +8,11 @@ from models import (
     Block,
     Activity
 )
+import logging
+
+server_logger = logging.getLogger('server')
+app_logger = logging.getLogger('app')
+db_logger = logging.getLogger('database')
 
 def create_routes(app: Flask):
     @app.route('/server/timetable', methods=['GET'])
@@ -18,15 +23,22 @@ def create_routes(app: Flask):
         #     tasks = ToDo.query.filter().all()
         #     blocks = Block.query.filter().all()
         # else:
-        todos = ToDo.query.all()
-        tasks = Task.query.all()
-        blocks = Block.query.all()
+        server_logger.info('Fetching timetable items')
+        
+        try:
+            todos = ToDo.query.all()
+            tasks = Task.query.all()
+            blocks = Block.query.all()
 
-        payload = {
-            "todos": [todo.serialise() for todo in todos],
-            "tasks": [task.serialise() for task in tasks],
-            "blocks": [block.serialise() for block in blocks]
-        }
+            payload = {
+                "todos": [todo.serialise() for todo in todos],
+                "tasks": [task.serialise() for task in tasks],
+                "blocks": [block.serialise() for block in blocks]
+            }
+        except Exception:
+            server_logger.exception("Failed to fetch timetable items")
+            raise
+
 
         return jsonify(payload)
 
@@ -72,6 +84,7 @@ def create_routes(app: Flask):
     def create_timetable_item(item):
         data = request.get_json()
         app.logger.info(f"Attempting to create an {item} from: {data}")
+        app_logger.info(f"Attempting to create an {item} from: {data}")
 
         item_class = None
         match item:
@@ -82,16 +95,22 @@ def create_routes(app: Flask):
             case 'blocks':
                 item_class = Block
             case _:
-                app.logger.warning(f'"{item}" is not a valid timetable item')
+                app.logger.info(f'"{item}" is not a valid timetable item')
+                app_logger.info(f'"{item}" is not a valid timetable item')
                 return {'error': f'"{item}" is not a valid timetable item'}, 404
         #assert type(item_class) is ToDo | Task| Block
         created_item = item_class(
             **data
         )
-
-        db.session.add(created_item)
-        db.session.commit()
-
+        try:
+            db.session.add(created_item)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            db_logger.exception(f'Database error while trying to create "{item}" instance')
+            return jsonify({'error':f'Database error while trying to create {item} instance'}), 500
+            
+        db_logger.info(f'Successfully created a "{item}" instance')
         return jsonify(created_item.serialise()), 202
 
     @app.route('/server/timetable/<string:item>/<int:id>', methods=['PUT'])
@@ -122,12 +141,19 @@ def create_routes(app: Flask):
             case 'blocks':
                 item_class = Block
             case _:
-                app.logger.warning(f'"{item}" is not a valid timetable item')
+                app.logger.info(f'"{item}" is not a valid timetable item')
+                app_logger.info(f'"{item}" is not a valid timetable item')
                 return {'error': f'"{item}" is not a valid timetable item'}, 404
         item_to_delete = item_class.query.filter_by(id=id).first()
         if not item_to_delete:
             return {'error':f'{item} with id "{id}" does not exist'}, 404
         assert type(item_to_delete) is not None
-        db.session.delete(item_to_delete)
-        db.session.commit()
+        try:
+            db.session.delete(item_to_delete)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            db_logger.exception(f'Database error while trying to delete {item}:"{item_to_delete.title}"')
+            return jsonify({'error':f'Database error while trying to delete {item}:"{item_to_delete.title}'})
+        db_logger.info(f'Successfully deleted {item}:"{item_to_delete.title}"')
         return jsonify({'success': f'{item} {item_to_delete.title} ({item_to_delete.id}) deleted successfully'}), 200
