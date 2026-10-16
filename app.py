@@ -71,7 +71,7 @@ def create_app():
     app.logger.info(r"                  / /  | | | | | | |  __/ || (_| | |_) | |  __/ |   ")
     app.logger.info(r"                  \/   |_|_| |_| |_|\___|\__\__,_|_.__/|_|\___|_|   ")
     app.logger.info(r"                                                                    ")
-    app.logger.info(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['host']}/app/timetable ")
+    app.logger.info(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app/timetable ")
     app.logger.info( "=======================================================================")
 
 
