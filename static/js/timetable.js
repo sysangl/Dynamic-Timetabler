@@ -110,7 +110,7 @@ function makeBlockElement(block) {
             pieces.push({dayIdx: dayIdx, el:currentEl});
         }
 
-        if (endMins > scheduleEndMins) {
+        if (endMins > minsInDay + scheduleEndMins) {
             const nextDayIdx = (dayIdx + 1) % 7;
             const overflowMins = endMins - minsInDay;
             const overflowEl = buildPieceElement(block,scheduleEndMins,overflowMins-scheduleEndMins,tl);
@@ -119,33 +119,6 @@ function makeBlockElement(block) {
 
     }
     return pieces
-
-
-    // const effectiveStart = startMins - scheduleStartMins
-    // const timeLength = (endMins - startMins) >= 0 ? (endMins - startMins) : (endMins + minsInDay - startMins)
-
-    // const leftPx = (effectiveStart / minsInDay) * tl.scrollWidth;
-    // const widthPx = (timeLength / minsInDay) * tl.scrollWidth;
-
-    // // building the actual elem
-    // const el = document.createElement('div');
-    // el.className = 'timetable-block';
-    // el.id = `timetable-block-${block.id}`;
-    // el.style.setProperty('--left', `${leftPx}px`);
-    // el.style.setProperty('--width', `${widthPx}px`);
-    // el.style.setProperty('--bg-colour', block.colour);
-
-    // const titleSpan = document.createElement('span');
-    // titleSpan.className = 'block-title';
-    // titleSpan.textContent = block.title;
-
-    // const timeSpan = document.createElement('span');
-    // timeSpan.className = 'block-time';
-    // timeSpan.textContent = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())} - ${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`
-
-    // el.append(titleSpan, document.createElement('br'), timeSpan);
-    // el.dataset.dayIdx = dayIdx;
-    // return {dayIdx, el};
 }
 
 async function renderTimetable() {

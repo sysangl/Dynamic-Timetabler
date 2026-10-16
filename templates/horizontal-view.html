@@ -454,8 +454,6 @@
     <script>
         // eventually store this locally
         var current_tab = 'timetable';
-        
-        const settingsUrl = 'http://localhost:58362/server/user/1/settings'
 
         // Sidebar toggle
         function toggleSidebar() {
@@ -482,7 +480,7 @@
         async function fetchSettings(userId) {
             try {
                 console.log("Attempting to fetch settings")
-                const response = await fetch(settingsUrl, {
+                const response = await fetch('http://localhost:58362/server/user/1/settings', {
                     method: 'GET',
                     headers: {
                         'Accept' : 'application/json'
@@ -669,7 +667,7 @@
 
                 console.log(options_data);
 
-                const response = await fetch(settingsUrl+"/update", {
+                const response = await fetch('http://localhost:58362/server/user/1/settings'+"/update", {
                     method: 'POST',
                     headers: {
                         'Content-Type' : 'application/json',

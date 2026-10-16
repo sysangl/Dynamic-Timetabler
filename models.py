@@ -98,6 +98,7 @@ class Block(db.Model):
         self.description = description
         self.start_datetime = datetime(**start_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
         self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
+        # self.multiday = self.start_datetime.date().isocalendar
         self.colour = colour
         
     

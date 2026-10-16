@@ -12,9 +12,15 @@ from models import (
 def create_routes(app: Flask):
     @app.route('/server/timetable', methods=['GET'])
     def get_timetable():
-        todos = ToDo.query.all()
-        tasks = Task.query.all()
-        blocks = Block.query.all()
+        data = request.get_json()
+        if data:
+            todos = ToDo.query.filter().all()
+            tasks = ToDo.query.filter().all()
+            blocks = Block.query.filter().all()
+        else:
+            todos = ToDo.query.all()
+            tasks = Task.query.all()
+            blocks = Block.query.all()
 
         payload = {
             "todos": [todo.serialise() for todo in todos],

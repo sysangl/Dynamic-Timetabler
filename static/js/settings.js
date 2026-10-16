@@ -12,7 +12,7 @@ async function saveSettings() {
 
         console.log(options_data);
 
-        const response = await fetch(settingsUrl+"/update", {
+        const response = await fetch("/server/user/1/settings/update", {
             method: 'POST',
             headers: {
                 'Content-Type' : 'application/json',
@@ -30,7 +30,7 @@ async function saveSettings() {
 
         applySettings(data["settings"]);
         
-        persistentSettings = null;
+        window.settings = data["settings"];
     } catch (err) {
         console.error('Failed to update settings: ', err);
         throw err;
@@ -38,16 +38,16 @@ async function saveSettings() {
 }
 
 // apply settings to timetable. need to automatically parse and apply these settings
-async function applySettings(settings = null) {
-    if (!settings) settings = await fetchSettings();
+async function applySettings(settings) {
+    console.log('setting option values')
     console.log(settings)
-    document.getElementById('starting-day-input').value = settings['starting_day'];
-    document.getElementById('starting-hour-input').value = settings['starting_hour'];
+    document.getElementById('starting-day-input').value = settings['start_day'];
+    document.getElementById('starting-hour-input').value = settings['start_hour'];
 }
 
 async function initSettings() {
     console.log("initialising settings")
-    await applySettings();
+    await applySettings(await fetchSettings());
 }
 initSettings();
 
