@@ -5,10 +5,7 @@
  */
 async function fetchPayload() {
     const response = await fetch('/server/timetable', {
-        method : 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
+        method : 'GET'
     });
 
     if (!response.ok) {

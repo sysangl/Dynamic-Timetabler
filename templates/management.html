@@ -4,7 +4,7 @@
 
 <div class="form-container">
 
-<form id="block-creation">
+<div id="block-creation">
     <label for="title">Title</label>
     <input id="block-title-input" name="title" data-field="title" type="text" maxlength="30"></input><br>
     <label for="description">Description</label>
@@ -19,8 +19,8 @@
     <input id="block-etime-input" name="end-time" data-field="end_time" type="time"></input><br>
     <label for="colour">Colour</label>
     <input id="block-colour-input" name="colour" data-field="colour" type="color" value="#3b3d19"></input>
-    <input id="management-save-button" type="submit" value="CREATE"></input>
-</form>
+    <input id="management-save-button" type="submit" value="CREATE" onclick="createBlock()"></input>
+</div>
 
 </div>
 
