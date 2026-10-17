@@ -8,7 +8,7 @@ a = Analysis(
     datas=[
         ('templates','templates'),
         ('static','static'),
-        ('routes','routes'),
+        ('app/routes','routes'),
         ('config','config'),
     ],
     hiddenimports=[],
