@@ -21,7 +21,7 @@ db_logger = logging.getLogger('database')
 def create_routes(app: Flask):
     @bp.route('/', methods=['GET'])
     @login_required
-    def get_timetable():
+    def get():
         # data = request.get_json()
         # if data:
         #     todos = ToDo.query.filter().all()
@@ -50,7 +50,7 @@ def create_routes(app: Flask):
 
     @bp.route('/<string:item>', methods=['GET'])
     @login_required
-    def get_timetable_items(item):
+    def get_items(item):
         item_class = None
         match item:
             #case 'todos':
@@ -67,7 +67,7 @@ def create_routes(app: Flask):
 
     @bp.route('/<string:item>/<int:id>',methods=['GET'])
     @login_required
-    def get_timetable_item(item, id):
+    def get_item(item, id):
         item_class = None
         match item:
             #case 'todos':
@@ -88,7 +88,7 @@ def create_routes(app: Flask):
 
     @bp.route('/<string:item>/create', methods=['POST'])
     @login_required
-    def create_timetable_item(item):
+    def create_item(item):
         data = request.get_json()
         app.logger.info(f"Attempting to create a {item} from: {data}")
         app_logger.info(f"Attempting to create a {item} from: {data}")
@@ -124,7 +124,7 @@ def create_routes(app: Flask):
 
     @bp.route('/<string:item>/<int:id>', methods=['PUT'])
     @login_required
-    def update_timetable_item(item,id):
+    def update_item(item,id):
 
         data = request.get_json()
         activity = Activity.query.filter_by(id=id).first()
@@ -142,7 +142,7 @@ def create_routes(app: Flask):
 
     @bp.route('/<string:item>/<int:id>', methods=['DELETE'])
     @login_required
-    def delete_timetable_item(item, id):
+    def delete_item(item, id):
         item_class = None
         match item:
             #case 'todos':

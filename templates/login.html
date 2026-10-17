@@ -135,7 +135,7 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    form.action = '{{ url_for("auth.login") }}';
+    form.action = '{{ url_for("auth.login") }}' + window.location.search;
     form.method = 'post';
     form.submit();
 });

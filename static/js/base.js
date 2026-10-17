@@ -19,7 +19,7 @@ document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('activ
  * @param {number} userId 
  * @returns {JSON}
  */
-async function fetchSettings(userId=1) {
+async function fetchSettings() {
     if (window.settings == null) {
         try {
             console.log("Attempting to fetch settings")
@@ -51,8 +51,6 @@ async function fetchSettings(userId=1) {
 document.addEventListener('fragmentloaded', e => {
     const page = e.detail.page;          // e.g. "settings"
     const registry = window.pageInits || {};
-
-    console.log(registry)
 
     if (typeof registry[page] === 'function') {
         // Call the init routine that the fragment has registered

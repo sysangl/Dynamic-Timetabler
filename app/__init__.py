@@ -50,26 +50,8 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = "auth.login" # type: ignore
     Migrate(app,db)
-
-
+    
     server_logger.info(f"Starting a server on 'http://{config['server']['host']}:{config['server']['host']}'")
-
-    app.logger.info( "=======================================================================")
-    app.logger.info(r"        ___                             _                              ")     
-    app.logger.info(r"       /   \_   _ _ __   __ _ _ __ ___ (_) ___                         ")
-    app.logger.info(r"      / /\ / | | | '_ \ / _` | '_ ` _ \| |/ __|                        ")
-    app.logger.info(r"     / /_//| |_| | | | | (_| | | | | | | | (__                         ")
-    app.logger.info(r"    /___,'  \__, |_| |_|\__,_|_| |_| |_|_|\___|                        ")
-    app.logger.info(r"            |___/                                                      ")
-    app.logger.info(r"                  _____ _                _        _     _              ")
-    app.logger.info(r"                 /__   (_)_ __ ___   ___| |_ __ _| |__ | | ___ _ __    ")
-    app.logger.info(r"                   / /\/ | '_ ` _ \ / _ \ __/ _` | '_ \| |/ _ \ '__|   ")
-    app.logger.info(r"                  / /  | | | | | | |  __/ || (_| | |_) | |  __/ |      ")
-    app.logger.info(r"                  \/   |_|_| |_| |_|\___|\__\__,_|_.__/|_|\___|_|      ")
-    app.logger.info(r"                                                                       ")
-    app.logger.info(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app ")
-    app.logger.info( "=======================================================================")
-
 
     assert app.static_folder is not None
     assert app.jinja_loader is not None

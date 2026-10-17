@@ -43,8 +43,8 @@ class Settings(db.Model):
     """
     id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
     default_block_length : Mapped[int] = mapped_column(default=30) # minutes
-    starting_day : Mapped[int] = mapped_column(default=0)
-    starting_hour : Mapped[int] = mapped_column(default=5)
+    start_day : Mapped[int] = mapped_column(default=0)
+    start_hour : Mapped[int] = mapped_column(default=5)
 
     user: Mapped["User"] = relationship(
         "User",
@@ -57,14 +57,14 @@ class Settings(db.Model):
     __tablename__ = "settings"
     def __init__(self,
                 default_block_length :int = 30,
-                starting_day:int = 0,
-                starting_hour:int = 5
+                start_day:int = 0,
+                start_hour:int = 5
                 ) -> None:
         try:
             super().__init__()
             self.default_block_length = default_block_length
-            self.starting_day = starting_day
-            self.starting_hour = starting_hour
+            self.start_day = start_day
+            self.start_hour = start_hour
         except Exception:
             db_logger.exception("Failed to create Settings instance")
             raise
@@ -74,8 +74,8 @@ class Settings(db.Model):
         return {
             "id": str(self.id),
             "default_block_length": self.default_block_length,
-            "start_day": self.starting_day,
-            "start_hour": self.starting_hour,
+            "start_day": self.start_day,
+            "start_hour": self.start_hour,
         }
 
 

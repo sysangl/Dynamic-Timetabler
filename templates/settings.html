@@ -1,23 +1,29 @@
 <!-- settings css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/settings.css')}}"></link>
 
-
 <!-- settings screen, need to find a way to autogenerate the settings -->
-<div class="settings-section-container">
-    <ul class="settings-list">
-        <li class="settings-section-title">Timetable</li>
-        <li class="settings-description">When does your week start (default : 0 - Monday)</li>
-        <li class="settings-option-name">Starting Day <div class="settings-flex-seperator"></div> <input data-optionName="start_day" id="starting-day-input" class="settings-number-input settings-option" type="number" min="0" max="6" size="2"/></li>
-        <li class="settings-description">When does your day start (default : 5am)</li>
-        <li class="settings-option-name">Starting Hour <div class="settings-flex-seperator"></div> <input data-optionName="start_hour" id="starting-hour-input" class="settings-number-input settings-option" type="number" min="0" max="24" size="2"/></li>
-    </ul>
-</div>
+<form method="post" id="settings-form" action="{{ url_for('settings.update') }}">
+    <div class="settings-section-container">
+        <label>Starting Day
+            <input name="start_day" type="number" min="0" max="6" size="2">
+        </label><br>
+        <label>Starting Hour
+            <input name="start_hour" type="number" min="0" max="24" size="2">
+        </label><br>
+    </div>
+    <div class="settings-section-container">
+        <label>Default Block Length
+            <input name="default_block_length" type="number" min="0" max="720" size="3">
+        </label><br>
 
-<div class="settings-section-container">
-    <input id="settings-save-button" type="submit" value="SAVE" onclick="saveSettings()"></input>
-</div>
-
-
+        <label>Default Block Colour
+            <input name="default_block_colour" type="color" disabled="true">
+        </label><br>
+    </div>
+    <div class="settings-section-container">
+        <input id="settings-save-button" type="submit" value="SAVE"></input>
+    </div>
+</form>
 
 <!-- settings script -->
 <script src="{{url_for('static',filename='js/settings.js')}}"></script>
