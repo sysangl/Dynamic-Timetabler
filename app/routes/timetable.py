@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, Blueprint
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from datetime import datetime
+from helpers.datetime import combine_date_time
 
 from app.models import (
     db,
@@ -89,9 +90,8 @@ def create_routes(app: Flask):
     @bp.route('/<string:item>/create', methods=['POST'])
     @login_required
     def create_item(item):
-        data = request.get_json()
-        app.logger.info(f"Attempting to create a {item} from: {data}")
-        app_logger.info(f"Attempting to create a {item} from: {data}")
+        app.logger.info(f"Attempting to create a {item} from: {request.form}")
+        app_logger.info(f"Attempting to create a {item} from: {request.form}")
 
         item_class = None
         match item:
@@ -106,6 +106,11 @@ def create_routes(app: Flask):
                 app_logger.info(f'"{item}" is not a valid timetable item')
                 return {'error': f'"{item}" is not a valid timetable item'}, 404
         #assert type(item_class) is ToDo | Task| Block
+        data : dict = dict(request.form)
+
+        data['start_datetime'] = combine_date_time(request.form.get('start_date'),request.form.get('start_time')) # type: ignore
+        data['end_datetime'] = combine_date_time(request.form.get('end_date'),request.form.get('end_time')) #type: ignore
+
         created_item = item_class(
             **data,
             owner = current_user # type: ignore

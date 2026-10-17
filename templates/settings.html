@@ -1,29 +1,42 @@
 <!-- settings css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/settings.css')}}"></link>
 
-<!-- settings screen, need to find a way to autogenerate the settings -->
-<form method="post" id="settings-form" action="{{ url_for('settings.update') }}">
-    <div class="settings-section-container">
-        <label>Starting Day
-            <input name="start_day" type="number" min="0" max="6" size="2">
-        </label><br>
-        <label>Starting Hour
-            <input name="start_hour" type="number" min="0" max="24" size="2">
-        </label><br>
-    </div>
-    <div class="settings-section-container">
-        <label>Default Block Length
-            <input name="default_block_length" type="number" min="0" max="720" size="3">
-        </label><br>
+{# --------------- SETTINGS FORM --------------- #}
+<form id="settings-form" method="post" action="{{ url_for('settings.update') }}">
 
-        <label>Default Block Colour
-            <input name="default_block_colour" type="color" disabled="true">
-        </label><br>
-    </div>
-    <div class="settings-section-container">
-        <input id="settings-save-button" type="submit" value="SAVE"></input>
+    <fieldset class="settings-section">
+        <legend class="section-title">General</legend>
+
+        <div class="field-group">
+            <label for="start_day">Starting day<span class="hint">(0 = Mon .. 6 = Sun)</span></label>
+                <input id="start_day" name="start_day" type="number" min="0" max="6" placeholder="0-6" class="field-input" />
+        </div>
+
+        <div class="field-group">
+            <label for="start_hour">Starting hour<span class="hint"> (0-23)</span></label>
+            <input id="start_hour" name="start_hour" type="number" min="0" max="23" placeholder="0-23" class="field-input" />
+        </div>
+    </fieldset>
+
+    <fieldset class="settings-section">
+        <legend class="section-title">Blocks</legend>
+
+        <div class="field-group">
+            <label for="default_block_length">Default block length (minutes)</label>
+            <input id="default_block_length" name="default_block_length" type="number" min="0" max="720" placeholder="30" class="field-input" />
+        </div>
+
+        <div class="field-group">
+            <label for="default_block_colour">Default block colour</label>
+            <input id="default_block_colour" name="default_block_colour" type="color" disabled class="field-input colour-input" />
+        </div>
+    </fieldset>
+
+    <div class="form-actions">
+        <button id="settings-save-button" type="submit">SAVE</button>
     </div>
 </form>
+
 
 <!-- settings script -->
 <script src="{{url_for('static',filename='js/settings.js')}}"></script>

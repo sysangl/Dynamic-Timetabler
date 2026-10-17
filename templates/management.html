@@ -3,27 +3,88 @@
 
 
 <div class="form-container">
+    <form id="block-creation" class="management-form" method="post" action="{{ url_for('timetable.create_item', item='block') }}">
 
-<div id="block-creation">
-    <label for="title">Title</label>
-    <input id="block-title-input" name="title" data-field="title" type="text" maxlength="30"></input><br>
-    <label for="description">Description</label>
-    <input id="block-description-input" name="description" data-field="description" type="text" maxlength="300"></input><br>
-    <label for="start-date">Start Date</label>
-    <input id="block-sdate-input" name="start-date" data-field="start_date" type="date"></input><br>
-    <label for="start-time">Start Time</label>
-    <input id="block-stime-input" name="start-time" data-field="start_time" type="time"></input><br>
-    <label for="end-date">End Date</label>
-    <input id="block-edate-input" name="end-date" data-field="end_date" type="date"></input><br>
-    <label for="end-time">End Time</label>
-    <input id="block-etime-input" name="end-time" data-field="end_time" type="time"></input><br>
-    <label for="colour">Colour</label>
-    <input id="block-colour-input" name="colour" data-field="colour" type="color" value="#3b3d19"></input>
-    <input id="management-save-button" type="submit" value="CREATE" onclick="createBlock()"></input>
-</div>
+        <fieldset class="card-section">
+            <legend class="section-title">General information</legend>
 
+            <div class="field-group">
+                <label for="title">Title</label>
+                <input id="title" name="title" type="text" maxlength="30" required class="field-input" placeholder="Short title">
+            </div>
+
+            <div class="field-group">
+                <label for="description">Description</label>
+                <input id="description" name="description" type="text" maxlength="300" class="field-input" placeholder="Optional longer description">
+            </div>
+        </fieldset>
+
+        <fieldset class="card-section">
+            <legend class="section-title">When does it happen?</legend>
+
+            <div class="field-group">
+                <label for="sdate">Start date</label>
+                <input id="sdate" name="start_date" type="date" required class="field-input">
+            </div>
+
+            <div class="field-group">
+                <label for="stime">Start time</label>
+                <input id="stime" name="start_time" type="time" required class="field-input">
+            </div>
+
+            <div class="field-group">
+                <label for="edate">End date</label>
+                <input id="edate" name="end_date" type="date" required class="field-input">
+            </div>
+
+            <div class="field-group">
+                <label for="etime">End time</label>
+                <input id="etime" name="end_time" type="time" required class="field-input">
+            </div>
+        </fieldset>
+
+        <fieldset class="card-section">
+            <legend class="section-title">Appearance</legend>
+
+            <div class="field-group">
+                <label for="colour">Colour</label>
+                <input id="colour" name="colour" type="color" value="#155764" class="field-input colour-input">
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button id="management-create-button" type="submit">CREATE</button>
+        </div>
+    </form>
 </div>
 
 
 <!-- settings script -->
 <script src="{{url_for('static',filename='js/management.js')}}"></script>
+
+<script>
+    async function setupManagement () {
+        let settings = await fetchSettings()
+        const now = new Date();
+        const future = new Date(now.getTime() + settings.default_block_length * 60 * 1000);
+
+        const sDate = now.toISOString().split('T')[0];
+        const eDate = future.toISOString().split('T')[0];
+
+        const sHours   = String(now.getHours()).padStart(2, '0');
+        const sMinutes = String(now.getMinutes()).padStart(2, '0');
+        const sTime = `${sHours}:${sMinutes}`;  
+
+        const eHours   = String(future.getHours()).padStart(2, '0');
+        const eMinutes = String(future.getMinutes()).padStart(2, '0');
+        const eTime = `${eHours}:${eMinutes}`;  
+
+        document.getElementById('sdate').value = sDate;
+        document.getElementById('edate').value = eDate;
+
+        document.getElementById('stime').value = sTime;
+        document.getElementById('etime').value = eTime;
+    }
+    setupManagement();
+
+</script>

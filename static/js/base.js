@@ -68,7 +68,7 @@ function clearFragmentInterval(name) {
 }
 
 
-(async () => {window.settings = await fetchSettings(1);});
+window.settings = fetchSettings();
 window.pageIntervals = window.pageIntervals || {};
 window.pageIntervals.temporary = window.pageIntervals.temporary || [];
 window.pageIntervals.persistent = window.pageIntervals.persistent || {};
