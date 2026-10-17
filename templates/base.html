@@ -38,7 +38,7 @@
         </div>
         <div id="topbar-title">Dynamic Timetabler</div>
         <div class="topbar-spacer"></div>
-        <div id="topbar-user"><span class="fa-solid fa-circle-user"></span></div>
+        <div id="topbar-user"><span id="display-name-wrapper"></span> <span class="fa-solid fa-circle-user"></span></div>
     </div>
 
     <nav id="sidebar">
@@ -56,12 +56,16 @@
     <script src="{{url_for('static',filename='js/router.js')}}"></script>
     <script>
     const initialPage = "{{ page }}";
+    let displayName = "{{ display_name }}";
     var currentPage=initialPage;
     document.getElementById('content')
             .dispatchEvent(new CustomEvent('fragmentloaded', {
                 bubbles: true,
                 detail: { page: initialPage }
             }));
+
+    document.getElementById('display-name-wrapper').innerHTML=displayName;
+    
     </script>
 </body>
 </html>

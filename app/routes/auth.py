@@ -19,6 +19,7 @@ def load_user(user_id:int) -> User | None:
 def register():
     data = request.get_json()
     username = data.get("username")
+    display_name = data.get("display_name")
     password = data.get("password")
 
     if not username or not password:
@@ -29,10 +30,10 @@ def register():
 
     db_logger.info("Creating a new User")
     try:
-        new_user = User(username=username)
+        new_user = User(username=username,display_name=display_name)
         new_user.password = password
         db.session.add(new_user)
-        db.session.commit
+        db.session.commit()
     except Exception:
         db.session.rollback()
         db_logger.exception("Database error while creating new User")

@@ -1,39 +1,144 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login / Register</title>
 
-    <link rel="stylesheet" href="{{url_for('static', filename='css/login.css')}}"/>
-</head>
-<body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
+
     <style>
         @font-face {
             font-family: Aleo;
-            src: url("{{url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf')}}");
+            src: url("{{ url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf') }}");
         }
     </style>
-    <div id="content">
+</head>
+<body>
+<div id="content">
+    <!-- Flash messages (used for both login & registration) -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <ul class=flashes>
+            <ul class="flashes">
                 {% for category, msg in messages %}
                     <li class="{{ category }}">{{ msg }}</li>
                 {% endfor %}
             </ul>
         {% endif %}
     {% endwith %}
-    <h2>Login</h2>
-    <form method="post">
-        <label>Username: <input name="username" required></label><br>
-        <label>Password: <input name="password" type="password" required></label><br>
-        <button type="submit">Log in</button>
+
+    <h2 id="form-heading">Login</h2>
+    <form id="auth-form">
+        <label>Username:
+            <input name="username" required>
+        </label><br>
+
+        <div id="display-name-wrapper" style="display:none;">
+            <label>Display name:
+                <input name="display_name">
+            </label><br>
+        </div>
+
+        <label>Password:
+            <input name="password" type="password" required>
+        </label><br>
+
+        <button type="submit" id="submit-btn">Log in</button>
     </form>
 
-    </div>
+    <p style="margin-top:1rem;">
+        <button id="toggle-btn" type="button">Switch to Register</button>
+    </p>
+</div>
 
+<script>
+let mode = 'login';
+
+const heading        = document.getElementById('form-heading');
+const submitBtn      = document.getElementById('submit-btn');
+const toggleBtn      = document.getElementById('toggle-btn');
+const displayWrapper = document.getElementById('display-name-wrapper');
+const form           = document.getElementById('auth-form');
+
+function switchToLogin() {
+    mode = 'login';
+    heading.textContent = 'Login';
+    submitBtn.textContent = 'Log in';
+    toggleBtn.textContent = 'Switch to Register';
+    displayWrapper.style.display = 'none';
+}
+
+function switchToRegister() {
+    mode = 'register';
+    heading.textContent = 'Register';
+    submitBtn.textContent = 'Create account';
+    toggleBtn.textContent = 'Switch to Login';
+    displayWrapper.style.display = 'block';
+}
+
+toggleBtn.addEventListener('click', () => {
+    if (mode === 'login') {
+        switchToRegister();
+    } else {
+        switchToLogin();
+    }
+});
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();                 // we handle the request ourselves
+
+    const formData = new FormData(form);
+    const payload  = {
+        username: formData.get('username').trim(),
+        password: formData.get('password')
+    };
+
+    if (mode === 'register') {
+        const displayName = formData.get('display_name').trim();
+        if (displayName) payload.display_name = displayName;
+
+        try {
+            const resp = await fetch('{{ url_for("auth.register") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await resp.json();
+
+            const ul = document.querySelector('.flashes') || document.createElement('ul');
+            ul.className = 'flashes';
+            ul.innerHTML = '';
+
+            if (resp.ok) {
+                const li = document.createElement('li');
+                li.className = 'success';
+                li.textContent = data.msg || 'Registration successful!';
+                ul.appendChild(li);
+                document.body.prepend(ul);
+                switchToLogin();
+            } else {
+                const li = document.createElement('li');
+                li.className = 'error';
+                li.textContent = data.error || 'Something went wrong';
+                ul.appendChild(li);
+                document.body.prepend(ul);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Network error - see console for details.');
+        }
+        return;
+    }
+
+    form.action = '{{ url_for("auth.login") }}';
+    form.method = 'post';
+    form.submit();
+});
+
+switchToLogin();
+</script>
 </body>
 </html>

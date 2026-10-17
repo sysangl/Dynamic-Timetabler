@@ -61,13 +61,17 @@ input, button {
 }
 
 #topbar-user {
-    width: 60px;
+    min-width: fit-content;
     color: var(--text-colour-1);
-    font-size: 40px;
+    font-size: 30px;
     align-content: center;
     text-align: center;
     justify-content: center;
     right: 0;
+}
+
+#display-name-wrapper {
+    font-size: 20px;
 }
 
 .topbar-spacer {

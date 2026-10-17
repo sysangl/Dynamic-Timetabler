@@ -34,3 +34,21 @@ body {
     transition: margin-left 0.3s ease;
     margin-left: 0;
 }
+
+.flashes {
+    list-style:none;
+    padding:0;
+    margin: 1rem 0;
+}
+.flashes li {
+    padding:.5rem;
+    border-radius:4px;
+    margin-bottom:.5rem;}
+.flashes .error   {
+    background:#ffdddd; 
+    color:#a00;
+}
+.flashes .success {
+    background:#ddffdd;
+    color:#080;
+}
