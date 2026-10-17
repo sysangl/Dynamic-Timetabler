@@ -5,8 +5,8 @@
     --bg-colour-1: #1e1e1e;
     --text-colour-1: #f5f5f5;
     --font-1: 'Aleo';
-
 }
+
 
 html {
     overscroll-behavior: none;
@@ -19,20 +19,11 @@ body {
     overscroll-behavior: none;
     height: 100vh;
     color: var(--text-colour-1);
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
-#content {
-    background: var(--bg-colour-1);
-    padding: 50px;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    height: calc(100% - 60px);
-    box-sizing: border-box;
-
-    transition: margin-left 0.3s ease;
-    margin-left: 0;
+h2 {
+    text-align: center;
 }
 
 .flashes {
@@ -48,7 +39,12 @@ body {
     background:#ffdddd; 
     color:#a00;
 }
+.flashes .danger   {
+    background:#ffdddd; 
+    color:#a00;
+}
 .flashes .success {
     background:#ddffdd;
     color:#080;
 }
+

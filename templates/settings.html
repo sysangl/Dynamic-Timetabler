@@ -1,10 +1,12 @@
 <!-- settings css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/settings.css')}}"></link>
+<!-- shared forms css -->
+<link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}"></link>
 
-{# --------------- SETTINGS FORM --------------- #}
-<form id="settings-form" method="post" action="{{ url_for('settings.update') }}">
 
-    <fieldset class="settings-section">
+<form id="settings-form" class="form-body" method="post" action="{{ url_for('settings.update') }}">
+
+    <fieldset class="card-section">
         <legend class="section-title">General</legend>
 
         <div class="field-group">
@@ -18,7 +20,7 @@
         </div>
     </fieldset>
 
-    <fieldset class="settings-section">
+    <fieldset class="card-section">
         <legend class="section-title">Blocks</legend>
 
         <div class="field-group">
@@ -33,7 +35,7 @@
     </fieldset>
 
     <div class="form-actions">
-        <button id="settings-save-button" type="submit">SAVE</button>
+        <button id="settings-save-button" class="submit-button" type="submit">SAVE</button>
     </div>
 </form>
 

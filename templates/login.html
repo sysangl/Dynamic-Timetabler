@@ -6,6 +6,7 @@
     <title>DT Login / Register</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}"/>
 
     <style>
         @font-face {
@@ -28,28 +29,34 @@
     {% endwith %}
 
     <h2>Dynamic Timetabler</h2>
-    <h2 id="form-heading">Login</h2>
-    <form id="auth-form">
-        <label>Username:
-            <input name="username" required>
-        </label><br>
+    <form id="auth-form" class="form-body">
+        <fieldset class="card-section">
+            <legend id="form-heading" class="section-title">Login</legend>
 
-        <div id="display-name-wrapper" style="display:none;">
-            <label>Display name:
-                <input name="display_name">
-            </label><br>
+            <div class="field-group">
+                <label for="username">Username</label>
+                <input name="username" type="text" maxlength="20" placeholder="user" required class="field-input"/>
+            </div>
+
+            <div class="field-group" id="display-name-wrapper" style="display:none;">
+                <label for="display_name">Display name</label>
+                <input name="display_name" type="text" maxlength="20" placeholder="User" class="field-input"/>
+            </div>
+
+            <div class="field-group">
+                <label for="password">Password</label>
+                <input name="password" type="password" placeholder="****" required class="field-input"/>
+            </div>
+
+        </fieldset>
+
+        <div class="form-actions">
+            <button id="toggle-btn" class="other-button" type="button">Switch to Registration</button>
+            <button type="submit" id="submit-btn" class="submit-button">Log In</button>
         </div>
-
-        <label>Password:
-            <input name="password" type="password" required>
-        </label><br>
-
-        <button type="submit" id="submit-btn">Log in</button>
+        
     </form>
 
-    <p style="margin-top:1rem;">
-        <button id="toggle-btn" type="button">Switch to Register</button>
-    </p>
 </div>
 
 <script>
@@ -65,17 +72,17 @@ const form           = document.getElementById('auth-form');
 function switchToLogin() {
     mode = 'login';
     heading.textContent = 'Login';
-    submitBtn.textContent = 'Log in';
-    toggleBtn.textContent = 'Switch to Register';
+    submitBtn.textContent = 'Log In';
+    toggleBtn.textContent = 'Switch to Registration';
     displayWrapper.style.display = 'none';
 }
 
 function switchToRegister() {
     mode = 'register';
     heading.textContent = 'Register';
-    submitBtn.textContent = 'Create account';
+    submitBtn.textContent = 'Create Account';
     toggleBtn.textContent = 'Switch to Login';
-    displayWrapper.style.display = 'block';
+    displayWrapper.style.display = 'grid';
 }
 
 toggleBtn.addEventListener('click', () => {

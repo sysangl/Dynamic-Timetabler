@@ -1,0 +1,164 @@
+
+:root {
+    --bg-main:        #1e1e1e;
+    --bg-section:     #252525;
+    --bg-input:       #2a2a2a;
+    --bg-button-submit:     rgb(110, 170, 110);
+    --bg-button-submit-hover: rgb(91, 144, 91);
+    --bg-button-cancel:     rgb(170, 110, 110);
+    --bg-button-cancel-hover: rgb(144, 91, 91);
+    --bg-button-other:     rgb(110, 162, 170);
+    --bg-button-other-hover: rgb(91, 124, 144);
+    --border-radius: 4px;
+    --text-primary:  #e0e0e0;
+    --text-muted:    #c0c0c0;
+    --accent:        #a0e0a0;
+}
+
+.form-body {
+    max-width: 560px;
+    margin: 2rem auto;
+    padding: 1rem;
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.card-section {
+    border-radius: var(--border-radius);
+    background: var(--bg-section);
+    padding: 1.2rem 1.6rem;
+    margin-bottom: 1.4rem;
+    border: 1px solid #333;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: .8rem;
+    color: var(--text-primary);
+}
+
+.field-group {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) 180px;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .9rem;
+}
+
+.field-group label {
+    justify-self: end;
+    font-size: 0.96rem;
+    color: var(--text-primary);
+}
+.field-group .hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-left: .4rem;
+}
+
+.field-input {
+    width: 100%;
+    padding: .38rem .45rem;
+    font-size: 0.94rem;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1px solid #444;
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+    transition: border-color .15s, background .15s;
+}
+
+.field-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #2f2f2f;
+}
+
+.field-input[type="number"]::-webkit-outer-spin-button,
+.field-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.field-input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.colour-input {
+    height: 2.2rem;
+    padding: 0;
+    cursor: pointer;
+}
+
+.colour-input:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.form-actions {
+    text-align: right;
+    margin-top: .5rem;
+}
+.submit-button {
+    min-width: 120px;
+    padding: .6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-button-submit);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+}
+.submit-button:hover,
+.submit-button:focus {
+    background: var(--bg-button-submit-hover);
+    transform: translateY(-1px);
+}
+
+.cancel-button {
+    min-width: 120px;
+    padding: .6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-button-cancel);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+}
+.cancel-button:hover,
+.cancel-button:focus {
+    background: var(--bg-button-cancel-hover);
+    transform: translateY(-1px);
+}
+
+.other-button {
+    min-width: 120px;
+    padding: .6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-button-other);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+}
+.other-button:hover,
+.other-button:focus {
+    background: var(--bg-button-other-hover);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 420px) {
+    .field-group {
+        grid-template-columns: 1fr;
+        gap: .3rem;
+    }
+    .field-group label {
+        justify-self: start;
+    }
+}
