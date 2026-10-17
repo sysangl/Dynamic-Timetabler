@@ -50,6 +50,9 @@ input, button {
     background: var(--highlight-colour);
     display: flex;
     align-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    box-sizing: border-box;
 }
 
 #topbar-title {
@@ -76,6 +79,29 @@ input, button {
 
 .topbar-spacer {
     flex-grow: 100;
+}
+
+#logout-btn-container {
+    display: none;
+    color: var(--text-colour-1);
+    font-size: 30px;
+    flex-grow: 0;
+    width: 0;
+    animation: width .2s, display .2s;
+    align-content: center;
+    text-align: center;
+    justify-content: center;
+}
+
+#logout-btn-container.open {
+    display: block;
+    width: 60px;
+}
+
+#logout-btn-container a {
+    text-decoration: none;
+    -moz-text-decoration-line: none;
+    color: var(--text-colour-1);
 }
 
 .ham {
