@@ -12,7 +12,7 @@ async function saveSettings() {
 
         console.log(options_data);
 
-        const response = await fetch("/server/user/1/settings/update", {
+        const response = await fetch("/server/users/settings/update", {
             method: 'POST',
             headers: {
                 'Content-Type' : 'application/json',

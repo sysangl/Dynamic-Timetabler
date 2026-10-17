@@ -1,17 +1,18 @@
 # import os, toml, multiprocessing
-import sys, os, logging
+import sys, os, logging, secrets
 from flask import Flask, request, jsonify, render_template, redirect, render_template_string
 from flask_migrate import Migrate
 from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
 from jinja2 import ChoiceLoader, FileSystemLoader
 # from sqlalchemy import create_engine
 # from route_init import initialise_routes
-from models import (
-    db
+from app.models import (
+    db, pwd_hasher
 )
 from helpers.config import get_config, reload_config
 from pathlib import Path
 from helpers.paths import resource_path
+from app.routes.auth import login_manager
 
 # For production
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
@@ -29,11 +30,25 @@ def create_app():
 
     app = Flask("Dynamic Timetabler", template_folder=TEMPLATE_ROOT, static_folder=STATIC_ROOT)
 
+    # APP CONFIGS ==============================
+
+    # DATABASE
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
-    app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
+    app.secret_key = secrets.token_hex(32)
+    app.config.update(
+        SQLALCHEMY_DATABASE_URI = sqlite_uri,
+        # ARGON (HASHING)
+        ARGON2_HASH_LENGTH = 32,
+        ARGON2_TIME_COST = 2,
+        ARGON2_MEMORY_COST = 64 * 1024,
+        ARGON2_PARALLELISM = 1,
+    )
     
     db.init_app(app)
+    pwd_hasher.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = "auth.login" # type: ignore
     Migrate(app,db)
 
 
@@ -52,7 +67,7 @@ def create_app():
     app.logger.info(r"                  / /  | | | | | | |  __/ || (_| | |_) | |  __/ |      ")
     app.logger.info(r"                  \/   |_|_| |_| |_|\___|\__\__,_|_.__/|_|\___|_|      ")
     app.logger.info(r"                                                                       ")
-    app.logger.info(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app/timetable ")
+    app.logger.info(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app ")
     app.logger.info( "=======================================================================")
 
 
@@ -64,29 +79,9 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        # db_init(directory="migrations", template="flask")
-        # db_migrate(message="initial", directory="migrations")
-        # db_upgrade(directory="migrations")
-        from models import User
-        server_logger.info("Checking for default user")
-        app.logger.info("Checking for default user")
-        default_user = User.query.filter(User.username=="default_user").first()
-        if not default_user:
-            server_logger.info("Creating default user")
-            app.logger.info("Creating default user")
-            try:
-                db.session.add(User(username="default_user", display_name="Default User"))
-                db.session.commit()
-            except Exception:
-                server_logger.exception("Failed to create default user")
-                app.logger.info("Failed to create default user")
-                exit(-1)
 
-
-    @app.route("/health")
-    def health():
-        """health-check ep"""
-        return jsonify({"status":"ok"})
+    from .routes import initialise_routes
+    initialise_routes(app)
 
     @app.cli.command("list-tables")
     def list_tables():

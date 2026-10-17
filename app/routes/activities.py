@@ -1,20 +1,22 @@
-from flask import Flask, request, jsonify
-from models import (
+from flask import Flask, request, jsonify, Blueprint
+from app.models import (
     db,
     Activity
 )
 import logging
 
+bp = Blueprint('activities',__name__)
+
 app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
-
 def create_routes(app: Flask):
-    @app.route('/server/activities', methods=['GET'])
+
+    @bp.route('/', methods=['GET'])
     def get_activities():
         activities = Activity.query.all()
         return jsonify({'activities':[activity.serialise() for activity in activities]}), 200
 
-    @app.route('/server/activities/<int:id>',methods=['GET'])
+    @bp.route('/<int:id>',methods=['GET'])
     def get_activity(id):
         activity = Activity.query.filter_by(id=id).first()
         if not activity:
@@ -22,7 +24,7 @@ def create_routes(app: Flask):
         result = activity.serialise() if activity else -1
         return jsonify(result)
 
-    @app.route('/server/activities/create', methods=['PUT'])
+    @bp.route('/create', methods=['PUT'])
     def create_activity():
         data = request.get_json()
         app.logger.info(f"Attempting to create an activity from: {data}")
@@ -58,7 +60,7 @@ def create_routes(app: Flask):
         db_logger.info(f'Successfully created Activity:{activity.name} (id:{activity.id})')
         return jsonify(activity.serialise())
 
-    @app.route('/server/activities/<int:id>', methods=['PUT'])
+    @bp.route('/<int:id>', methods=['PUT'])
     def update_activity(id):
 
         data = request.get_json()
@@ -75,7 +77,7 @@ def create_routes(app: Flask):
         return jsonify(activity.serialise())
         
 
-    @app.route('/server/activities/<int:id>', methods=['DELETE'])
+    @bp.route('/<int:id>', methods=['DELETE'])
     def delete_activity(id):
         activity = Activity.query.filter_by(id=id).first()
         if not activity:

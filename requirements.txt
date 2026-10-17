@@ -1,6 +1,8 @@
 flask
 flask-sqlalchemy
 flask-migrate
+flask-argon2
+flask-login
 psycopg[binary]
 toml
 pytz

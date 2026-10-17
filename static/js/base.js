@@ -23,7 +23,7 @@ async function fetchSettings(userId=1) {
     if (window.settings == null) {
         try {
             console.log("Attempting to fetch settings")
-            const response = await fetch(`http://localhost:58362/server/user/${userId}/settings`, {
+            const response = await fetch(`http://localhost:58362/api/users/settings`, {
                 method: 'GET',
                 headers: {
                     'Accept' : 'application/json'

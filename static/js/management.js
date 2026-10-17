@@ -27,7 +27,7 @@ async function createBlock() {
     console.log('sending data')
     console.log(options_data);
 
-    const response = await fetch('/server/timetable/blocks/create', {
+    const response = await fetch('/api/timetable/blocks/create', {
         method: 'POST',
         headers: {
             'Content-Type' : 'application/json'

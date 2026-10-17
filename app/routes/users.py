@@ -1,5 +1,5 @@
-from flask import Flask, jsonify, request
-from models import (
+from flask import Flask, jsonify, request, Blueprint
+from app.models import (
     db,
     User,
     Settings
@@ -7,31 +7,33 @@ from models import (
 import logging
 
 
+bp = Blueprint('users', __name__)
+
 app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
 def create_routes(app: Flask):
-    """
-    Create routes that deal with the user
-    """
-    @app.route('/server/users/health',methods=['GET'])
+
+    @bp.route('/health',methods=['GET'])
     def user_healthcheck():
         return jsonify({'status':'ok'})
 
 
-    @app.route('/server/users', methods=['GET'])
+    @bp.route('/', methods=['GET'])
     def get_users():
         users = User.query.all()
         return jsonify({'users':[user.serialise() for user in users]}), 200
 
-    @app.route('/server/user/create', methods=['POST'])
+    @bp.route('/create', methods=['POST'])
     def create_user():
         """
-        Expected JSON (only "username" is required)
+        Expected JSON (only "username" & "password" is required)
         {
             "username": "test_user",
+            "password": "password",
             "display_name": "Test User",
         }
         """
+        #return jsonify({'msg':'Deprecated'}), 404
         app.logger.info("Attempting to create user")
         app.logger.info(f"Recieved - {request.data}")
         payload = request.get_json(silent=False)
@@ -41,10 +43,11 @@ def create_routes(app: Flask):
             return jsonify({"error": "Missing JSON body"}), 400
 
         username = payload.get("username")
-        if not username:
-            app.logger.info("User creation failed - No username")
-            app_logger.info("User creation failed - No username")
-            return jsonify({"error": "Field `username` is required"}), 400
+        password = payload.get("password")
+        if not username or not password:
+            app.logger.info("User creation failed - No username or password")
+            app_logger.info("User creation failed - No username or password")
+            return jsonify({"error": "Field `username` and `password` is required"}), 400
 
         # check if a user with that username already exists
         if User.query.filter_by(username=username).first():
@@ -61,6 +64,7 @@ def create_routes(app: Flask):
             username=username, # type: ignore
             display_name=payload.get("display_name"), # type: ignore
         )
+        new_user.password = password
 
         try:
             db.session.add(new_user)

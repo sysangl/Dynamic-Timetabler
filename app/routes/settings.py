@@ -1,17 +1,24 @@
-from flask import Flask, jsonify, request
-from models import (
+from flask import Flask, jsonify, request, Blueprint
+from flask_login import login_required, current_user
+
+from app.models import (
     db,
     User,
     Settings
 )
 import logging
 
+bp = Blueprint('settings', __name__)
+
 db_logger = logging.getLogger("database")
 app_logger = logging.getLogger("app")
 
+
 def create_routes(app: Flask):
-    @app.route('/server/user/<int:user_id>/settings/update', methods=['POST'])
-    def update_settings(user_id: int):
+
+    @bp.route('/update', methods=['POST'])
+    @login_required
+    def update_settings():
         """
         Expected JSON (any subset of fields is valid)
         {
@@ -20,6 +27,7 @@ def create_routes(app: Flask):
             "starting_hour": 5,
         }
         """
+        user_id = current_user.id
 
         app.logger.info("Attempting to update settings")
         app.logger.info(f"Recieved - {request.data}")
@@ -62,11 +70,13 @@ def create_routes(app: Flask):
         app_logger.info(f'Successfully updated settings for User (id:{user_id})')
         return jsonify({"settings":settings.serialise()}), 200
 
-    @app.route('/server/user/<int:user_id>/settings', methods=['GET'])
-    def get_settings(user_id: int):
+    @bp.route('/', methods=['GET'])
+    @login_required
+    def get_settings():
         """
         Returns the user's settings
         """
+        user_id = current_user.id
         app_logger.info(f"Fetching settings for User {user_id}")
         user = User.query.filter_by(id=user_id).first()
         if user is None:

@@ -27,7 +27,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='run',
+    name='Dynamic-Timetabler-v0.0.0.exe',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

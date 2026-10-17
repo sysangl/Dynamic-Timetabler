@@ -1,7 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Blueprint
+from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from datetime import datetime
-from models import (
+
+from app.models import (
     db,
     ToDo,
     Task,
@@ -10,12 +12,15 @@ from models import (
 )
 import logging
 
+bp = Blueprint('timetable', __name__)
+
 server_logger = logging.getLogger('server')
 app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
 
 def create_routes(app: Flask):
-    @app.route('/server/timetable', methods=['GET'])
+    @bp.route('/', methods=['GET'])
+    @login_required
     def get_timetable():
         # data = request.get_json()
         # if data:
@@ -23,16 +28,16 @@ def create_routes(app: Flask):
         #     tasks = ToDo.query.filter().all()
         #     blocks = Block.query.filter().all()
         # else:
-        server_logger.info('Fetching timetable items')
+        server_logger.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
         
         try:
-            todos = ToDo.query.all()
-            tasks = Task.query.all()
-            blocks = Block.query.all()
+            #todos = ToDo.query.filter().all()
+            #tasks = Task.query.all()
+            blocks = Block.query.filter(Block.owner_id == current_user.id).all()
 
             payload = {
-                "todos": [todo.serialise() for todo in todos],
-                "tasks": [task.serialise() for task in tasks],
+                #"todos": [todo.serialise() for todo in todos],
+                #"tasks": [task.serialise() for task in tasks],
                 "blocks": [block.serialise() for block in blocks]
             }
         except Exception:
@@ -43,30 +48,32 @@ def create_routes(app: Flask):
         return jsonify(payload)
 
 
-    @app.route('/server/timetable/<string:item>', methods=['GET'])
+    @bp.route('/<string:item>', methods=['GET'])
+    @login_required
     def get_timetable_items(item):
         item_class = None
         match item:
-            case 'todos':
-                item_class = ToDo
-            case 'tasks':
-                item_class = Task
+            #case 'todos':
+            #    item_class = ToDo
+            #case 'tasks':
+            #    item_class = Task
             case 'blocks':
                 item_class = Block
             case _:
                 return {'error': f'"{item}" is not a valid timetable item'}, 404
         #assert type(item_class) is ToDo | Task| Block
-        response_items = item_class.query.all()
+        response_items = item_class.query.filter(item_class.owner_id == current_user.id).all()
         return jsonify({f'{item}':[item.serialise() for item in response_items]}), 200
 
-    @app.route('/server/timetable/<string:item>/<int:id>',methods=['GET'])
+    @bp.route('/<string:item>/<int:id>',methods=['GET'])
+    @login_required
     def get_timetable_item(item, id):
         item_class = None
         match item:
-            case 'todos':
-                item_class = ToDo
-            case 'tasks':
-                item_class = Task
+            #case 'todos':
+            #    item_class = ToDo
+            #case 'tasks':
+            #    item_class = Task
             case 'blocks':
                 item_class = Block
             case _:
@@ -77,21 +84,21 @@ def create_routes(app: Flask):
             return {'error':f'{item} with id "{id}" does not exist'}, 404
         result = tti.serialise() if tti else -1
         return jsonify(result)
-        
+    
 
-
-    @app.route('/server/timetable/<string:item>/create', methods=['POST'])
+    @bp.route('/<string:item>/create', methods=['POST'])
+    @login_required
     def create_timetable_item(item):
         data = request.get_json()
-        app.logger.info(f"Attempting to create an {item} from: {data}")
-        app_logger.info(f"Attempting to create an {item} from: {data}")
+        app.logger.info(f"Attempting to create a {item} from: {data}")
+        app_logger.info(f"Attempting to create a {item} from: {data}")
 
         item_class = None
         match item:
-            case 'todos':
-                item_class = ToDo
-            case 'tasks':
-                item_class = Task
+            #case 'todos':
+            #    item_class = ToDo
+            #case 'tasks':
+            #    item_class = Task
             case 'blocks':
                 item_class = Block
             case _:
@@ -100,8 +107,10 @@ def create_routes(app: Flask):
                 return {'error': f'"{item}" is not a valid timetable item'}, 404
         #assert type(item_class) is ToDo | Task| Block
         created_item = item_class(
-            **data
+            **data,
+            owner = current_user # type: ignore
         )
+        created_item.owner_id = current_user.id
         try:
             db.session.add(created_item)
             db.session.commit()
@@ -110,10 +119,11 @@ def create_routes(app: Flask):
             db_logger.exception(f'Database error while trying to create "{item}" instance')
             return jsonify({'error':f'Database error while trying to create {item} instance'}), 500
             
-        db_logger.info(f'Successfully created a "{item}" instance')
+        db_logger.info(f'Successfully created a "{item}" instance for {current_user.username}')
         return jsonify(created_item.serialise()), 202
 
-    @app.route('/server/timetable/<string:item>/<int:id>', methods=['PUT'])
+    @bp.route('/<string:item>/<int:id>', methods=['PUT'])
+    @login_required
     def update_timetable_item(item,id):
 
         data = request.get_json()
@@ -130,14 +140,15 @@ def create_routes(app: Flask):
         return jsonify(activity.serialise())
         
 
-    @app.route('/server/timetable/<string:item>/<int:id>', methods=['DELETE'])
+    @bp.route('/<string:item>/<int:id>', methods=['DELETE'])
+    @login_required
     def delete_timetable_item(item, id):
         item_class = None
         match item:
-            case 'todos':
-                item_class = ToDo
-            case 'tasks':
-                item_class = Task
+            #case 'todos':
+            #    item_class = ToDo
+            #case 'tasks':
+            #    item_class = Task
             case 'blocks':
                 item_class = Block
             case _:
@@ -147,6 +158,8 @@ def create_routes(app: Flask):
         item_to_delete = item_class.query.filter_by(id=id).first()
         if not item_to_delete:
             return {'error':f'{item} with id "{id}" does not exist'}, 404
+        if item_to_delete.owner_id != current_user.id:
+            return {'error':f'{item} with id "{id}" does not belong to User:{current_user.username} (id:{current_user.id})'}, 403
         assert type(item_to_delete) is not None
         try:
             db.session.delete(item_to_delete)

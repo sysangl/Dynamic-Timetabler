@@ -1,0 +1,39 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <link rel="stylesheet" href="{{url_for('static', filename='css/login.css')}}"/>
+</head>
+<body>
+    <style>
+        @font-face {
+            font-family: Aleo;
+            src: url("{{url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf')}}");
+        }
+    </style>
+    <div id="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class=flashes>
+                {% for category, msg in messages %}
+                    <li class="{{ category }}">{{ msg }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <h2>Login</h2>
+    <form method="post">
+        <label>Username: <input name="username" required></label><br>
+        <label>Password: <input name="password" type="password" required></label><br>
+        <button type="submit">Log in</button>
+    </form>
+
+    </div>
+
+</body>
+</html>

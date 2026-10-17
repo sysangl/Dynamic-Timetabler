@@ -11,6 +11,7 @@ from sqlalchemy.dialects.sqlite import (
     JSON,
     INTEGER
 )
+from flask_argon2 import Argon2
 from helpers.config import get_config, reload_config
 # from sqlalchemy.dialects.postgresql import (
 #     UUID,
@@ -19,6 +20,7 @@ from helpers.config import get_config, reload_config
 #     INTEGER
 # )
 
+pwd_hasher = Argon2()
 class Base(DeclarativeBase):
     pass
 
@@ -28,6 +30,164 @@ db = SQLAlchemy(model_class=Base)
 #
 
 db_logger = logging.getLogger('database')
+
+
+
+# Settings
+#
+#
+class Settings(db.Model):
+    """
+    The user's preferences and settings
+    Has one-to-one relationship with User table
+    """
+    id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
+    default_block_length : Mapped[int] = mapped_column(default=30) # minutes
+    starting_day : Mapped[int] = mapped_column(default=0)
+    starting_hour : Mapped[int] = mapped_column(default=5)
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="settings",
+        uselist=False,          # one‑to‑one
+        foreign_keys="[User.settings_id]",
+        remote_side="[User.settings_id]"
+    )
+
+    __tablename__ = "settings"
+    def __init__(self,
+                default_block_length :int = 30,
+                starting_day:int = 0,
+                starting_hour:int = 5
+                ) -> None:
+        try:
+            super().__init__()
+            self.default_block_length = default_block_length
+            self.starting_day = starting_day
+            self.starting_hour = starting_hour
+        except Exception:
+            db_logger.exception("Failed to create Settings instance")
+            raise
+
+
+    def serialise(self)->dict:
+        return {
+            "id": str(self.id),
+            "default_block_length": self.default_block_length,
+            "start_day": self.starting_day,
+            "start_hour": self.starting_hour,
+        }
+
+
+# Other
+#
+#
+class User(db.Model):
+    """
+    Stores users, so multiple people can use the same server to store different timetables.
+    Has a one-to-one relationship with Settings table
+    """
+
+    __tablename__ = "users"
+    id : Mapped[int] = mapped_column(INTEGER,primary_key=True, autoincrement=True)
+    username : Mapped[str] = mapped_column(nullable=False, unique=True)
+    display_name : Mapped[Optional[str]] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
+    is_admin : Mapped[bool] = mapped_column(nullable=False, default=False)
+
+    settings_id : Mapped[int] = mapped_column(
+        INTEGER, 
+        ForeignKey("settings.id", ondelete="CASCADE"),
+        nullable=False, 
+        unique=True
+    )
+    settings : Mapped[Settings] = relationship(
+        "Settings", 
+        back_populates="user",
+        single_parent=True,
+        uselist=False,
+        cascade="all, delete-orphan",
+        foreign_keys="[User.settings_id]",
+        remote_side="[Settings.id]"
+    )
+    blocks = db.relationship(
+        "Block",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+    active: Mapped[bool] = mapped_column(default=True)
+
+    @property
+    def is_authenticated(self): 
+        return True
+
+    @property
+    def is_active(self): 
+        return getattr(self, "active", True)
+
+    @property
+    def is_anonymous(self): 
+        return False
+
+    def get_id(self):
+        return str(self.id) 
+
+    _password_hash: Mapped[str] = mapped_column(nullable=False)
+
+    @property
+    def password(self) -> str:
+        raise AttributeError("Password hashes are write-only")
+
+    @password.setter
+    def password(self, plain_password: str) -> None:
+        if not plain_password:
+            raise ValueError("Password may not be empty")
+        self._password_hash = pwd_hasher.generate_password_hash(plain_password)
+
+    def verify_password(self, plain_password: str)->bool:
+        if not self._password_hash:
+            return False
+        try:
+            return pwd_hasher.check_password_hash(self._password_hash, plain_password)
+        except Exception:
+            db_logger.exception("Password verification failed")
+            return False
+
+    def __init__(self,
+                username : str,
+                display_name : str | None = None,
+                is_admin : bool = False,
+                ) -> None:
+        try:
+            super().__init__()
+            self.username = username
+            self.display_name = display_name or username
+            self.is_admin = is_admin
+            self.settings = Settings()
+        except Exception:
+            db_logger.exception("Failed to create User instance")
+            raise
+
+
+    # __table_args__ = (
+    #     UniqueConstraint(
+    #         "settings_id",
+    #         name="uq_user_settings_id"   # <-- give the constraint a stable name
+    #     ),
+    # )
+
+    def serialise(self) -> dict:
+        return {
+            "id" : self.id,
+            "username": self.username,
+            "display_name": self.display_name,
+            "is_admin": self.is_admin,
+            # embed the Settings payload (or ``None`` if it ever becomes optional)
+            "settings": self.settings.serialise() if self.settings else None,
+            #"no_of_blocks": self.blocks.all()
+        }
+
+
 
 class ToDo(db.Model):
     """
@@ -95,12 +255,24 @@ class Block(db.Model):
     reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
     end_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
     colour : Mapped[str] = mapped_column(nullable=False, default="#75547e")
+    owner_id : Mapped[int] = mapped_column(
+        INTEGER,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    owner : Mapped[User] = relationship(
+        "User",
+        back_populates="blocks"
+    )
+
     def __init__(self, 
                 title:str, 
                 start_datetime: dict,
+                owner: User,
                 end_datetime: dict,
                 description:str = "", 
-                colour:str = ""
+                colour:str = "",
                 ) -> None:
         try:
             self.title = title
@@ -109,6 +281,7 @@ class Block(db.Model):
             self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
             # self.multiday = self.start_datetime.date().isocalendar
             self.colour = colour
+            self.owner = owner
         except Exception:
             db_logger.exception("Failed to create Block instance")
             raise
@@ -122,7 +295,8 @@ class Block(db.Model):
             'description' : str(self.description),
             'start_datetime' : self.start_datetime.isoformat(),
             'end_datetime' : self.end_datetime.isoformat(),
-            'colour' : self.colour
+            'colour' : self.colour,
+            'owner' : self.owner.id
         }
 
 class ClassBlock(Block):
@@ -279,114 +453,6 @@ class Activity(db.Model):
 
 
 
-# Settings
-#
-#
-
-class Settings(db.Model):
-    """
-    The user's preferences and settings
-    Has one-to-one relationship with User table
-    """
-    id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
-    default_block_length : Mapped[int] = mapped_column(default=30) # minutes
-    starting_day : Mapped[int] = mapped_column(default=0)
-    starting_hour : Mapped[int] = mapped_column(default=5)
-
-    user: Mapped["User"] = relationship(
-        "User",
-        back_populates="settings",
-        uselist=False,          # one‑to‑one
-        foreign_keys="[User.settings_id]",
-        remote_side="[User.settings_id]"
-    )
-
-    __tablename__ = "settings"
-    def __init__(self,
-                default_block_length :int = 30,
-                starting_day:int = 0,
-                starting_hour:int = 5
-                ) -> None:
-        try:
-            super().__init__()
-            self.default_block_length = default_block_length
-            self.starting_day = starting_day
-            self.starting_hour = starting_hour
-        except Exception:
-            db_logger.exception("Failed to create Settings instance")
-            raise
 
 
-    def serialise(self)->dict:
-        return {
-            "id": str(self.id),
-            "default_block_length": self.default_block_length,
-            "start_day": self.starting_day,
-            "start_hour": self.starting_hour,
-        }
-
-
-# Other
-#
-#
-
-class User(db.Model):
-    """
-    Stores users, so multiple people can use the same server to store different timetables.
-    Has a one-to-one relationship with Settings table
-    """
-
-
-    __tablename__ = "users"
-    id : Mapped[int] = mapped_column(INTEGER,primary_key=True, autoincrement=True)
-    username : Mapped[str] = mapped_column(nullable=False, unique=True)
-    display_name : Mapped[Optional[str]] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
-    is_admin : Mapped[bool] = mapped_column(nullable=False, default=False)
-
-    settings_id : Mapped[int] = mapped_column(
-        INTEGER, 
-        ForeignKey("settings.id", ondelete="CASCADE"),
-        nullable=False, 
-        unique=True
-    )
-    settings : Mapped[Settings] = relationship(
-        "Settings", 
-        back_populates="user",
-        single_parent=True,
-        uselist=False,
-        cascade="all, delete-orphan",
-        foreign_keys="[User.settings_id]",
-        remote_side="[Settings.id]"
-    )
-
-    def __init__(self,
-                username : str,
-                display_name : str | None = None,
-                is_admin : bool = False,
-                ) -> None:
-        try:
-            super().__init__()
-            self.username = username
-            self.display_name = display_name or username
-            self.is_admin = is_admin
-            self.settings = Settings()
-        except Exception:
-            db_logger.exception("Failed to create User instance")
-            raise
-
-    # __table_args__ = (
-    #     UniqueConstraint(
-    #         "settings_id",
-    #         name="uq_user_settings_id"   # <-- give the constraint a stable name
-    #     ),
-    # )
-
-    def serialise(self) -> dict:
-        return {
-            "id" : self.id,
-            "username": self.username,
-            "display_name": self.display_name,
-            "is_admin": self.is_admin,
-            # embed the Settings payload (or ``None`` if it ever becomes optional)
-            "settings": self.settings.serialise() if self.settings else None,
-        }
+    

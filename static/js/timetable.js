@@ -4,7 +4,7 @@
  * 
  */
 async function fetchPayload() {
-    const response = await fetch('/server/timetable', {
+    const response = await fetch('/api/timetable', {
         method : 'GET'
     });
 
@@ -221,7 +221,7 @@ async function deleteBlock() {
     const popupMenu = document.getElementById('popup-menu');
     const blockId = popupMenu._currentTarget.dataset.blockId
     console.log(`Deleting block ${blockId}`)
-    const response = await fetch(`/server/timetable/blocks/${blockId}`,{
+    const response = await fetch(`/api/timetable/blocks/${blockId}`,{
         'method' : 'DELETE'
     })
     document.querySelectorAll(`#timetable-block-${blockId}`).forEach(block=>block.remove())

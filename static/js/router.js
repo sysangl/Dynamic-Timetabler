@@ -12,7 +12,7 @@ async function loadPage(page, push = true) {
     if(currentPage==page) return;
 
     // getch fragment 
-    const response = await fetch(`/page/${page}`, {
+    const response = await fetch(`/app/page/${page}`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     });
 
