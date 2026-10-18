@@ -29,7 +29,7 @@ Main limitation of this project would probably the Graph Colouring Problem, but 
 # Features!
 
 > DONE    = Finished! May still be updated to fix bugs. <br>
-> WORKING = Currently works, but may be updated as the project goes on. <br>
+> WORKING = Currently works, but will be updated as the project goes on. (Basic functionality) <br>
 > WIP     = Work In Progress (still working on it/partial functionality) <br>
 > FUTURE  = Haven't started work (or limited functionality not meant for users) <br>
 > ?       = Thinking about adding it. <br>

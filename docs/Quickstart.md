@@ -1,33 +1,31 @@
 Note : This project is still in development.
 
 ---
-This project requires Python 3.13 to run.
+
+### Running
+This project requires Python 3.13 to run from source code or Windows to run as an executable.
 
 1. Download Dynamic-Timetabler-<version>.exe
 2. Run Dynamic-Timetabler-<version>.exe
 3. Open a web browser and go to 'http://localhost:58362/app/timetable
 
-Creating a new user
-I haven't created a web interface to create a user yet, so if you want to create a user you need to run
-NOTE : Settings and timetable configuration will not be available unless a user has been created.
-```
-curl.exe -X POST http://localhost:58362/server/user/create -H "Content-Type: application/json" --data-raw '{\"username\":\"test_user\",\"display_name\":\"TEST\"}' -v
-```
-The username and display_name fields can be whatever you want. For linux, the command is the same, just remove the .exe from curl.
+### Creating a new user
+Opening the link above will bring up a login screen. 
+1. Click on 'Switch to Registration', and enter a username. 
+2. Remember, your username is case-sensitive. 
+3. Display name can be whatever you want. It defaults to your username if left blank.
+4. Then enter a password and click 'Create Account'. It should automatically bring you back to the login page with your details prefilled. Press login, and youre in!
 
+You can log out by clicking your the user icon in the top right corner, and then the exit icon.
 
-Adding Timetable Blocks
-The command below will create a timetable block when run in Windows Powershell
-```
-Invoke-WebRequest -Uri 'http://localhost:58362/server/timetable/blocks/create' `
-      -Method Post `
-      -Headers @{ 'Content-Type' = 'application/json' } `
-      -Body '{
-            "title" : "Block Name",
-            "description" : "Block Description",
-            "start_datetime" : {"year":2026, "month":10, "day":13, "hour":10, "minute":0},
-            "end_datetime" : {"year":2026, "month":10, "day":13, "hour":15, "minute":30},
-            "colour" : "#734984"
-      }' `
-      -Verbose
-```
+### Creating new blocks
+1. Open the sidebar (burger menu) and click on the Management Tab
+2. Enter the details of your Block.
+   1. Title - The name of the event, this will be displayed in the timetable view
+   2. Description - Optional extra detail
+   3. Start Date/Time & End Date/Time - When the event starts and ends. Make sure the *End Date* is *AFTER* the *Start Date*
+3. Press the 'CREATE' button.
+4. Your newly created block should now show up in the Timetable tab!
+
+### Notes
+- '~/.dynamic-timetabler' contains the database, configuration files and log files.
