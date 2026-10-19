@@ -1,30 +1,22 @@
 ```
-      ___                             _            
-     /   \_   _ _ __   __ _ _ __ ___ (_) ___             
-    / /\ / | | | '_ \ / _` | '_ ` _ \| |/ __|            
-   / /_//| |_| | | | | (_| | | | | | | | (__            
-  /___,'  \__, |_| |_|\__,_|_| |_| |_|_|\___|            
-          |___/                          
-          _____ _                _        _     _      
-         /__   (_)_ __ ___   ___| |_ __ _| |__ | | ___ _ __
-           / /\/ | '_ ` _ \ / _ \ __/ _` | '_ \| |/ _ \ '__|
-          / /  | | | | | | |  __/ || (_| | |_) | |  __/ | 
-          \/   |_|_| |_| |_|\___|\__\__,_|_.__/|_|\___|_|
+     _____
+    /  __ \
+    | /  \/ __ _ _ __   ___  _ __  _   _
+    | |    / _` | '_ \ / _ \| '_ \| | | |
+    | \__/\ (_| | | | | (_) | |_) | |_| |
+     \____/\__,_|_| |_|\___/| .__/ \__, |
+                            | |     __/ |
+                            |_|    |___/
 ```
 
 ==========================================================================
 
 ![hackatime badge](https://hackatime.hackclub.com/api/v1/badge/U0A0HQ4TYJX/sysangl/Dynamic-Timetabler)
 
-# Dynamic Timetable
+# Canopy Suite
+> Previously named Dynamic Timetabler
 
-A timetable/calendar/routine planner (although they're all basically the same thing) backend. The goal for this project is to automatically generate/fill a timetable. Activities can be created to set rules on the creation of timetable 'Blocks', which can change size and start times to make the most of your time. 
-
-Missed a task? The algorithm will sort it out and reschedule it for a different time.
-
-# Algorithm details
-
-Main limitation of this project would probably the Graph Colouring Problem, but since the only constraints on each block (for now) is just the times, it shouldn't cause too many issues. I attempt to create a simulated annealing algorithm, but if it doesn't work nicely I'll try to make a neural network instead.
+A productivity suite with various things to help you keep track of your time. 
 
 # Features!
 
@@ -39,9 +31,10 @@ Main limitation of this project would probably the Graph Colouring Problem, but 
 | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | WIP     | Timetable functionality (event creation and display)                                                                          |
 | WIP     | Event/Activity/Block Management                                                                                               |
-| FUTURE  | User management                                                                                                               |
+| WORKING | User management                                                                                                               |
 | FUTURE  | Dynamic Table Engine (auto generating timetables, dynamic routines)                                                           |
 | WORKING | Web Interface (Basic timetable view, settings page and a basic block creation page)                                           |
 | WORKING | Portable (Currently works as an .exe or python project. The source code *should* work on most platforms that support python.) |
-|         |                                                                                                                               |
-|         |                                                                                                                               |
+| WIP     | Pomodoro Timer                                                                                                                |
+| WIP     | Dashboard View                                                                                                                |
+| ?       | Wakatime (and other time keeping software) integration                                                                        |

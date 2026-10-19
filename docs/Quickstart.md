@@ -28,4 +28,4 @@ You can log out by clicking your the user icon in the top right corner, and then
 4. Your newly created block should now show up in the Timetable tab!
 
 ### Notes
-- '~/.dynamic-timetabler' contains the database, configuration files and log files.
+- '~/.canopy-suite' contains the database, configuration files and log files.
