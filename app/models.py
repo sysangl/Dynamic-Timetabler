@@ -268,17 +268,18 @@ class Block(db.Model):
 
     def __init__(self, 
                 title:str, 
-                start_datetime: dict,
+                start_datetime: datetime,
                 owner: User,
-                end_datetime: dict,
+                end_datetime: datetime,
                 description:str = "", 
                 colour:str = "",
+                **extra
                 ) -> None:
         try:
             self.title = title
             self.description = description
-            self.start_datetime = datetime(**start_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
-            self.end_datetime = datetime(**end_datetime, tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
+            self.start_datetime = start_datetime
+            self.end_datetime = end_datetime
             # self.multiday = self.start_datetime.date().isocalendar
             self.colour = colour
             self.owner = owner
@@ -446,13 +447,17 @@ class Activity(db.Model):
             'time_spent' : self.time_spent
         }
 
-# i wanted to name this 'Class' but that would probably confusing for me
-# class Subject(Activity):
-#     teacher : Mapped[str] = mapped_column(nullable=False)
-#     classroom : Mapped[Optional[str]] = mapped_column()
+class Routine(db.Model):
+    __tablename__ = "routines"
+    id : Mapped[uuid.UUID] = mapped_column(primary_key = True, default=uuid.uuid4)
+    name : Mapped[str] = mapped_column(nullable=False, default="New Routine")
 
-
-
-
-
+    start_date : Mapped[datetime] = mapped_column(nullable=False)
+    end_date : Mapped[datetime] = mapped_column(nullable=False)
     
+    routine_length : Mapped[int] = mapped_column(nullable=False, default=7)
+    repeats_every : Mapped[int] = mapped_column(nullable=False, default=7)
+
+    def __init__(self, name, start_date, end_date, routine_length, repeats_every) -> None:
+        self.name = name
+        self.start_date = start_date

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Blueprint
+from flask import Flask, request, jsonify, Blueprint, url_for, redirect
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from datetime import datetime
@@ -125,7 +125,7 @@ def create_routes(app: Flask):
             return jsonify({'error':f'Database error while trying to create {item} instance'}), 500
             
         db_logger.info(f'Successfully created a "{item}" instance for {current_user.username}')
-        return jsonify(created_item.serialise()), 202
+        return redirect(url_for('app.serve_management'))
 
     @bp.route('/<string:item>/<int:id>', methods=['PUT'])
     @login_required
