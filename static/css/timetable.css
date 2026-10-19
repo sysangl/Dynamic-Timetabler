@@ -30,9 +30,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
     background: #e1e1e1;
-    color: black;
+    
     border-top: 1px solid #c0c0c0;
+}
+
+.day-name {
+    font-size: 1.3rem;
+    color: black;
+}
+
+.day-date {
+    font-size: 1.0rem;
+    color: rgb(85, 85, 85);
 }
 
 #tt-schedule-container {

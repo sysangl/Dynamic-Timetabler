@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, Blueprint, url_for, redirect
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
-from datetime import datetime
+from datetime import datetime, timedelta
 from helpers.datetime import combine_date_time
+from sqlalchemy import func, Date
 
 from app.models import (
     db,
@@ -19,52 +20,55 @@ server_logger = logging.getLogger('server')
 app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
 
+
+def parse_iso_date(s: str):
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
 def create_routes(app: Flask):
     @bp.route('/', methods=['GET'])
     @login_required
     def get():
-        # data = request.get_json()
-        # if data:
-        #     todos = ToDo.query.filter().all()
-        #     tasks = ToDo.query.filter().all()
-        #     blocks = Block.query.filter().all()
-        # else:
+        start_date = parse_iso_date(request.args.get('start','').strip())
+        end_date = parse_iso_date(request.args.get('end','').strip())
+
         server_logger.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
-        
+
+        if not start_date or not end_date:
+            start_date = datetime.now().date()
+            end_date = start_date
+        else:
+            if end_date < start_date:
+                start_date, end_date = end_date, start_date
+
+        app.logger.info(f'Getting blocks for {start_date} - {end_date}')
+
         try:
             #todos = ToDo.query.filter().all()
             #tasks = Task.query.all()
-            blocks = Block.query.filter(Block.owner_id == current_user.id).all()
+            blocks = Block.query.filter(
+                    Block.owner_id == current_user.id,
+                    Block.start_datetime <= datetime.combine(end_date, datetime.max.time()),
+                    Block.end_datetime >= datetime.combine(start_date, datetime.min.time())
+                ).all()
 
             payload = {
                 #"todos": [todo.serialise() for todo in todos],
                 #"tasks": [task.serialise() for task in tasks],
                 "blocks": [block.serialise() for block in blocks]
             }
+
+            app.logger.info(payload)
+
         except Exception:
             server_logger.exception("Failed to fetch timetable items")
             raise
+        return jsonify(payload), 200
 
-
-        return jsonify(payload)
-
-
-    @bp.route('/<string:item>', methods=['GET'])
-    @login_required
-    def get_items(item):
-        item_class = None
-        match item:
-            #case 'todos':
-            #    item_class = ToDo
-            #case 'tasks':
-            #    item_class = Task
-            case 'blocks':
-                item_class = Block
-            case _:
-                return {'error': f'"{item}" is not a valid timetable item'}, 404
-        #assert type(item_class) is ToDo | Task| Block
-        response_items = item_class.query.filter(item_class.owner_id == current_user.id).all()
-        return jsonify({f'{item}':[item.serialise() for item in response_items]}), 200
 
     @bp.route('/<string:item>/<int:id>',methods=['GET'])
     @login_required

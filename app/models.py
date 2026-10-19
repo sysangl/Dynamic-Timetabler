@@ -44,7 +44,7 @@ class Settings(db.Model):
     id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
     default_block_length : Mapped[int] = mapped_column(default=30) # minutes
     start_day : Mapped[int] = mapped_column(default=0)
-    start_hour : Mapped[int] = mapped_column(default=5)
+    start_hour : Mapped[int] = mapped_column(default=0)
 
     user: Mapped["User"] = relationship(
         "User",
@@ -58,7 +58,7 @@ class Settings(db.Model):
     def __init__(self,
                 default_block_length :int = 30,
                 start_day:int = 0,
-                start_hour:int = 5
+                start_hour:int = 0
                 ) -> None:
         try:
             super().__init__()

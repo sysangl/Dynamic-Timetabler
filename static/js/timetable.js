@@ -4,7 +4,8 @@
  * 
  */
 async function fetchPayload() {
-    const response = await fetch('/api/timetable', {
+    const dates = document.getElementsByClassName('day-container')
+    const response = await fetch(`/api/timetable/?start=${dates[0].dataset.date}&end=${dates[6].dataset.date}`, {
         method : 'GET'
     });
 
@@ -31,7 +32,6 @@ function clamp(value, min, max) {
  * Generates the days and their respective containers
  */
 function generateWeek() {
-    console.log('Generating Week')
     const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const legend = document.getElementById("tt-legend");
     const schedule = document.getElementById("tt-schedule");
@@ -45,13 +45,21 @@ function generateWeek() {
         const newDay = document.createElement('div');
         newDay.id = `day-${days[dayIdx]}`;
         newDay.classList.add('tt-weekday');
-        newDay.innerText = `${days[dayIdx]}`;
+
+        const dayName = document.createElement('span');
+        dayName.textContent = `${days[dayIdx]}`;
+        dayName.className = 'day-name';
+        const dayDate = document.createElement('span');
+        dayDate.textContent = nextDay.toDateString().slice(3);
+        dayDate.className = 'day-date';
+        newDay.append(dayName, document.createElement('br'), dayDate)
+
 
         const newDayCont = document.createElement('div');
         newDayCont.id = `day-container-${days[dayIdx]}`;
         newDayCont.classList.add('day-container');
-        newDayCont.dataset.date = nextDay.toDateString()
-        legend.append(newDay)
+        newDayCont.dataset.date = nextDay.toISOString().slice(0,10)
+        legend.appendChild(newDay)
         schedule.appendChild(newDayCont)
     }
 }
@@ -184,7 +192,6 @@ function updateTime() {
  * @returns 
  */
 function showPopupMenu(target, e) {
-    const scheduleContainer = document.getElementById('tt-schedule-container')
     const backdrop  = document.getElementById('backdrop')
     const popupMenu = document.getElementById('popup-menu');
     const alreadyOpen = popupMenu.classList.contains('open') && target === popupMenu._currentTarget;
@@ -230,7 +237,6 @@ document.addEventListener('keydown', (e) => {
 async function deleteBlock() {
     const popupMenu = document.getElementById('popup-menu');
     const blockId = popupMenu._currentTarget.dataset.blockId
-    console.log(`Deleting block ${blockId}`)
     const response = await fetch(`/api/timetable/blocks/${blockId}`,{
         'method' : 'DELETE'
     })
@@ -250,133 +256,86 @@ function markRescheduleBlock() {
     console.log('mark resc')
 }
 
-/**
- * 
- * @param {Object} block 
- * @param {number} startMins 
- * @param {number} lengthMins 
- * @param {HTMLDivElement} tl
- * @returns {HTMLDivElement}
- */
-function buildPieceElement(block, startMins, lengthMins, tl) {
-    const start = new Date(block.start_datetime);
-    const end = new Date(block.end_datetime);
-    const minsInDay = 24 * 60;
-    const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
-    const effectiveStart = startMins - scheduleStartMins;
-    const leftPx = (effectiveStart/minsInDay) * tl.scrollWidth;
-    const widthPx = (lengthMins/minsInDay) * tl.scrollWidth;
-
-    const el = document.createElement('div');
-    el.className = 'timetable-block';
-    el.id = `timetable-block-${block.id}`;
-    el.style.setProperty('--left', `${leftPx}px`);
-    el.style.setProperty('--width', `${widthPx}px`);
-    el.style.setProperty('--bg-colour', block.colour);
-    el.dataset.blockId = block.id;
-
-    const titleSpan = document.createElement('span');
-    titleSpan.className = 'block-title';
-    titleSpan.textContent = block.title;
-
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'block-time';
-    timeSpan.textContent = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())} - ${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`
-
-    el.append(titleSpan, document.createElement('br'), timeSpan);
-    return el;
-}
-
-/**
- * Turns a block into an element
- * ONLY for timetable blocks
- * Splits the block if it extends past the visible space
- * 
- * @param {Object} block
- * @returns {Array<{dayIdx:number, el:HTMLDivElement}} 
- */
-function makeBlockElement(block) {
-    const start = new Date(block.start_datetime);
-    const end = new Date(block.end_datetime);
-
-    // days were misaligned by -1 in the previous script.
-    // so we normalise the day index
-    // Mon : 0 -> Sun : 6
-    const dayIdx = (start.getDay() + 6 ) % 7; 
-
-    // i had a really messy way of calculating the offset for each block, but it worked
-    // this is just more refined
-    const minsInDay = 24 * 60;
-    const startMins = start.getHours() * 60 + start.getMinutes();
-    var endMins = end.getHours() * 60 + end.getMinutes();
-    if (endMins <= startMins) endMins += minsInDay;
-
-    const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
-    const scheduleEndMins = ((window.settings?.start_hour ?? 0)%24) * 60;
-    
+function splitBlock(block) {
     const tl = document.getElementById('tt-topbar-timeline');
     const pieces = [];
+    const minsInDay = 24 * 60
 
-    // if the block starts before the visible space
-    if (startMins < scheduleStartMins) {
-        // normalise idx for the previous day
-        const prevDayidx = (dayIdx - 1 + 7) % 7
-        const prevLength = Math.min(scheduleStartMins, endMins) - startMins;
-        if (prevLength > 0) {
-            const prevEl = buildPieceElement(block,minsInDay+startMins,prevLength, tl);
-            pieces.push({dayIdx: prevDayidx, el:prevEl});
+    function splitBlockRecursive(currentBlock, long = false) {
+        const start = new Date(currentBlock.start_datetime);
+        const end = new Date(currentBlock.end_datetime);
+        const endOfDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()+1,0,0,0,0));
+
+        const startMins = start.getUTCHours() * 60 + start.getUTCMinutes();
+        let lengthMins = Math.min(end-start, endOfDay-start)/(60*1000);
+        const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
+
+        
+        const leftPx = ((startMins - scheduleStartMins) / minsInDay) * tl.scrollWidth;
+        if (startMins+lengthMins>minsInDay) {
+            lengthMins = minsInDay-startMins;
         }
-
-        const remainingStart = scheduleStartMins;
-        const remainingLength = endMins - scheduleStartMins;
-        if (remainingLength > 0) {
-            const currentEl = buildPieceElement(block, remainingStart, remainingLength, tl);
-            pieces.push({dayIdx: dayIdx, el: currentEl})
+        const widthPx = (lengthMins / minsInDay) * tl.scrollWidth;
+        
+        const el = document.createElement('div');
+        el.className = 'timetable-block';
+        el.id = `timetable-block-${currentBlock.id}`;
+        el.style.setProperty('--left', `${leftPx}px`)
+        el.style.setProperty('--width', `${widthPx}px`)
+        el.style.setProperty('--bg-colour', currentBlock.colour ?? (window.settings?.default_block_colour ?? '#3b3d68'))
+    
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'block-title';
+        titleSpan.textContent = currentBlock.title;
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'block-time';
+        if (long){
+            timeSpan.textContent = `${start.toISOString().slice(0,10)} ${formatTime(start.getUTCHours())}:${formatTime(start.getUTCMinutes())}- ${end.toISOString().slice(0,10)} ${formatTime(end.getUTCHours())}:${formatTime(end.getUTCMinutes())}`;
+        } else {
+            timeSpan.textContent = `${formatTime(start.getUTCHours())}:${formatTime(start.getUTCMinutes())}-${formatTime(end.getUTCHours())}:${formatTime(end.getUTCMinutes())}`;
         }
-    } else {
-        const currentStart = Math.max(startMins, scheduleStartMins);
-        const currentEnd = Math.min(endMins, minsInDay + scheduleEndMins);
-        const currentLength = currentEnd - currentStart;
+        
+        el.append(titleSpan, document.createElement('br'), timeSpan);
 
-        if (currentLength > 0) {
-            const currentEl = buildPieceElement(block, currentStart, currentLength, tl);
-            pieces.push({dayIdx: dayIdx, el:currentEl});
+        el.dataset.date = start.toISOString().slice(0,10);
+        pieces.push(el);
+        
+        if (end > endOfDay) {
+            const nextBlock = {
+                ...currentBlock,
+                start_datetime: endOfDay.toISOString()
+            }
+            splitBlockRecursive(nextBlock, true);
         }
-
-        if (endMins > minsInDay + scheduleEndMins) {
-            const nextDayIdx = (dayIdx + 1) % 7;
-            const overflowMins = endMins - minsInDay;
-            const overflowEl = buildPieceElement(block,scheduleEndMins,overflowMins-scheduleEndMins,tl);
-            pieces.push({dayIdx: nextDayIdx, el: overflowEl})
-        }
-
     }
+
+    splitBlockRecursive(block);
     return pieces
 }
 
 async function renderTimetable() {
-    console.log("Rendering timetable")
     const payload = await fetchPayload();
+    console.log(payload.blocks)
     const blocks = payload.blocks;
-    const dayContainers = Array.from({ length: 7 }, (_, i) => {
-        // The DOM has: <section id="day-container-Mon"><div class="day-inner"></div></section>
-        const container = document.getElementById(`day-container-${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}`);
-        return container;
-    });
+    const getDayContainer = (date) => document.querySelector(`[data-date="${date}"]`)
 
-    const fragments = Array.from({length: 7}, () => document.createDocumentFragment());
+    const fragmentMap = new Map();
 
     for (const block of blocks) {
-        const pieces = makeBlockElement(block);
-        // fragments[dayIdx].appendChild(el);
-        for (const {dayIdx, el} of pieces) {
-            fragments[dayIdx].appendChild(el);
+        const pieces = splitBlock(block);
+        for (const el of pieces) {
+            const date = el.dataset.date;
+            if (!fragmentMap.has(date)) {
+                fragmentMap.set(date, document.createDocumentFragment())
+            }
+            fragmentMap.get(date).appendChild(el);
         }
     }
 
-    fragments.forEach((frag, i)=>{
-        if (frag.childElementCount) {
-            dayContainers[i].appendChild(frag);
+    fragmentMap.forEach((frag, date)=>{
+        const dayContainer = getDayContainer(date);
+        if (dayContainer) {
+            dayContainer.appendChild(frag);
         }
     })
 }

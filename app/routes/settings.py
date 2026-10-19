@@ -62,7 +62,7 @@ def create_routes(app: Flask):
             return jsonify({"error":"Database error while updating settings"}), 500
         db_logger.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
         app_logger.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
-        return redirect(url_for('app.settings'))
+        return redirect(url_for('app.serve_settings'))
 
     @bp.route('/', methods=['GET'])
     @login_required
