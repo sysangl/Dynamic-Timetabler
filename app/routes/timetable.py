@@ -99,7 +99,7 @@ def create_routes(app: Flask):
             #    item_class = ToDo
             #case 'tasks':
             #    item_class = Task
-            case 'blocks':
+            case 'block':
                 item_class = Block
             case _:
                 app.logger.info(f'"{item}" is not a valid timetable item')

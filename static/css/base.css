@@ -20,6 +20,7 @@ body {
     height: 100vh;
     color: var(--text-colour-1);
     overflow-x: hidden;
+    font-size: 16px;
 }
 
 #content {
@@ -46,12 +47,12 @@ input, button {
 #topbar {
     position: sticky;
     width: 100%;
-    height: 60px;
+    height: 3rem;
     background: var(--highlight-colour);
     display: flex;
     align-content: center;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 1rem;
+    padding-right: 1rem;
     box-sizing: border-box;
 }
 
@@ -66,7 +67,7 @@ input, button {
 #topbar-user {
     min-width: fit-content;
     color: var(--text-colour-1);
-    font-size: 30px;
+    font-size: 1.7rem;
     align-content: center;
     text-align: center;
     justify-content: center;
@@ -74,7 +75,7 @@ input, button {
 }
 
 #display-name-wrapper {
-    font-size: 20px;
+    font-size: 1.3rem;
     text-align: center;
 }
 
@@ -85,7 +86,7 @@ input, button {
 #logout-btn-container {
     display: none;
     color: var(--text-colour-1);
-    font-size: 30px;
+    font-size: 1.6rem;
     flex-grow: 0;
     width: 0;
     animation: width .2s, display .2s;
@@ -96,7 +97,7 @@ input, button {
 
 #logout-btn-container.open {
     display: block;
-    width: 60px;
+    width: 3rem;
 }
 
 #logout-btn-container a {
@@ -143,9 +144,9 @@ input, button {
 #sidebar {
     position: absolute;
     left: 0;
-    top: 60px;
+    top: 3rem;
     width: 0;
-    height: calc(100% - 60px);
+    height: calc(100% - 3rem);
     background: #454545;
     overflow: hidden;
     transition: width 0.3s ease;
