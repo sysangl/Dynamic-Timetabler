@@ -33,16 +33,26 @@ function clamp(value, min, max) {
 function generateWeek() {
     console.log('Generating Week')
     const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const legend = document.getElementById("tt-legend");
+    const schedule = document.getElementById("tt-schedule");
     window.dayContainers = {};
-    document.getElementById("tt-legend").innerHTML = '<div id="tt-topbar-time">-</div>';
-    for (let dayIdx = window.settings['start_day']; dayIdx < 7; dayIdx++) {
-        document.getElementById("tt-legend").innerHTML+=`<div id="day-${days[dayIdx]}" class="tt-weekday"> ${days[dayIdx]} </div>`;
-        document.getElementById("tt-schedule").innerHTML+=`<div id="day-container-${days[dayIdx]}" class="day-container"></div>`;
-    }
-    for (let dayIdx = 0; dayIdx < window.settings['start_day']; dayIdx++) {
-        document.getElementById("tt-legend").innerHTML+='<div class="tt-weekday">'+days[dayIdx]+'</div>';
-        document.getElementById("tt-schedule").innerHTML+=`<div id="day-container-${days[dayIdx]}" class="day-container"></div>`;
+    legend.innerHTML = '<div id="tt-topbar-time">-</div>';
+    const now = new Date();
+    for (let inc = 0; inc < 7; inc++) {
+        const dayIdx = (inc + window.settings['start_day']) % 7;
+        const nextDay = new Date(now.getTime() + inc * 24 * 60 * 60 * 1000)
 
+        const newDay = document.createElement('div');
+        newDay.id = `day-${days[dayIdx]}`;
+        newDay.classList.add('tt-weekday');
+        newDay.innerText = `${days[dayIdx]}`;
+
+        const newDayCont = document.createElement('div');
+        newDayCont.id = `day-container-${days[dayIdx]}`;
+        newDayCont.classList.add('day-container');
+        newDayCont.dataset.date = nextDay.toDateString()
+        legend.append(newDay)
+        schedule.appendChild(newDayCont)
     }
 }
 
@@ -51,20 +61,20 @@ function generateWeek() {
  */
 function generateTimeline() {
     document.getElementById("tt-topbar-timeline").innerHTML = "";
-    for (let hour = window.settings['start_hour']; hour < 24; hour++) {
+    for (let inc = 0; inc < 24; inc++) {
+        const hour = (inc + window.settings['start_hour']) % 24;
+        const timeline = document.getElementById('tt-topbar-timeline');
+        const timelineNumber = document.createElement('div');
+        
         if (hour >= 12 ) {
-            document.getElementById("tt-topbar-timeline").innerHTML+='<div class="timeline-number-pm"> '+hour+'</div>';
+            timelineNumber.classList.add('timeline-number-pm')
         } else {
-            document.getElementById("tt-topbar-timeline").innerHTML+='<div class="timeline-number"> '+hour+'</div>';
+            timelineNumber.classList.add('timeline-number')
         }
+        timelineNumber.innerText = hour;
+        timeline.appendChild(timelineNumber)
     }
-    for (let hour = 0; hour < window.settings['start_hour']; hour++) {
-        if (hour >= 12 ) {
-            document.getElementById("tt-topbar-timeline").innerHTML+='<div class="timeline-number-pm"> '+hour+'</div>';
-        } else {
-            document.getElementById("tt-topbar-timeline").innerHTML+='<div class="timeline-number"> '+hour+'</div>';
-        }
-    }
+
 }
 
 /**

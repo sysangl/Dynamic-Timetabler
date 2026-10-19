@@ -35,7 +35,7 @@ def create_app():
     # DATABASE
     #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
     #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
-    app.secret_key = secrets.token_hex(32)
+    app.secret_key = secrets.token_hex(32) if not config['server']['debug'] else 'debug'
     app.config.update(
         SQLALCHEMY_DATABASE_URI = sqlite_uri,
         # ARGON (HASHING)

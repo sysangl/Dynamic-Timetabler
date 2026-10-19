@@ -5,12 +5,11 @@ from pathlib import Path
 from helpers.paths import resource_path
 
 server_logger = logging.getLogger("server")
-
+PROJECT_NAME = 'canopy_suite'
 _DEFAULT_CFG = Path(resource_path('config')) / 'default.toml'
-_USER_CFG = Path.home() / '.dynamic-timetabler' / 'default.toml'
+_USER_CFG = Path.home() / f'.{PROJECT_NAME}' / 'default.toml'
 
 _lock = threading.RLock()
-
 def _read_config(path: Path) -> dict:
     try:
         with path.open("r") as f:
@@ -31,7 +30,7 @@ def _deep_merge(a: dict, b: dict) -> dict:
 def _load_config():
     server_logger.info("Loading config...")
     if not _USER_CFG.exists():
-        server_logger.info("Copying default config to ~/.dynamic-timetabler/")
+        server_logger.info(f"Copying default config to ~/.{PROJECT_NAME}/")
         _USER_CFG.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src=_DEFAULT_CFG, dst=_USER_CFG)
 
