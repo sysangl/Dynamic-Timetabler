@@ -4,6 +4,8 @@ from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
 from helpers.datetime import combine_date_time
 from sqlalchemy import func, Date
+from helpers.config import get_config
+import pytz
 
 from app.models import (
     db,
@@ -112,8 +114,8 @@ def create_routes(app: Flask):
         #assert type(item_class) is ToDo | Task| Block
         data : dict = dict(request.form)
 
-        data['start_datetime'] = combine_date_time(request.form.get('start_date'),request.form.get('start_time')) # type: ignore
-        data['end_datetime'] = combine_date_time(request.form.get('end_date'),request.form.get('end_time')) #type: ignore
+        data['start_datetime'] = combine_date_time(request.form.get('start_date'),request.form.get('start_time'), tz=get_config()["general"]["timezone"]) # type: ignore
+        data['end_datetime'] = combine_date_time(request.form.get('end_date'),request.form.get('end_time'), tz=get_config()["general"]["timezone"]) #type: ignore
 
         created_item = item_class(
             **data,
@@ -158,7 +160,7 @@ def create_routes(app: Flask):
             #    item_class = ToDo
             #case 'tasks':
             #    item_class = Task
-            case 'blocks':
+            case 'block':
                 item_class = Block
             case _:
                 app.logger.info(f'"{item}" is not a valid timetable item')

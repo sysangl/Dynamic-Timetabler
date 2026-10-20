@@ -37,10 +37,10 @@ function generateWeek() {
     const schedule = document.getElementById("tt-schedule");
     window.dayContainers = {};
     legend.innerHTML = '<div id="tt-topbar-time">-</div>';
-    const now = new Date();
     for (let inc = 0; inc < 7; inc++) {
         const dayIdx = (inc + window.settings['start_day']) % 7;
-        const nextDay = new Date(now.getTime() + inc * 24 * 60 * 60 * 1000)
+        const now = new Date();
+        const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + dayIdx + 1);
 
         const newDay = document.createElement('div');
         newDay.id = `day-${days[dayIdx]}`;
@@ -54,11 +54,10 @@ function generateWeek() {
         dayDate.className = 'day-date';
         newDay.append(dayName, document.createElement('br'), dayDate)
 
-
         const newDayCont = document.createElement('div');
         newDayCont.id = `day-container-${days[dayIdx]}`;
         newDayCont.classList.add('day-container');
-        newDayCont.dataset.date = nextDay.toISOString().slice(0,10)
+        newDayCont.dataset.date = nextDay.toDateString().slice(3)
         legend.appendChild(newDay)
         schedule.appendChild(newDayCont)
     }
@@ -237,7 +236,7 @@ document.addEventListener('keydown', (e) => {
 async function deleteBlock() {
     const popupMenu = document.getElementById('popup-menu');
     const blockId = popupMenu._currentTarget.dataset.blockId
-    const response = await fetch(`/api/timetable/blocks/${blockId}`,{
+    const response = await fetch(`/api/timetable/block/${blockId}`,{
         'method' : 'DELETE'
     })
     document.querySelectorAll(`#timetable-block-${blockId}`).forEach(block=>block.remove())
@@ -261,43 +260,42 @@ function splitBlock(block) {
     const pieces = [];
     const minsInDay = 24 * 60
 
-    function splitBlockRecursive(currentBlock, long = false) {
+    function splitBlockRecursive(currentBlock) {
         const start = new Date(currentBlock.start_datetime);
         const end = new Date(currentBlock.end_datetime);
-        const endOfDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()+1,0,0,0,0));
+        const endOfDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+        console.log(start.toISOString())
+        console.log(end.toISOString())
+        console.log(endOfDay.toISOString())
+        console.log('-')
 
-        const startMins = start.getUTCHours() * 60 + start.getUTCMinutes();
-        let lengthMins = Math.min(end-start, endOfDay-start)/(60*1000);
+        const startMins = start.getHours() * 60 + start.getMinutes();
+        let lengthMins = (end-start) / (60*1000);
         const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
-
-        
         const leftPx = ((startMins - scheduleStartMins) / minsInDay) * tl.scrollWidth;
-        if (startMins+lengthMins>minsInDay) {
-            lengthMins = minsInDay-startMins;
+        if (end>endOfDay) {
+            lengthMins = (endOfDay-start)/(60*1000);
+            console.log(`length : ${lengthMins}`)
         }
         const widthPx = (lengthMins / minsInDay) * tl.scrollWidth;
         
         const el = document.createElement('div');
         el.className = 'timetable-block';
-        el.id = `timetable-block-${currentBlock.id}`;
+        el.dataset.blockId = block.id;
+        el.id = `timetable-block-${block.id}`;
         el.style.setProperty('--left', `${leftPx}px`)
         el.style.setProperty('--width', `${widthPx}px`)
-        el.style.setProperty('--bg-colour', currentBlock.colour ?? (window.settings?.default_block_colour ?? '#3b3d68'))
+        el.style.setProperty('--bg-colour', block.colour ?? (window.settings?.default_block_colour ?? '#3b3d68'))
     
         const titleSpan = document.createElement('span');
         titleSpan.className = 'block-title';
-        titleSpan.textContent = currentBlock.title;
+        titleSpan.textContent = block.title;
         const timeSpan = document.createElement('span');
         timeSpan.className = 'block-time';
-        if (long){
-            timeSpan.textContent = `${start.toISOString().slice(0,10)} ${formatTime(start.getUTCHours())}:${formatTime(start.getUTCMinutes())}- ${end.toISOString().slice(0,10)} ${formatTime(end.getUTCHours())}:${formatTime(end.getUTCMinutes())}`;
-        } else {
-            timeSpan.textContent = `${formatTime(start.getUTCHours())}:${formatTime(start.getUTCMinutes())}-${formatTime(end.getUTCHours())}:${formatTime(end.getUTCMinutes())}`;
-        }
-        
+        timeSpan.textContent = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())}-${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`;
         el.append(titleSpan, document.createElement('br'), timeSpan);
 
-        el.dataset.date = start.toISOString().slice(0,10);
+        el.dataset.date = start.toDateString().slice(3);
         pieces.push(el);
         
         if (end > endOfDay) {
@@ -305,7 +303,7 @@ function splitBlock(block) {
                 ...currentBlock,
                 start_datetime: endOfDay.toISOString()
             }
-            splitBlockRecursive(nextBlock, true);
+            splitBlockRecursive(nextBlock);
         }
     }
 
