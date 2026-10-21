@@ -40,10 +40,18 @@ def _load_config():
 
 CONFIG = _load_config()
 
-def get_config():
+def get_config(default=False):
+    if default:
+        return _read_config(_DEFAULT_CFG)
     return CONFIG
 
 def reload_config():
     global CONFIG
     with _lock:
         CONFIG = _load_config()
+
+def write_config(config:dict):
+    _USER_CFG.parent.mkdir(parents=True, exist_ok=True)
+    with _USER_CFG.open("w",encoding="utf-8") as f:
+        toml.dump(config, f)
+    server_logger.info("Configuration created/updated")

@@ -1,9 +1,6 @@
 [general]
 timezone = "Australia/Melbourne"
 
-[engine]
-engine_only = true
-
 [server]
 debug = false
 host = "localhost"
