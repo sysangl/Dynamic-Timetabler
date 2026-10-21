@@ -28,7 +28,7 @@ def create_app():
     sqlite_uri = f"sqlite:///{db_file.resolve().as_posix()}"
     server_logger = logging.getLogger('server')
 
-    app = Flask("Dynamic Timetabler", template_folder=TEMPLATE_ROOT, static_folder=STATIC_ROOT)
+    app = Flask("Canopy", template_folder=TEMPLATE_ROOT, static_folder=STATIC_ROOT)
 
     # APP CONFIGS ==============================
 

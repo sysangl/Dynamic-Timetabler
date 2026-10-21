@@ -5,9 +5,20 @@ from helpers.config import get_config, write_config, _deep_merge
 import toml
 from run import run_server
 
-HEADING_FONT = (resource_path('static/fonts/Aleo/static/Aleo-Regular.ttf'),32)
-SUBHEADING_FONT = (resource_path('static/fonts/Aleo/static/Aleo-Regular.ttf'),18)
+ALEO = resource_path('static/fonts/Aleo/static/Aleo-Regular.ttf')
+HEADING_FONT = (ALEO,28, 'bold')
+SUBHEADING_FONT = (ALEO,22)
+BTN_FONT = (ALEO, 18, 'bold')
+TEXT_FONT = (ALEO, 14)
 original_config = get_config(True)
+BG_COLOUR = '#1e1e1e'
+FG_COLOUR = '#e0e0e0'
+ACCENT = '#a0e0a0'
+ACCENT_MUTED = "#749e74"
+BTN_BG = '#6ea2aa'
+BTN_BG_DISABLED = "#55797e"
+BTN_FG = FG_COLOUR
+
 
 
 def finalise_settings(config:dict, controller):
@@ -25,6 +36,28 @@ def finalise_installation(controller, run: bool = True):
 class installerApp(tk.Tk):
     def __init__(self, screenName: str | None = None, baseName: str | None = None, className: str = 'Tk', useTk: bool = True, sync: bool = False, use: str | None = None) -> None:
         super().__init__(screenName, baseName, className, useTk, sync, use)
+        self.title('Canopy Setup')
+        self.minsize(700,500)
+        self.maxsize(700,500)
+        self.resizable(False,False)
+        self.geometry('700x700+50+50')
+
+        style = ttk.Style()
+        base_theme = 'clam'
+        style.theme_use(base_theme)
+
+        self.configure(background=BG_COLOUR)
+        style.configure('TFrame', background=BG_COLOUR)
+        style.configure('TLabel', background=BG_COLOUR, foreground=FG_COLOUR)
+
+        style.configure('Header.TLabel', font=HEADING_FONT,background=BG_COLOUR, foreground=FG_COLOUR)
+        style.map('Accent.TButton', 
+                foreground=[('active', BTN_FG),("!disabled", BTN_FG)],
+                background=[('active', ACCENT), ('!disabled', BTN_BG_DISABLED)]
+                )
+        style.configure("Accent.TButton",font=BTN_FONT, foreground=BTN_FG, background=BTN_BG, borderwidth=0, focusthickness=0, padding=(10,5))
+
+
         container = tk.Frame(self)
         container.pack(side='top',fill='both',expand=True)
 
@@ -35,7 +68,6 @@ class installerApp(tk.Tk):
             frame = FRAME(container, self)
             self.frames[FRAME] = frame
             frame.grid(row=0, column=0, sticky='nsew')
-
         self.show_frame(StartPage)
 
     def show_frame(self, container):
@@ -46,8 +78,9 @@ class installerApp(tk.Tk):
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text='Canopy Suite', font=HEADING_FONT)
+        label = ttk.Label(self, text='Canopy Setup', font=HEADING_FONT)
         label.pack(anchor='n',pady=20)
+        self.configure(background=BG_COLOUR)
 
         start_btn = ttk.Button(self, text='Start', command=lambda:controller.show_frame(ModeSelectPage))
         start_btn.pack(anchor='se', padx=20)
@@ -57,6 +90,7 @@ class ModeSelectPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text='Select Installation Mode', font=HEADING_FONT)
         label.pack(anchor='n', pady=20)
+        self.configure(background=BG_COLOUR)
 
 
         installation_modes = ['Portable', 'User Install']
@@ -94,6 +128,7 @@ class FolderSelectPage(tk.Frame):
         label.pack(anchor='n', pady=20)
         label = ttk.Label(self, text='SKIP FOR NOW', font=HEADING_FONT)
         label.pack(anchor='n', pady=20)
+        self.configure(background=BG_COLOUR)
 
         back_btn = ttk.Button(self, text='Back', command=lambda:controller.show_frame(ModeSelectPage))
         back_btn.pack(anchor='sw',padx=20)
@@ -107,8 +142,10 @@ class SettingsPage(tk.Frame):
         self.widgets = {}
         label = ttk.Label(self, text='Settings', font=HEADING_FONT)
         label.pack(anchor='n', pady=20)
+        self.configure(background=BG_COLOUR)
 
         canvas = tk.Canvas(self, borderwidth=0, highlightthickness=0)
+        canvas.configure(background=BG_COLOUR)
         self.scroll_frame = ttk.Frame(canvas)
         scroll_bar = ttk.Scrollbar(self, orient='vertical', command=canvas.yview)
         scroll_bar.pack(side='right', fill='y')
@@ -129,16 +166,16 @@ class SettingsPage(tk.Frame):
         next_btn = ttk.Button(self, text='Next', command=self.finalise_settings)
         next_btn.pack(anchor='se', padx=20)
 
-    def build_widgets(self, config, row, prefix="")->int:
+    def build_widgets(self, config, row, prefix='')->int:
         for key,value in config.items():
             if isinstance(value, dict):
                 row += 1
-                label = tk.Label(self.scroll_frame, text=(prefix+key).replace('.', ' ').title(), font=SUBHEADING_FONT)
+                label = tk.Label(self.scroll_frame, text=(prefix+key).replace('.', ' ').title(), font=SUBHEADING_FONT, bg=BG_COLOUR, fg=FG_COLOUR)
                 label.grid(row=row, column=1, sticky='w', padx=10, pady=5)
                 row += 1
                 row = self.build_widgets(value, row, prefix=prefix+key+'.')
             else:
-                ttk.Label(self.scroll_frame, text=key).grid(row=row, column=0, sticky='w', padx=10, pady=5)
+                ttk.Label(self.scroll_frame, text=key, font=TEXT_FONT).grid(row=row, column=0, sticky='w', padx=10, pady=5)
             if isinstance(value, bool): # type: ignore
                 var = tk.BooleanVar(value=value)
                 check_btn = ttk.Checkbutton(self.scroll_frame, variable=var)
@@ -180,17 +217,18 @@ class FinalisePage(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text='Finished Setup', font=HEADING_FONT)
         label.pack(anchor='n', pady=20)
+        self.configure(background=BG_COLOUR)
         ttk.Label(self,
             text=(
-                "Your configuration has been saved.\n"
-                "Click 'Finish' to close the installer."
+                'Your configuration has been saved.\n'
+                'Click **Finish** to close the installer.'
             ),
-            justify="center",
-        ).pack(anchor="center", pady=10)
+            justify='center',
+        ).pack(anchor='center', pady=10)
 
         run_var = tk.BooleanVar(value=True)
-        run_check = tk.Checkbutton(self, variable=run_var, text="Run program on exit?")
-        run_check.pack(anchor="center", pady=10)
+        run_check = tk.Checkbutton(self, variable=run_var, text='Run program on exit?')
+        run_check.pack(anchor='center', pady=10)
 
         
         back_btn = ttk.Button(self, text='Back', command=lambda:controller.show_frame(SettingsPage))
@@ -200,9 +238,4 @@ class FinalisePage(tk.Frame):
 
 
 app = installerApp()
-app.title('Canopy Installer')
-app.minsize(700,500)
-app.maxsize(700,500)
-app.resizable(False,False)
-app.geometry('700x700+50+50')
 app.mainloop()

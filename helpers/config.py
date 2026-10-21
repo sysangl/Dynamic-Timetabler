@@ -5,7 +5,7 @@ from pathlib import Path
 from helpers.paths import resource_path
 
 server_logger = logging.getLogger("server")
-PROJECT_NAME = 'canopy_suite'
+PROJECT_NAME = 'canopy-suite'
 _DEFAULT_CFG = Path(resource_path('config')) / 'default.toml'
 _USER_CFG = Path.home() / f'.{PROJECT_NAME}' / 'default.toml'
 
