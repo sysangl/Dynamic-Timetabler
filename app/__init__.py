@@ -22,9 +22,9 @@ def create_app():
     STATIC_ROOT = resource_path('static')
     config = get_config()
     home_dir = Path.home()
-    project_dir = home_dir / ".dynamic-timetabler"
+    project_dir = home_dir / ".canopy-suite"
     project_dir.mkdir(parents=True, exist_ok=True)
-    db_file = project_dir / "dynamic-timetabler.sqlite"
+    db_file = project_dir / "database.sqlite"
     sqlite_uri = f"sqlite:///{db_file.resolve().as_posix()}"
     server_logger = logging.getLogger('server')
 
