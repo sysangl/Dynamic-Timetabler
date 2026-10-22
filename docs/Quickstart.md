@@ -29,3 +29,4 @@ You can log out by clicking your the user icon in the top right corner, and then
 
 ### Notes
 - '~/.canopy-suite' contains the database, configuration files and log files.
+- For older versions (v0.0.6 and below) 'canopy-suite' is replaced with 'dynamic-timetabler'
