@@ -29,7 +29,13 @@ async function generateItemTable() {
             const itemTypeText = document.createElement('td')
             itemTypeText.textContent = itemType.slice(0,-1).toLocaleUpperCase()
             const itemTitleText = document.createElement('td')
-            itemTitleText.textContent = item.title
+            const itemColour = document.createElement('span')
+            itemColour.classList.add('fa-solid', 'fa-circle')
+            itemColour.style.color = item.colour
+            itemColour.style.marginRight = '5px';
+            itemTitleText.append(itemColour)
+
+            itemTitleText.innerHTML += item.title
             const itemStart = document.createElement('td')
             const startDateTime = new Date(item.start_datetime)
             const sDate = document.createElement('p')
@@ -81,5 +87,12 @@ async function setupManagement () {
     document.getElementById('etime').value = eTime;
 
     generateItemTable();
+
+
 }
 setupManagement();
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !itemForms.classList.contains('hidden')) {
+        toggleForms();
+    }
+});
