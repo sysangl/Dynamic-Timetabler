@@ -1,11 +1,15 @@
 
 :root {
     --sidebar-width: 200px;
-    --highlight-colour: #5d845d;
-    --bg-colour-1: #1e1e1e;
-    --text-colour-1: #f5f5f5;
-    --font-1: 'Aleo';
-
+    --topbar-colour: #5d845d;
+    --font-main: 'Aleo';
+    --bg-main: #1e1e1e;
+    --bg-section: #252525;
+    --bg-input:#2a2a2a;
+    --border-radius: 4px;
+    --text-primary:  #e0e0e0;
+    --text-muted:    #c0c0c0;
+    --accent:        #a0e0a0;
 }
 
 html {
@@ -13,18 +17,18 @@ html {
 }
 
 body {
-    background-color: var(--bg-colour-1);
-    font-family: var(--font-1);
+    background-color: var(--bg-main);
+    font-family: var(--font-main);
     margin:0;
     overscroll-behavior: none;
     height: 100vh;
-    color: var(--text-colour-1);
+    color: var(--text-primary);
     overflow-x: hidden;
     font-size: 16px;
 }
 
 #content {
-    background: var(--bg-colour-1);
+    background: var(--bg-main);
     padding: 50px;
     display: flex;
     flex-direction: column;
@@ -48,7 +52,7 @@ input, button {
     position: sticky;
     width: 100%;
     height: 3rem;
-    background: var(--highlight-colour);
+    background: var(--topbar-colour);
     display: flex;
     align-content: center;
     padding-left: 1rem;
@@ -58,15 +62,15 @@ input, button {
 
 #topbar-title {
     font-size: 1.6rem;
-    font-family: var(--font-1);
-    color: #e1e1e1;
+    font-family: var(--font-main);
+    color: var(--text-primary);
     left: 15px;
     align-content: center;
 }
 
 #topbar-user {
     min-width: fit-content;
-    color: var(--text-colour-1);
+    color: var(--text-primary);
     font-size: 1.7rem;
     align-content: center;
     text-align: center;
@@ -85,7 +89,7 @@ input, button {
 
 #logout-btn-container {
     display: none;
-    color: var(--text-colour-1);
+    color: var(--text-primary);
     font-size: 1.6rem;
     flex-grow: 0;
     width: 0;
@@ -103,7 +107,7 @@ input, button {
 #logout-btn-container a {
     text-decoration: none;
     -moz-text-decoration-line: none;
-    color: var(--text-colour-1);
+    color: var(--text-primary);
 }
 
 .ham {
@@ -123,7 +127,7 @@ input, button {
 .line {
     fill:none;
     transition: stroke-dasharray 400ms, stroke-dashoffset 400ms;
-    stroke:#e1e1e1;
+    stroke:var(--text-primary);
     stroke-width:4;
     stroke-linecap:round;
 }
@@ -174,7 +178,7 @@ input, button {
     border-bottom: 0 1px solid rgba(255,255,255, 0.5);
     background-color: rgba(255,255,255,0);
     transition: background-color 0.2s ease;
-    color: var(--text-colour-1);
+    color: var(--text-primary);
     text-decoration: none;
     font-size: 20px;
 }

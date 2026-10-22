@@ -2,9 +2,9 @@
 :root {
     --sidebar-width: 200px;
     --highlight-colour: rgb(137, 15, 165);
-    --bg-colour-1: #1e1e1e;
-    --text-colour-1: #f5f5f5;
-    --font-1: 'Aleo';
+    --bg-main: #1e1e1e;
+    --text-primary: #f5f5f5;
+    --font-main: 'Aleo';
 }
 
 
@@ -13,12 +13,12 @@ html {
 }
 
 body {
-    background-color: var(--bg-colour-1);
-    font-family: var(--font-1);
+    background-color: var(--bg-main);
+    font-family: var(--font-main);
     margin:0;
     overscroll-behavior: none;
     height: 100vh;
-    color: var(--text-colour-1);
+    color: var(--text-primary);
     overflow: hidden;
 }
 

@@ -5,7 +5,7 @@
  */
 async function fetchPayload() {
     const dates = document.getElementsByClassName('day-container')
-    const response = await fetch(`/api/timetable/?start=${dates[0].dataset.date}&end=${dates[6].dataset.date}`, {
+    const response = await fetch(`/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[6].dataset.isoDate}`, {
         method : 'GET'
     });
 
@@ -58,6 +58,7 @@ function generateWeek() {
         newDayCont.id = `day-container-${days[dayIdx]}`;
         newDayCont.classList.add('day-container');
         newDayCont.dataset.date = nextDay.toDateString().slice(3)
+        newDayCont.dataset.isoDate = nextDay.toISOString().slice(0,10)
         legend.appendChild(newDay)
         schedule.appendChild(newDayCont)
     }
@@ -264,10 +265,6 @@ function splitBlock(block) {
         const start = new Date(currentBlock.start_datetime);
         const end = new Date(currentBlock.end_datetime);
         const endOfDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
-        console.log(start.toISOString())
-        console.log(end.toISOString())
-        console.log(endOfDay.toISOString())
-        console.log('-')
 
         const startMins = start.getHours() * 60 + start.getMinutes();
         let lengthMins = (end-start) / (60*1000);

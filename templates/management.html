@@ -1,9 +1,40 @@
+<!-- management -->
+<link rel="stylesheet" href="{{url_for('static', filename='css/management.css')}}"></link>
 <!-- shared forms css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}"></link>
 
 
 
-<div class="form-container">
+
+<div id="item-container">
+    <header>
+        <span class="title">Timetable Items</span>
+        <span id="counter">| <span id="item-counter">0</span> Item(s)</span>
+        <div></div>
+        <button onclick="toggleForms()">CREATE NEW</button>
+    </header>
+    <table id="item-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        
+        <tbody id="item-table-body">
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<div id="item-forms" class="hidden" >
+<div id="block-creation-form" class="form-container">
     <form id="block-creation" class="form-body" method="post" action="{{ url_for('timetable.create_item', item='block') }}">
 
         <fieldset class="card-section">
@@ -59,33 +90,15 @@
     </form>
 </div>
 
+</div>
+
+<div id="backdrop" onclick="toggleForms()" class="hidden fill-available"></div>
+
 
 <!-- settings script -->
 <script src="{{url_for('static',filename='js/management.js')}}"></script>
 
 <script>
-    async function setupManagement () {
-        let settings = await fetchSettings()
-        const now = new Date();
-        const future = new Date(now.getTime() + settings.default_block_length * 60 * 1000);
 
-        const sDate = now.toISOString().split('T')[0];
-        const eDate = future.toISOString().split('T')[0];
-
-        const sHours   = String(now.getHours()).padStart(2, '0');
-        const sMinutes = String(now.getMinutes()).padStart(2, '0');
-        const sTime = `${sHours}:${sMinutes}`;  
-
-        const eHours   = String(future.getHours()).padStart(2, '0');
-        const eMinutes = String(future.getMinutes()).padStart(2, '0');
-        const eTime = `${eHours}:${eMinutes}`;  
-
-        document.getElementById('sdate').value = sDate;
-        document.getElementById('edate').value = eDate;
-
-        document.getElementById('stime').value = sTime;
-        document.getElementById('etime').value = eTime;
-    }
-    setupManagement();
 
 </script>

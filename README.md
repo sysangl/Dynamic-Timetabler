@@ -18,6 +18,15 @@
 
 A productivity suite with various things to help you keep track of your time. 
 
+# How to run
+
+1. Download the latest release `Canopy-<version>.exe`
+2. Run the executable and go through the setup process (configuration).
+3. Once a console window pops up (should show a 'Canopy' text banner), open a web browser and go to 'http://localhost:58362/app' (or whatever your configuration is)
+4. You can create a user by clicking 'Switch to Registration'
+
+More information is located in `docs/Quickstart.md`
+
 # Features!
 
 > DONE    = Finished! May still be updated to fix bugs. <br>

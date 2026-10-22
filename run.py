@@ -43,3 +43,6 @@ def run_server():
         server_logger.info("Shutting down server")
 
     atexit.register(server_stop)
+
+if __name__ == "__main__":
+    run_server()

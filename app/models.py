@@ -453,11 +453,24 @@ class Routine(db.Model):
     name : Mapped[str] = mapped_column(nullable=False, default="New Routine")
 
     start_date : Mapped[datetime] = mapped_column(nullable=False)
-    end_date : Mapped[datetime] = mapped_column(nullable=False)
-    
+    end_date : Mapped[Optional[datetime]] = mapped_column()
+
+    # length of time the routine encompases and when it repeats. defaukt : a 7day routine that repeats every week
     routine_length : Mapped[int] = mapped_column(nullable=False, default=7)
     repeats_every : Mapped[int] = mapped_column(nullable=False, default=7)
 
-    def __init__(self, name, start_date, end_date, routine_length, repeats_every) -> None:
+    blocks : Mapped[list[Block]] = mapped_column(JSON, nullable=False)
+
+    def __init__(self, 
+                name,
+                start_date,
+                end_date = None,
+                routine_length = 7,
+                repeats_every = 7
+                ) -> None:
         self.name = name
         self.start_date = start_date
+        self.end_date = end_date
+        self.routine_length = routine_length
+        self.repeats_every = repeats_every
+        self.blocks = []

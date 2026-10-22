@@ -35,6 +35,32 @@ def create_routes(app: Flask):
     @bp.route('/', methods=['GET'])
     @login_required
     def get():
+        server_logger.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
+
+        try:
+            #todos = ToDo.query.filter().all()
+            #tasks = Task.query.all()
+            blocks = Block.query.filter(
+                    Block.owner_id == current_user.id,
+                ).all()
+
+            payload = {
+                #"todos": [todo.serialise() for todo in todos],
+                #"tasks": [task.serialise() for task in tasks],
+                "blocks": [block.serialise() for block in blocks]
+            }
+
+            app.logger.info(payload)
+
+        except Exception:
+            server_logger.exception("Failed to fetch timetable items")
+            raise
+        return jsonify(payload), 200
+
+
+    @bp.route('/range/', methods=['GET'])
+    @login_required
+    def get_range():
         start_date = parse_iso_date(request.args.get('start','').strip())
         end_date = parse_iso_date(request.args.get('end','').strip())
 

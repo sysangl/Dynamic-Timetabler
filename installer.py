@@ -30,7 +30,8 @@ def finalise_settings(config:dict, controller):
 
 def finalise_installation(controller, run: bool = True):
     controller.destroy()
-    run_server()
+    if run:
+        run_server()
 
 
 class installerApp(tk.Tk):
