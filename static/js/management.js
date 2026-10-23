@@ -1,18 +1,30 @@
 itemForms = document.getElementById('item-forms');
-filters = {};
+filters = {dateRangeFrom:null, dateRangeTo:null};
 currentItemClass = 'all';
 filterForm =document.getElementById('filter-form');
 
 filterForm.addEventListener('submit', async (e) => {
-    e.preventDefault();                 // we handle the request ourselves
+    e.preventDefault();
 
     const formData = new FormData(filterForm);
     const drf = formData.get('filter_date_from');
     const drt = formData.get('filter_date_to');
 
-    const ti = await fetchTimetableItems(dateRangeFrom=drf, dateRangeTo=drt);
+    filters.dateRangeFrom = drf;
+    filters.dateRangeTo = drt;
+
+    const ti = await fetchTimetableItems();
     generateItemTable(currentItemClass, timetableItems=ti);
 });
+
+filterForm.addEventListener('reset', async (e) => {
+    filters.dateRangeFrom = null;
+    filters.dateRangeTo = null;
+
+    const ti = await fetchTimetableItems();
+    generateItemTable(currentItemClass, timetableItems=ti);
+});
+
 
 
 function toggleForms() {
@@ -20,7 +32,9 @@ function toggleForms() {
     itemForms.classList.toggle('hidden')
 }
 
-async function fetchTimetableItems(dateRangeFrom=null, dateRangeTo=null) {
+async function fetchTimetableItems() {
+    dateRangeFrom = filters.dateRangeFrom;
+    dateRangeTo = filters.dateRangeTo;
     var url = '/api/timetable'
     if (dateRangeFrom || dateRangeTo) {
         url += '/range/?'

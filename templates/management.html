@@ -23,7 +23,7 @@
         </select>
         <button id="create-new-btn" onclick="toggleForms()" disabled>CREATE NEW</button>
     </header>
-    <div id="filter-container hidden">
+    <div id="filter-container" class="hidden">
         <form id="filter-form">
             <fieldset class="card-section">
                 <legend class="section-title">Date Range</legend>
@@ -38,7 +38,8 @@
                 </div>
             </fieldset>
             <div class="form-actions">
-                <button id="filter-submit-btn" class="submit-button" type="submit">Apply Filters</button>
+                <button id="filter-apply-btn" class="submit-button" type="submit">Apply Filters</button>
+                <button id="filter-remove-btn" class="cancel-button" type="reset">Remove Filters</button>
             </div>
         </form>
     </div>
