@@ -153,6 +153,11 @@
     transform: translateY(-1px);
 }
 
+button:disabled {
+    filter: grayscale(1);
+    cursor:not-allowed;
+}
+
 @media (max-width: 420px) {
     .field-group {
         grid-template-columns: 1fr;

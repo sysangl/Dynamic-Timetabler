@@ -8,10 +8,17 @@
 
 <div id="item-container">
     <header>
-        <span class="title">Timetable Items</span>
+        <span class="title">Timetable Items |&nbsp;</span>
+        <span id="item-table-title" class="title"></span>
         <span id="counter">| <span id="item-counter">0</span> Item(s)</span>
         <div></div>
-        <button onclick="toggleForms()">CREATE NEW</button>
+        <select id="item-select" class="field-input" >
+            <option onclick="changeTable('all')" selected>All</option>
+            <option onclick="changeTable('blocks')">Blocks</option>
+            <option onclick="changeTable('tasks')">Tasks</option>
+            <option onclick="changeTable('routines')">Routines</option>
+        </select>
+        <button id="create-new-btn" onclick="toggleForms()" disabled>CREATE NEW</button>
     </header>
     <table id="item-table">
         <thead>

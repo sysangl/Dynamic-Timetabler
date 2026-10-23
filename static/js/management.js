@@ -16,13 +16,18 @@ async function fetchTimetableItems() {
     return await response.json()
 }
 
-async function generateItemTable() {
+async function generateItemTable(selectedItem='all') {
     const timetableItems = await fetchTimetableItems()
     const itemTable = document.getElementById('item-table-body')
     itemTable.innerHTML = "";
+    const tableTitle = document.getElementById('item-table-title')
+    tableTitle.textContent = toUpper(selectedItem)
     let itemCount = 0
 
     for (const [itemType, items] of Object.entries(timetableItems)) {
+        if ((selectedItem != itemType) && (selectedItem != 'all')) {
+            continue
+        }
         for (const item of items) {
             const row = document.createElement('tr');
             row.id = `${itemType}-${item.id}`
@@ -63,6 +68,14 @@ async function generateItemTable() {
     document.getElementById('item-counter').textContent = itemCount;
 }
 
+function changeTable(selectedItem) {
+    if (selectedItem == 'all') {
+        document.getElementById('create-new-btn').disabled = true
+    } else {
+        document.getElementById('create-new-btn').disabled = false
+    }
+    generateItemTable(selectedItem)
+}
 
 async function setupManagement () {
     let settings = await fetchSettings()
@@ -87,9 +100,8 @@ async function setupManagement () {
     document.getElementById('etime').value = eTime;
 
     generateItemTable();
-
-
 }
+
 setupManagement();
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !itemForms.classList.contains('hidden')) {
