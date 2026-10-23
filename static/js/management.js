@@ -29,6 +29,19 @@ async function generateItemTable(selectedItem='all') {
         }
         for (const item of items) {
             const row = document.createElement('tr');
+            row.onclick = (e) => {
+                if (!getPressedKeys().includes('Control')) {
+                    const selectedElements = document.getElementsByClassName('selected');
+                    for (let index = 0; index < selectedElements.length; index++) {
+                        const element = selectedElements[index];
+                        if (element != row) {
+                            element.classList.remove('selected')
+                        }
+                    }
+                    
+                }
+                row.classList.toggle('selected')
+            };
             row.id = `${itemType}-${item.id}`
             const itemTypeText = document.createElement('td')
             itemTypeText.textContent = itemType.slice(0,-1).toLocaleUpperCase()
