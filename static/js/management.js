@@ -1,11 +1,38 @@
-itemForms = document.getElementById('item-forms')
+itemForms = document.getElementById('item-forms');
+filters = {};
+currentItemClass = 'all';
+filterForm =document.getElementById('filter-form');
+
+filterForm.addEventListener('submit', async (e) => {
+    e.preventDefault();                 // we handle the request ourselves
+
+    const formData = new FormData(filterForm);
+    const drf = formData.get('filter_date_from');
+    const drt = formData.get('filter_date_to');
+
+    const ti = await fetchTimetableItems(dateRangeFrom=drf, dateRangeTo=drt);
+    generateItemTable(currentItemClass, timetableItems=ti);
+});
+
+
 function toggleForms() {
     document.getElementById('backdrop').classList.toggle('hidden')
     itemForms.classList.toggle('hidden')
 }
 
-async function fetchTimetableItems() {
-    const response = await fetch(`/api/timetable`, {
+async function fetchTimetableItems(dateRangeFrom=null, dateRangeTo=null) {
+    var url = '/api/timetable'
+    if (dateRangeFrom || dateRangeTo) {
+        url += '/range/?'
+        if (dateRangeFrom) {
+            url+=`from=${dateRangeFrom}&`
+        } 
+        if (dateRangeTo) {
+            url+=`until=${dateRangeTo}`
+        }
+    }
+
+    const response = await fetch(url, {
         method : 'GET'
     });
 
@@ -15,8 +42,8 @@ async function fetchTimetableItems() {
     return await response.json()
 }
 
-async function generateItemTable(selectedItem='all') {
-    const timetableItems = await fetchTimetableItems()
+async function generateItemTable(selectedItem='all', timetableItems = null) {
+    timetableItems = timetableItems || await fetchTimetableItems()
     const itemTable = document.getElementById('item-table-body')
     itemTable.innerHTML = "";
     const tableTitle = document.getElementById('item-table-title')
@@ -86,7 +113,8 @@ function changeTable(selectedItem) {
     } else {
         document.getElementById('create-new-btn').disabled = false
     }
-    generateItemTable(selectedItem)
+    currentItemClass = selectedItem
+    generateItemTable(selectedItem = selectedItem)
 }
 
 async function setupManagement () {

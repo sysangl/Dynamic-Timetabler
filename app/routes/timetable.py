@@ -50,7 +50,6 @@ def create_routes(app: Flask):
                 "blocks": [block.serialise() for block in blocks]
             }
 
-            app.logger.info(payload)
 
         except Exception:
             server_logger.exception("Failed to fetch timetable items")
@@ -63,26 +62,42 @@ def create_routes(app: Flask):
     def get_range():
         start_date = parse_iso_date(request.args.get('start','').strip())
         end_date = parse_iso_date(request.args.get('end','').strip())
+        from_date = parse_iso_date(request.args.get('from',''.strip()))
+        until_date = parse_iso_date(request.args.get('until',''.strip()))
 
         server_logger.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
 
-        if not start_date or not end_date:
-            start_date = datetime.now().date()
-            end_date = start_date
-        else:
-            if end_date < start_date:
-                start_date, end_date = end_date, start_date
+        if not (from_date or until_date):
+            if not start_date or not end_date:
+                start_date = datetime.now().date()
+                end_date = start_date
+            else:
+                if end_date < start_date:
+                    start_date, end_date = end_date, start_date
 
-        app.logger.info(f'Getting blocks for {start_date} - {end_date}')
+        app.logger.info(f'Getting blocks for {start_date or from_date} - {end_date or until_date}')
 
         try:
-            #todos = ToDo.query.filter().all()
-            #tasks = Task.query.all()
-            blocks = Block.query.filter(
-                    Block.owner_id == current_user.id,
-                    Block.start_datetime <= datetime.combine(end_date, datetime.max.time()),
-                    Block.end_datetime >= datetime.combine(start_date, datetime.min.time())
-                ).all()
+            blocks = []
+            if from_date and until_date:
+                start_date=from_date
+                end_date=until_date
+            if start_date and end_date:
+                blocks = Block.query.filter(
+                        Block.owner_id == current_user.id,
+                        Block.start_datetime <= datetime.combine(end_date, datetime.max.time()),
+                        Block.end_datetime >= datetime.combine(start_date, datetime.min.time())
+                    ).all()
+            elif from_date:
+                blocks = Block.query.filter(
+                        Block.owner_id == current_user.id,
+                        Block.end_datetime >= datetime.combine(from_date, datetime.min.time())
+                    ).all()
+            elif until_date:
+                    blocks = Block.query.filter(
+                        Block.owner_id == current_user.id,
+                        Block.start_datetime <= datetime.combine(until_date, datetime.max.time()),
+                    ).all()
 
             payload = {
                 #"todos": [todo.serialise() for todo in todos],
@@ -90,7 +105,6 @@ def create_routes(app: Flask):
                 "blocks": [block.serialise() for block in blocks]
             }
 
-            app.logger.info(payload)
 
         except Exception:
             server_logger.exception("Failed to fetch timetable items")

@@ -96,7 +96,7 @@
 #item-select {
     width: initial !important;
     flex: 0;
-    margin-right: 10px;
+    margin: 0 10px;
 }
 
 .table-sort-arrows {
@@ -116,7 +116,33 @@
     justify-self: center;
 }
 
-.hidden {
+#item-table-body {
+    overflow-y: scroll;
+}
+
+#filter-container {
+    height: 200px;
+    animation: height 0.5s;
+    overflow: hidden;
+}
+
+#filter-container.hidden {
+    height: 0;
+}
+
+.filter-group {
+    display: block !important;
+}
+.filter-group .field-input {
+    width: unset !important;
+}
+
+#filter-form {
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+
+#item-forms.hidden {
     display: none !important;
 }
 
@@ -124,4 +150,8 @@
     position: absolute;
     z-index: 1;
     backdrop-filter: brightness(0.6);
+}
+
+#backdrop.hidden {
+    display: none;
 }

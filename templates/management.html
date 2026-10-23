@@ -4,12 +4,17 @@
 <link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}"></link>
 
 
+
+<!-- TODO WORK ON AN ADVANCED FILTER, FILTER DATE/START TIMES, ADD FROM - AND AN OPTIONAL TO (END DATE) -->
+
+
 <div id="item-container">
     <header>
         <span class="title">Timetable Items |&nbsp;</span>
         <span id="item-table-title" class="title"></span>
         <span id="counter">| <span id="item-counter">0</span> Item(s)</span>
         <div></div>
+        <button onclick="document.getElementById('filter-container').classList.toggle('hidden')"><span class="fa-solid fa-filter"></span></button>
         <select id="item-select" class="field-input" >
             <option onclick="changeTable('all')" selected>All</option>
             <option onclick="changeTable('blocks')">Blocks</option>
@@ -18,6 +23,25 @@
         </select>
         <button id="create-new-btn" onclick="toggleForms()" disabled>CREATE NEW</button>
     </header>
+    <div id="filter-container hidden">
+        <form id="filter-form">
+            <fieldset class="card-section">
+                <legend class="section-title">Date Range</legend>
+                <div class="field-group filter-group">
+                    <label for="filter-date-from">From</label>
+                    <input id="filter-date-from" name="filter_date_from" type="date" class="field-input">
+                </div>
+        
+                <div class="field-group filter-group">
+                    <label for="filter-date-to">To</label>
+                    <input id="filter-date-to" name="filter_date_to" type="date" class="field-input">
+                </div>
+            </fieldset>
+            <div class="form-actions">
+                <button id="filter-submit-btn" class="submit-button" type="submit">Apply Filters</button>
+            </div>
+        </form>
+    </div>
     <table id="item-table">
         <thead>
             <tr>
