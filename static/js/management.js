@@ -1,6 +1,5 @@
 itemForms = document.getElementById('item-forms')
 function toggleForms() {
-    console.log('Toggling forms')
     document.getElementById('backdrop').classList.toggle('hidden')
     itemForms.classList.toggle('hidden')
 }
@@ -100,6 +99,45 @@ async function setupManagement () {
     document.getElementById('etime').value = eTime;
 
     generateItemTable();
+}
+
+function sortTable(column) {
+    console.log(`Sorting column ${column+1}`)
+    const table = document.getElementById('item-table')
+    var switching = true;
+    var shouldSwitch = false;
+    var switchCount = 0;
+    var sortDirection = 'asc';
+    while (switching) {
+        switching = false;
+        const rows = table.rows;
+        for (var i=1; i < (rows.length -1); i++) {
+            shouldSwitch = false;
+            current = rows[i].getElementsByTagName('td')[column];
+            next = rows[i+1].getElementsByTagName('td')[column]
+            if (sortDirection == 'asc'){
+                if (current.textContent.toLowerCase() > next.textContent.toLowerCase()) {
+                    shouldSwitch = true;
+                    break;
+                }
+            } else if (sortDirection == 'desc') {
+                if (current.textContent.toLowerCase() < next.textContent.toLowerCase()) {
+                    shouldSwitch = true;
+                    break;
+                }
+            }
+        }
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i+1], rows[i]);
+            switching = true;
+            switchCount ++;
+        } else {
+            if (switchCount==0 && sortDirection == 'asc') {
+                sortDirection = 'desc';
+                switching = true;
+            }
+        }
+    }
 }
 
 setupManagement();
