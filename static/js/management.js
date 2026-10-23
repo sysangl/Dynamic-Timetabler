@@ -138,6 +138,20 @@ function sortTable(column) {
             }
         }
     }
+    const tableArrows = document.getElementsByClassName('table-sort-arrows');
+    for (let index = 0; index < tableArrows.length; index++) {
+        const element = tableArrows[index];
+        element.classList.remove('fa-sort');
+        element.classList.remove('fa-sort-asc');
+        element.classList.remove('fa-sort-desc');
+        if (index != column) {
+            element.classList.add('fa-sort');
+        }
+
+        document.getElementsByClassName('table-sort-arrows')[column].classList.add(`fa-sort-${sortDirection}`)   
+
+    }
+
 }
 
 setupManagement();

@@ -95,6 +95,10 @@
     margin-right: 10px;
 }
 
+.table-sort-arrows {
+    font-size: 12px ;
+}
+
 #item-forms {
     position: absolute;
     display: flex;
