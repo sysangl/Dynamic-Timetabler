@@ -250,7 +250,7 @@ function splitBlock(block) {
     const pieces = [];
     const minsInDay = 24 * 60
 
-    function splitBlockRecursive(currentBlock) {
+    function splitBlockRecursive(currentBlock, wasSplit=false) {
         const start = new Date(currentBlock.start_datetime);
         const end = new Date(currentBlock.end_datetime);
         const endOfDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
@@ -258,9 +258,17 @@ function splitBlock(block) {
         const startMins = start.getHours() * 60 + start.getMinutes();
         let lengthMins = (end-start) / (60*1000);
         const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
+
+        var sTime = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())} `
+        var eTime = ` ${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`
+        if (wasSplit) {
+            sTime = `<`
+        }
         if (end>endOfDay) {
             lengthMins = (endOfDay-start)/(60*1000);
+            eTime = `>`
         }
+        var displayTime = `${sTime}-${eTime}`
 
         const el = document.createElement('div');
         el.className = 'timetable-block';
@@ -288,7 +296,7 @@ function splitBlock(block) {
         titleSpan.textContent = block.title;
         const timeSpan = document.createElement('span');
         timeSpan.className = 'block-time';
-        timeSpan.textContent = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())}-${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`;
+        timeSpan.textContent = displayTime;
         infoDiv.append(titleSpan, document.createElement('br'), timeSpan);
         el.appendChild(infoDiv)
         el.dataset.date = start.toDateString().slice(3);
@@ -299,7 +307,7 @@ function splitBlock(block) {
                 ...currentBlock,
                 start_datetime: endOfDay.toISOString()
             }
-            splitBlockRecursive(nextBlock);
+            splitBlockRecursive(nextBlock, true);
         }
     }
 
