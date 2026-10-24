@@ -21,7 +21,7 @@ def redirect_to_timetable():
 @bp.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("base.html", page="timetable", display_name=current_user.display_name)
+    return render_template("base.html", page="timetable", display_name=current_user.display_name, view=current_user.timetable_view)
 
 @bp.route("/timetable")
 @login_required
@@ -29,7 +29,7 @@ def serve_timetable():
     if is_ajax():
         return page_fragment('timetable')
     else:
-        return render_template("base.html", page='timetable', display_name=current_user.display_name)
+        return render_template("base.html", page='timetable', display_name=current_user.display_name, view=current_user.timetable_view)
 
 @bp.route("/management")
 @login_required

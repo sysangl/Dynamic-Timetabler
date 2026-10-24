@@ -59,7 +59,6 @@ document.addEventListener('fragmentloaded', e => {
         // console.warn(`No init function registered for page "${page}"`);
     }
 
-    window.pageIntervals.temporary.forEach(i => clearInterval(i))
 
 });
 
@@ -73,3 +72,5 @@ window.pageIntervals = window.pageIntervals || {};
 window.pageIntervals.temporary = window.pageIntervals.temporary || [];
 window.pageIntervals.persistent = window.pageIntervals.persistent || {};
 window.pageInits = window.pageInits || {};
+window.eventListeners = window.eventListeners || {};
+window.eventListeners.temporary = window.eventListeners.temporary || [];

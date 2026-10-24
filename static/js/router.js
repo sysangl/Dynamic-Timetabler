@@ -21,6 +21,12 @@ async function loadPage(page, push = true) {
         return;
     }
 
+    // clear intervals and event listeners
+    window.pageIntervals.temporary.forEach(i => clearInterval(i))
+    const eventListeners = window.eventListeners.temporary;
+    for (const [element, type, listener] of eventListeners) {
+        element.removeEventListener(type, listener)
+    }
     // replace view
     const html = await response.text();
     contentDiv.innerHTML = html;
@@ -28,6 +34,7 @@ async function loadPage(page, push = true) {
     const scripts = contentDiv.querySelectorAll('script');
 
     for (const oldScript of scripts) {
+
         const newScript = document.createElement('script');
 
         // copy all attributes

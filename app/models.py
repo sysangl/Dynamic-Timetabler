@@ -117,6 +117,8 @@ class User(db.Model):
     )
     active: Mapped[bool] = mapped_column(default=True)
 
+    timetable_view : Mapped[str] = mapped_column(default='horizontal')
+
     @property
     def is_authenticated(self): 
         return True

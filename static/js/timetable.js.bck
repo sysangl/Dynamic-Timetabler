@@ -62,7 +62,7 @@ function calcBlockPlacement(block) {
     if (elapsed<0) elapsed += dayMs;
 
     const progress= elapsed / dayMs;
-    return document.getElementById("tt-topbar-timeline").scrollWidth * progress;
+    return document.getElementById("tt-timeline").scrollWidth * progress;
 }
 
 function calcBlockLength(block) {
@@ -75,8 +75,8 @@ function calcBlockLength(block) {
 
     const dayPercentage = blockTimeLength/dayMs;
     console.log(`day percent ${dayPercentage}`)
-    console.log(`block length ${document.getElementById("tt-topbar-timeline").scrollWidth * dayPercentage}`)
-    return document.getElementById("tt-topbar-timeline").scrollWidth * dayPercentage
+    console.log(`block length ${document.getElementById("tt-timeline").scrollWidth * dayPercentage}`)
+    return document.getElementById("tt-timeline").scrollWidth * dayPercentage
 }
 
 buildTimetableBlocks();

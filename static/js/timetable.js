@@ -16,7 +16,6 @@ async function fetchPayload() {
 }
 
 
-
 /**
  * Clamps a number
  * @param {number} value 
@@ -36,7 +35,7 @@ function generateWeek() {
     const legend = document.getElementById("tt-legend");
     const schedule = document.getElementById("tt-schedule");
     window.dayContainers = {};
-    legend.innerHTML = '<div id="tt-topbar-time">-</div>';
+    legend.innerHTML = '<div id="tt-time">-</div>';
     for (let inc = 0; inc < 7; inc++) {
         const dayIdx = (inc + window.settings['start_day']) % 7;
         const now = new Date();
@@ -68,10 +67,10 @@ function generateWeek() {
  * Generates the numbers on the top timeline
  */
 function generateTimeline() {
-    document.getElementById("tt-topbar-timeline").innerHTML = "";
+    document.getElementById("tt-timeline").innerHTML = "";
     for (let inc = 0; inc < 24; inc++) {
         const hour = (inc + window.settings['start_hour']) % 24;
-        const timeline = document.getElementById('tt-topbar-timeline');
+        const timeline = document.getElementById('tt-timeline');
         const timelineNumber = document.createElement('div');
         
         if (hour >= 12 ) {
@@ -89,7 +88,7 @@ function generateTimeline() {
  * Generates the grids that identify day and hour boundaries
  */
 function buildGrid() {
-    const tl = document.getElementById('tt-topbar-timeline');
+    const tl = document.getElementById('tt-timeline');
     const ts = document.getElementById('tt-schedule')
     const l = document.getElementById('tt-legend');
     const hl = document.getElementById('hour-lines');
@@ -146,7 +145,7 @@ function scheduleProgress() {
  * Moves the current time marker
  */
 function alignTimeMarker() {
-    const left = document.getElementById("tt-topbar-timeline").scrollWidth * scheduleProgress();
+    const left = document.getElementById("tt-timeline").scrollWidth * scheduleProgress();
     document.getElementById("time-marker").style.left = left + "px";
 }
 
@@ -156,7 +155,7 @@ function alignTimeMarker() {
 function alignTimetimetableView() {
     const schedule = document.getElementById("tt-schedule-container")
     const marker = document.getElementById("time-marker")
-    const tl = document.getElementById("tt-topbar-timeline")
+    const tl = document.getElementById("tt-timeline")
 
     var scroll = parseInt(marker.style.left) - (tl.scrollWidth/24)*2.5;
     if (scroll < 0) scroll = 0;
@@ -176,7 +175,7 @@ function formatTime(number) {
  * Update the clock on the top left corner of the timetable
  */
 function updateTime() {
-    const clock = document.getElementById('tt-topbar-time');
+    const clock = document.getElementById('tt-time');
     const now = new Date();
     let hours = formatTime(now.getHours());
     let minutes = formatTime(now.getMinutes());
@@ -211,6 +210,7 @@ function showPopupMenu(target, e) {
 function closePopupMenu() {
     const popupMenu = document.getElementById('popup-menu');
     const backdrop  = document.getElementById('backdrop')
+    if (!popupMenu || !backdrop) return;
     popupMenu.classList.remove('open');
     backdrop.classList.remove('active');
     if (popupMenu._currentTarget) {
@@ -218,21 +218,7 @@ function closePopupMenu() {
     }
 }
 
-document.getElementById('tt-schedule-container').addEventListener('click', (e)=>{
-    const block = e.target.closest('.timetable-block');
-    if (!block) return;
-    e.stopPropagation();
-    showPopupMenu(block, e);
-})
 
-document.getElementById('backdrop').addEventListener('click', closePopupMenu)
-
-document.addEventListener('keydown', (e) => {
-    const popupMenu  = document.getElementById('popup-menu')
-    if (e.key === 'Escape' && popupMenu.classList.contains('open')) {
-        closePopupMenu();
-    }
-});
 
 async function deleteBlock() {
     const popupMenu = document.getElementById('popup-menu');
@@ -257,7 +243,7 @@ function markRescheduleBlock() {
 }
 
 function splitBlock(block) {
-    const tl = document.getElementById('tt-topbar-timeline');
+    const tl = document.getElementById('tt-timeline');
     const pieces = [];
     const minsInDay = 24 * 60
 
@@ -355,7 +341,7 @@ async function initTimetable() {
     generateWeek(); // generate first column of the timetable
     generateTimeline(); // generate top row of the timetable
     buildGrid(); // generate grid
-    document.getElementById('tt-topbar-timeline').style.width=document.getElementById('tt-topbar-timeline').scrollWidth+'px'; // make sure the timeline has a continous bg
+    document.getElementById('tt-timeline').style.width=document.getElementById('tt-timeline').scrollWidth+'px'; // make sure the timeline has a continous bg
     alignTimeMarker(); // make sure time marker is in the right place
     window.pageIntervals.temporary.push(setInterval(alignTimeMarker, 60*1000)); // update the time marker every 60 seconds
     updateTime(); // set the timetable corner clock
@@ -367,6 +353,25 @@ async function initTimetable() {
     renderTimetable().catch(err => console.error('Timetable render failed:', err))
     window.addEventListener('resize', closePopupMenu);
     window.addEventListener('scroll', closePopupMenu);
+
+    const scheduleContainer = document.getElementById('tt-schedule-container')
+    scheduleContainer.addEventListener('click', (e)=>{
+        const block = e.target.closest('.timetable-block');
+        if (!block) return;
+        e.stopPropagation();
+        showPopupMenu(block, e);
+    })
+
+    document.getElementById('backdrop').addEventListener('click', closePopupMenu)
+
+    document.addEventListener('keydown', (e) => {
+        const popupMenu  = document.getElementById('popup-menu')
+        if (!popupMenu) return;
+        if (e.key === 'Escape' && popupMenu.classList.contains('open')) {
+            closePopupMenu();
+        }
+    });
+
 }
 
 initTimetable();

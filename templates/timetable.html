@@ -1,10 +1,12 @@
-<!-- timetable css -->
+<!-- base timetable css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/timetable.css')}}"></link>
+<!-- horizontal/vertical view -->
+<link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-timetable.css')}}"></link>
 
 <!-- main timetable screen -->
 <div id="timetable-container">
     <div id="tt-legend">
-        <div id="tt-topbar-time">-</div>
+        <div id="tt-time">-</div>
         <div class="tt-weekday">Mon</div>
         <div class="tt-weekday">Tues</div>
         <div class="tt-weekday">Wed</div>
@@ -16,7 +18,7 @@
     
     <div id="tt-schedule-container">
         <div id="time-marker"></div>
-        <div id="tt-topbar-timeline"></div>
+        <div id="tt-timeline"></div>
         <div id="tt-schedule">
             <div id="day-lines"></div>
             <div id="hour-lines"></div>
