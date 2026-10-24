@@ -88,18 +88,8 @@ function generateTimeline() {
  * Generates the grids that identify day and hour boundaries
  */
 function buildGrid() {
-    const tl = document.getElementById('tt-timeline');
-    const ts = document.getElementById('tt-schedule')
-    const l = document.getElementById('tt-legend');
     const hl = document.getElementById('hour-lines');
     const dl = document.getElementById('day-lines');
-
-
-    hl.style.width = tl.scrollWidth + 'px';
-    hl.style.height = l.scrollHeight + 'px';
-    dl.style.top = tl.scrollHeight + 'px';
-    dl.style.width = tl.scrollWidth + 'px';
-    dl.style.height = ts.scrollHeight + 'px';
 
     let hlHtml = '';
     for (let i=0; i<24; i++) hlHtml += '<div></div>';
@@ -108,10 +98,6 @@ function buildGrid() {
     let dlHtml = '';
     for (let i=0; i<7; i++) dlHtml += '<div></div>';
     dl.innerHTML = dlHtml;
-
-    const dayWidth = tl.scrollWidth;
-    const dayContainers = document.querySelectorAll('.day-container');
-    dayContainers.forEach(col => col.style.width = dayWidth + 'px');
 }
 
 /**
@@ -339,13 +325,15 @@ async function initTimetable() {
     window.settings = await fetchSettings(1);
     generateWeek(); // generate first column of the timetable
     generateTimeline(); // generate top row of the timetable
-    buildGrid(); // generate grid
-    document.getElementById('tt-timeline').style.width=document.getElementById('tt-timeline').scrollWidth+'px'; // make sure the timeline has a continous bg
-    alignTimeMarker(); // make sure time marker is in the right place
-    window.pageIntervals.temporary.push(setInterval(alignTimeMarker, 60*1000)); // update the time marker every 60 seconds
     updateTime(); // set the timetable corner clock
-    window.pageIntervals.temporary.push(setInterval(updateTime(), 5*1000)); // set the timetable corner clock
-    alignTimetimetableView(); // scroll timetable to the current time
+    buildGrid(); // generate grid
+    if (window.settings.timeline_view == 'horizontal') {
+        document.getElementById('tt-timeline').style.width=document.getElementById('tt-timeline').scrollWidth+'px'; // make sure the timeline has a continous bg
+        alignTimeMarker(); // make sure time marker is in the right place
+        window.pageIntervals.temporary.push(setInterval(alignTimeMarker, 60*1000)); // update the time marker every 60 seconds
+        window.pageIntervals.temporary.push(setInterval(updateTime(), 5*1000)); // set the timetable corner clock
+        alignTimetimetableView(); // scroll timetable to the current time
+    }
     document.getElementById('timetable-container').dispatchEvent(new Event('finishedBuilding'))
 
     // Render timetable (events, block, content)
