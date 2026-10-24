@@ -1,14 +1,17 @@
+:root {
+    --time-block-size: 6rem;
+}
+
 #timetable-container {
-    flex:1;
-    display: flex;
+    display: grid;
     overflow: hidden;
-    flex-direction: row;
+    grid-template-columns: 16% 84%;
+    height: 100%;
 }
 
 #tt-legend {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 15%;
+    display: grid;
+    grid-template-rows: 5.5% repeat(7, 13.5%);
 }
 
 #tt-time {
@@ -18,7 +21,6 @@
 }
 
 .tt-weekday {
-    flex:1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -28,31 +30,31 @@
 
 #tt-schedule-container {
     position: relative;
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    overflow-x: auto;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 5.5% 94.5%;
+    overflow-x: scroll;
     overflow-y: hidden;
     overscroll-behavior: none;
 }
 
 #tt-timeline {
-    position: sticky;
     top: 0;
     z-index: 1;
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
     padding: 10px 0;
-    flex-shrink: 0;
+    /* overflow-x: scroll; */
+    display: grid;
+    grid-template-columns: repeat(24, calc(var(--time-block-size) * 2));
+    width: fit-content;
+    min-width: max-content;
+
 }
 
 .timeline-number,
 .timeline-number-pm {
-    flex: 0 0 150px;
     white-space: nowrap;
-
     padding-left: 5px;
+    width: min-content;
 }
 
 
@@ -61,29 +63,25 @@
     position: absolute;
     top: 0;
     width: 1px;
-    left: 100px;
     height: 100%;
     background: rgba(255,0,0,0.5);
     z-index: 3;
 }
 
 #tt-schedule {
-    display: flex;
-    flex:1;
-    /* flex-grow: 1; */
-    width: max-content;
-    /* border-bottom: 1px solid #c0c0c0; */
-    /* overflow-x: visible; */
-    flex-direction: column;
-    /* position: relative; */
+    width: 100%;
+    display: grid;
+    grid-template-rows: calc(100% / 7);
 }
 
 #hour-lines {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     display: grid;
-    grid-template-columns: repeat(24, 1fr);
+    grid-template-columns: repeat(24, calc(var(--time-block-size) * 2));
     grid-template-rows: repeat(1, 1fr);
     pointer-events: none;
     z-index: 1;
@@ -94,8 +92,10 @@
     top: 0;
     left: 0;
     display: grid;
+    width: calc(var(--time-block-size) * 2 * 24);
+    height: 100%;
     grid-template-columns: repeat(1, 1fr);
-    grid-template-rows: repeat(7, 1fr);
+    grid-template-rows: 5.5% repeat(7, 13.5%);
     pointer-events: none;
     z-index: 1;
 }
@@ -109,11 +109,8 @@
 }
 
 .day-container {
-    display: flex;
-    flex-grow: 1;
-    width: 100%;
+    width: calc(var(--time-block-size) * 24 * 2);
     justify-content: center;
-    flex-direction: column;
 }
 
 .timetable-block {

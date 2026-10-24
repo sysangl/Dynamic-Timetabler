@@ -87,14 +87,7 @@
 }
 
 #tt-schedule {
-    display: flex;
-    flex:1;
-    /* flex-grow: 1; */
-    width: max-content;
-    /* border-bottom: 1px solid #c0c0c0; */
-    /* overflow-x: visible; */
-    flex-direction: column;
-    /* position: relative; */
+    
 }
 
 #hour-lines {

@@ -131,8 +131,14 @@ function scheduleProgress() {
  * Moves the current time marker
  */
 function alignTimeMarker() {
-    const left = document.getElementById("tt-timeline").scrollWidth * scheduleProgress();
-    document.getElementById("time-marker").style.left = left + "px";
+
+    if (window.settings.timetable_view == 'horizontal') {
+        const left = document.getElementById("tt-timeline").scrollWidth * scheduleProgress();
+        document.getElementById("time-marker").style.left = left + "px";
+    } else {
+        const top = document.getElementById("tt-timeline").scrollHeight * scheduleProgress();
+        document.getElementById("time-marker").style.top = top + "px";
+    }
 }
 
 /**
@@ -141,11 +147,15 @@ function alignTimeMarker() {
 function alignTimetimetableView() {
     const schedule = document.getElementById("tt-schedule-container")
     const marker = document.getElementById("time-marker")
-    const tl = document.getElementById("tt-timeline")
-
-    var scroll = parseInt(marker.style.left) - (tl.scrollWidth/24)*2.5;
-    if (scroll < 0) scroll = 0;
-    schedule.scrollLeft = scroll;
+    if (window.settings.timetable_view == 'horizontal') {
+        var scroll = parseInt(marker.style.left) - (schedule.scrollWidth/24);
+        if (scroll < 0) scroll = 0;
+        schedule.scrollLeft = scroll;
+    } else {
+        var scroll = parseInt(marker.style.top) - (schedule.scrollHeight/24);
+        if (scroll < 0) scroll = 0;
+        schedule.scrollTop = scroll;
+    }
 }
 
 
@@ -322,18 +332,15 @@ async function clearTimetable() {
 
 async function initTimetable() {
     // Build timetable (actual html and timetable divs)
-    window.settings = await fetchSettings(1);
+    window.settings = await fetchSettings();
     generateWeek(); // generate first column of the timetable
     generateTimeline(); // generate top row of the timetable
     updateTime(); // set the timetable corner clock
     buildGrid(); // generate grid
-    if (window.settings.timeline_view == 'horizontal') {
-        document.getElementById('tt-timeline').style.width=document.getElementById('tt-timeline').scrollWidth+'px'; // make sure the timeline has a continous bg
-        alignTimeMarker(); // make sure time marker is in the right place
-        window.pageIntervals.temporary.push(setInterval(alignTimeMarker, 60*1000)); // update the time marker every 60 seconds
-        window.pageIntervals.temporary.push(setInterval(updateTime(), 5*1000)); // set the timetable corner clock
-        alignTimetimetableView(); // scroll timetable to the current time
-    }
+    alignTimeMarker(); // make sure time marker is in the right place
+    window.pageIntervals.temporary.push(setInterval(alignTimeMarker, 60*1000)); // update the time marker every 60 seconds
+    window.pageIntervals.temporary.push(setInterval(updateTime, 5*1000)); // set the timetable corner clock
+    alignTimetimetableView(); // scroll timetable to the current time
     document.getElementById('timetable-container').dispatchEvent(new Event('finishedBuilding'))
 
     // Render timetable (events, block, content)

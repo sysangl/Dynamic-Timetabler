@@ -1,7 +1,7 @@
 <!-- base timetable css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/timetable.css')}}"></link>
 <!-- horizontal/vertical view -->
-{% if view == 'horizontal' %}
+{% if current_user.settings.timetable_view == 'horizontal' %}
     <link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-timetable.css')}}"></link>
 {% else %}
     <link rel="stylesheet" href="{{url_for('static', filename='css/vertical-timetable.css')}}"></link>
