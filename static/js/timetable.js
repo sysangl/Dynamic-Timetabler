@@ -5,7 +5,8 @@
  */
 async function fetchPayload() {
     const dates = document.getElementsByClassName('day-container')
-    const response = await fetch(`/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[6].dataset.isoDate}`, {
+    const dpv = window.settings['days_per_view'];
+    const response = await fetch(`/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[dpv-1].dataset.isoDate}`, {
         method : 'GET'
     });
 
@@ -39,11 +40,12 @@ function generateWeek() {
     const msInDay = 24*60*60*1000;
     const now = new Date();
     negative = false
-    for (let inc = 0; inc < 7; inc++) {
+    const dpv = window.settings['days_per_view']
+    for (let inc = 0; inc < dpv; inc++) {
         var dayIdx = ((inc + window.settings['start_day']) % 7);
-        const day = days[dayIdx];
+        const day = days[dayIdx+7-dpv];
         if (dayIdx >= window.settings['start_day']) {
-            dayIdx-=7
+            dayIdx-=dpv
         }
         const nextDay = new Date(Number(now) + msInDay*(1-now.getDay()+dayIdx));
         const newDay = document.createElement('div');
@@ -348,6 +350,7 @@ async function clearTimetable() {
 async function initTimetable() {
     // Build timetable (actual html and timetable divs)
     window.settings = await fetchSettings();
+    document.documentElement.style.setProperty('--days', window.settings['days_per_view']);
     generateWeek(); // generate first column of the timetable
     generateTimeline(); // generate top row of the timetable
     updateTime(); // set the timetable corner clock

@@ -46,6 +46,7 @@ class Settings(db.Model):
     start_day : Mapped[int] = mapped_column(default=0)
     start_hour : Mapped[int] = mapped_column(default=0)
     timetable_view : Mapped[str] = mapped_column(default='horizontal')
+    days_per_view : Mapped[int] = mapped_column(default=7) 
 
     user: Mapped["User"] = relationship(
         "User",
@@ -77,7 +78,8 @@ class Settings(db.Model):
             "default_block_length": self.default_block_length,
             "start_day": self.start_day,
             "start_hour": self.start_hour,
-            "timetable_view": self.timetable_view
+            "timetable_view": self.timetable_view,
+            "days_per_view": self.days_per_view
         }
 
 
