@@ -36,17 +36,23 @@ function generateWeek() {
     const schedule = document.getElementById("tt-schedule");
     window.dayContainers = {};
     legend.innerHTML = '<div id="tt-time">-</div>';
+    const msInDay = 24*60*60*1000;
+    const now = new Date();
+    negative = false
     for (let inc = 0; inc < 7; inc++) {
-        const dayIdx = (inc + window.settings['start_day']) % 7;
-        const now = new Date();
-        const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + dayIdx + 1);
-
+        var dayIdx = ((inc + window.settings['start_day']) % 7);
+        const day = days[dayIdx];
+        if (dayIdx >= window.settings['start_day']) {
+            dayIdx-=7
+        }
+        const nextDay = new Date(Number(now) + msInDay*(1-now.getDay()+dayIdx));
+        console.log(nextDay.toDateString())
         const newDay = document.createElement('div');
-        newDay.id = `day-${days[dayIdx]}`;
+        newDay.id = `day-${day}`;
         newDay.classList.add('tt-weekday');
 
         const dayName = document.createElement('span');
-        dayName.textContent = `${days[dayIdx]}`;
+        dayName.textContent = `${day}`;
         dayName.className = 'day-name';
         const dayDate = document.createElement('span');
         dayDate.textContent = nextDay.toDateString().slice(3);
@@ -54,7 +60,7 @@ function generateWeek() {
         newDay.append(dayName, document.createElement('br'), dayDate)
 
         const newDayCont = document.createElement('div');
-        newDayCont.id = `day-container-${days[dayIdx]}`;
+        newDayCont.id = `day-container-${day}`;
         newDayCont.classList.add('day-container');
         newDayCont.dataset.date = nextDay.toDateString().slice(3)
         newDayCont.dataset.isoDate = nextDay.toISOString().slice(0,10)
