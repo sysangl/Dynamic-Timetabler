@@ -195,7 +195,7 @@ function showPopupMenu(target, e) {
         return;
     }
     const bRect = target.getBoundingClientRect()
-    popupMenu.style.top = `${bRect.bottom + window.scrollY}px`;
+    popupMenu.style.top = `${e.pageY}px`;
     // popupMenu.style.left = `${bRect.left + window.scrollX}px`;
     popupMenu.style.left = `${e.pageX}px`;
     popupMenu._currentTarget = target;
@@ -239,7 +239,7 @@ function markRescheduleBlock() {
 }
 
 function splitBlock(block) {
-    const tl = document.getElementById('tt-timeline');
+    const schedule = document.getElementById('tt-schedule');
     const pieces = [];
     const minsInDay = 24 * 60
 
@@ -251,19 +251,27 @@ function splitBlock(block) {
         const startMins = start.getHours() * 60 + start.getMinutes();
         let lengthMins = (end-start) / (60*1000);
         const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
-        const leftPx = ((startMins - scheduleStartMins) / minsInDay) * tl.scrollWidth;
         if (end>endOfDay) {
             lengthMins = (endOfDay-start)/(60*1000);
             console.log(`length : ${lengthMins}`)
         }
-        const widthPx = (lengthMins / minsInDay) * tl.scrollWidth;
-        
+
         const el = document.createElement('div');
         el.className = 'timetable-block';
         el.dataset.blockId = block.id;
         el.id = `timetable-block-${block.id}`;
-        el.style.setProperty('--left', `${leftPx}px`)
-        el.style.setProperty('--width', `${widthPx}px`)
+
+        if (window.settings.timetable_view =='horizontal') {
+            const leftPx = ((startMins - scheduleStartMins) / minsInDay) * schedule.scrollWidth;
+            const widthPx = (lengthMins / minsInDay) * schedule.scrollWidth;
+            el.style.setProperty('--left', `${leftPx}px`)
+            el.style.setProperty('--width', `${widthPx}px`)
+        } else {
+            const topPx = ((startMins - scheduleStartMins) / minsInDay) * schedule.scrollHeight;
+            const heightPx = (lengthMins / minsInDay) * schedule.scrollHeight;
+            el.style.setProperty('--top', `${topPx}px`)
+            el.style.setProperty('--height', `${heightPx}px`)
+        }
         el.style.setProperty('--bg-colour', block.colour ?? (window.settings?.default_block_colour ?? '#3b3d68'))
     
         const titleSpan = document.createElement('span');
