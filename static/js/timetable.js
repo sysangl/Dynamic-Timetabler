@@ -296,7 +296,6 @@ function splitBlock(block) {
 
 async function renderTimetable() {
     const payload = await fetchPayload();
-    console.log(payload.blocks)
     const blocks = payload.blocks;
     const getDayContainer = (date) => document.querySelector(`[data-date="${date}"]`)
 

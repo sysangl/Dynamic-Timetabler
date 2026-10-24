@@ -1,7 +1,15 @@
-itemForms = document.getElementById('item-forms');
+itemFormContainer = document.getElementById('item-forms');
 filters = {dateRangeFrom:null, dateRangeTo:null};
 currentItemClass = 'all';
 filterForm =document.getElementById('filter-form');
+itemForms = itemFormContainer.getElementsByTagName('form');
+for (const form of itemForms) {
+    form.addEventListener('submit',async (e) => {
+        e.preventDefault();
+        form.submit();
+    })
+}
+
 
 filterForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -29,7 +37,7 @@ filterForm.addEventListener('reset', async (e) => {
 
 function toggleForms() {
     document.getElementById('backdrop').classList.toggle('hidden')
-    itemForms.classList.toggle('hidden')
+    itemFormContainer.classList.toggle('hidden')
 }
 
 async function fetchTimetableItems() {
@@ -153,6 +161,10 @@ async function setupManagement () {
     document.getElementById('stime').value = sTime;
     document.getElementById('etime').value = eTime;
 
+    document.getElementById('filter-date-from').value = sDate;
+    document.getElementById('filter-date-to').value = sDate;
+
+
     generateItemTable();
 }
 
@@ -207,7 +219,7 @@ function sortTable(column) {
 
 setupManagement();
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !itemForms.classList.contains('hidden')) {
+    if (e.key === 'Escape' && !itemFormContainer.classList.contains('hidden')) {
         toggleForms();
     }
 });

@@ -36,6 +36,7 @@ def create_routes(app: Flask):
             "default_block_length": int,
             "start_day": int,
             "start_hour": int,
+            "timetable_view" : str,
         }
 
         settings : Settings = current_user.settings # type: ignore

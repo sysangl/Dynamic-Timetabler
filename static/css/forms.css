@@ -51,6 +51,15 @@
     font-size: 0.96rem;
     color: var(--text-primary);
 }
+
+.field-group label.radio {
+    left: 100px;
+}
+
+.field-group .field-input[type="radio"] {
+    width: max-content;
+}
+
 .field-group .hint {
     font-size: 0.78rem;
     color: var(--text-muted);

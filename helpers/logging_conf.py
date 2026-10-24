@@ -2,7 +2,7 @@ import logging
 import logging.config
 from pathlib import Path
 
-_LOG_PATH = Path().home() / ".dynamic-timetabler" / "logs"
+_LOG_PATH = Path().home() / ".canopy-suite" / "logs"
 _LOG_FMT = "%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
 _DATE_FMT = "%Y-%m-%d %H:%M:%S"
 

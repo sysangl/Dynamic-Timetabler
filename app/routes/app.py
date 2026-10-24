@@ -21,15 +21,15 @@ def redirect_to_timetable():
 @bp.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("base.html", page="timetable", display_name=current_user.display_name, view=current_user.timetable_view)
+    return render_template("base.html", page="timetable", display_name=current_user.display_name, view=current_user.settings.timetable_view)
 
 @bp.route("/timetable")
 @login_required
 def serve_timetable():
     if is_ajax():
-        return page_fragment('timetable')
+        return page_fragment('timetable',view=current_user.settings.timetable_view)
     else:
-        return render_template("base.html", page='timetable', display_name=current_user.display_name, view=current_user.timetable_view)
+        return render_template("base.html", page='timetable', display_name=current_user.display_name, view=current_user.settings.timetable_view)
 
 @bp.route("/management")
 @login_required
@@ -52,9 +52,9 @@ def serve_settings():
 
 @bp.route("/page/<string:page>", methods=['GET'])
 @login_required
-def page_fragment(page):
+def page_fragment(page, **kwargs):
     """
     returns page fragment
     """
     template_name = f"{page}.html"
-    return render_template(template_name)
+    return render_template(template_name, **kwargs)

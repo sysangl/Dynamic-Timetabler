@@ -11,14 +11,29 @@ function populateSettings(settings) {
     formElements.each(function(index, element) {
         // const $element = $(element);
         if (element.id == 'settings-save-button') return;
-        element.value = settings[element.name]
+        if (element.type == 'radio') {
+            if (element.value == settings[element.name]) {
+                element.checked = true;
+            }
+        } else {
+            element.value = settings[element.name]
+        }
     })
 }
 
 async function initSettings() {
     console.log("initialising settings")
     await applySettings(await fetchSettings());
+
+    const form = document.getElementById('settings-form');
+    form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        console.log((new FormData(form)).get('timetable_view'))
+        form.submit()
+    })
+
 }
+
 initSettings();
 
 // window.pageInits = window.pageInits || {};

@@ -45,6 +45,7 @@ class Settings(db.Model):
     default_block_length : Mapped[int] = mapped_column(default=30) # minutes
     start_day : Mapped[int] = mapped_column(default=0)
     start_hour : Mapped[int] = mapped_column(default=0)
+    timetable_view : Mapped[str] = mapped_column(default='horizontal')
 
     user: Mapped["User"] = relationship(
         "User",
@@ -76,6 +77,7 @@ class Settings(db.Model):
             "default_block_length": self.default_block_length,
             "start_day": self.start_day,
             "start_hour": self.start_hour,
+            "timetable_view": self.timetable_view
         }
 
 
@@ -117,7 +119,6 @@ class User(db.Model):
     )
     active: Mapped[bool] = mapped_column(default=True)
 
-    timetable_view : Mapped[str] = mapped_column(default='horizontal')
 
     @property
     def is_authenticated(self): 

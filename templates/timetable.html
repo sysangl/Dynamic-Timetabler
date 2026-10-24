@@ -1,7 +1,12 @@
 <!-- base timetable css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/timetable.css')}}"></link>
 <!-- horizontal/vertical view -->
-<link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-timetable.css')}}"></link>
+{% if view == 'horizontal' %}
+    <link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-timetable.css')}}"></link>
+{% else %}
+    <link rel="stylesheet" href="{{url_for('static', filename='css/vertical-timetable.css')}}"></link>
+{% endif %}
+
 
 <!-- main timetable screen -->
 <div id="timetable-container">
