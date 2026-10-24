@@ -43,6 +43,11 @@
     border-left: 1px solid #c0c0c0;
 }
 
+.day-container {
+    position: relative;
+    min-height: calc(var(--time-block-size) * 24);
+}
+
 .day-name {
     font-size: 1.3rem;
     color: black;
@@ -142,13 +147,12 @@
 .timetable-block {
     display: block;
     position: absolute;
-    top: var(--top, 0%);
+    margin-top: var(--top, 0%);
     height: var(--height, 0%);
     max-height: var(--height, 0%);
-    overflow: hidden;
     background: var(--bg-colour, #3b3d68);
     padding: .7rem;
-    width: 13%;
+    width: 100%;
     word-wrap:normal;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -159,21 +163,20 @@
     filter: brightness(1.1);
 }
 
+.block-info {
+    position: sticky;
+    top: 0;
+}
+
 .block-title {
     display: inline-block;
-    white-space: nowrap;
     color: var(--text-primary);
-    text-overflow: clip;
-    overflow: hidden;
     font-size: 1.2rem;
 }
 
 .block-time {
     color: #c8c7c7;
-    text-overflow: clip;
-    white-space: nowrap;
-    overflow: hidden; 
-    font-size: 1.1rem;
+    font-size: 0.8rem;
 }
 
 #popup-menu {

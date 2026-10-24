@@ -46,7 +46,6 @@ function generateWeek() {
             dayIdx-=7
         }
         const nextDay = new Date(Number(now) + msInDay*(1-now.getDay()+dayIdx));
-        console.log(nextDay.toDateString())
         const newDay = document.createElement('div');
         newDay.id = `day-${day}`;
         newDay.classList.add('tt-weekday');
@@ -259,7 +258,6 @@ function splitBlock(block) {
         const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
         if (end>endOfDay) {
             lengthMins = (endOfDay-start)/(60*1000);
-            console.log(`length : ${lengthMins}`)
         }
 
         const el = document.createElement('div');
@@ -280,14 +278,17 @@ function splitBlock(block) {
         }
         el.style.setProperty('--bg-colour', block.colour ?? (window.settings?.default_block_colour ?? '#3b3d68'))
     
+        const infoDiv = document.createElement('div');
+        infoDiv.classList.add('block-info', 'sticky')
+
         const titleSpan = document.createElement('span');
         titleSpan.className = 'block-title';
         titleSpan.textContent = block.title;
         const timeSpan = document.createElement('span');
         timeSpan.className = 'block-time';
         timeSpan.textContent = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())}-${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`;
-        el.append(titleSpan, document.createElement('br'), timeSpan);
-
+        infoDiv.append(titleSpan, document.createElement('br'), timeSpan);
+        el.appendChild(infoDiv)
         el.dataset.date = start.toDateString().slice(3);
         pieces.push(el);
         
