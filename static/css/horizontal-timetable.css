@@ -111,22 +111,29 @@
 .day-container {
     width: calc(var(--time-block-size) * 24 * 2);
     justify-content: center;
+    position: relative;
+    height: 100%;
 }
 
 .timetable-block {
     display: block;
-    left: var(--left, 0%);
+    margin-left: var(--left, 0%);
     width: var(--width, 0%);
     max-width: var(--width, 0%);
     background: var(--bg-colour, #3b3d68);
-    flex-grow: 1;
     position: absolute;
-    padding: .7rem;
-    overflow: hidden;
     text-overflow: clip;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    height: 100%;
+}
+
+.block-info {
+    position: sticky;
+    left: 0;
+    width: min-content;
+    padding: .7rem;
 }
 
 .timetable-block:hover {
@@ -147,7 +154,7 @@
     text-overflow: clip;
     white-space: nowrap;
     overflow: hidden; 
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 }
 
 #popup-menu {

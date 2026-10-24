@@ -122,7 +122,6 @@
 
 .timetable-block {
     display: block;
-    padding: .7rem;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
@@ -141,7 +140,7 @@
 
 .block-time {
     color: #c8c7c7;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 }
 
 #popup-menu {

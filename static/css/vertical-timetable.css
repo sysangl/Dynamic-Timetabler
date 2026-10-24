@@ -3,20 +3,13 @@
 }
 
 #timetable-container {
-    /* flex:1; */
-    /* display: flex; */
     background: beige;
     overflow: hidden;
-    /* border-radius: 5px; */
-    /* flex-direction: row; */
     display: grid;
     grid-template-rows: 8% 92%;
 }
 
 #tt-legend {
-    /* display: flex; */
-    /* flex-direction: column; */
-    /* flex: 0 0 15%; */
     background: #f5f5f5;
     display: grid;
     grid-template-columns: 9% repeat(7, 13%);
@@ -62,7 +55,6 @@
     position: relative;
     display: grid;
     grid-template-columns: 9% 91%;
-    /* flex-direction: column; */
     background: #454545;
     overflow-x: hidden;
     overflow-y: scroll;
@@ -70,21 +62,16 @@
 }
 
 #tt-timeline {
-    /* position: sticky; */
-    /* top: 0; */
     z-index: 1;
     display: grid;
     grid-template-rows: repeat(24, var(--time-block-size)); /* change to make the time spacing larger */
     font-size: 1.5rem;
     font-weight: bold;
-    /* padding: 10px 0; */
     background: #252525;
-    /* flex-shrink: 0; */
 }
 
 .timeline-number,
 .timeline-number-pm {
-
     white-space: nowrap;
     color: var(--text-primary);
     padding: 5px 10px;
@@ -104,9 +91,6 @@
     display: grid;
     width: 100%;
     grid-template-columns: repeat(7, 1fr);
-    /* border-bottom: 1px solid #c0c0c0; */
-    /* overflow-x: visible; */
-    /* position: relative; */
 }
 
 #hour-lines {
@@ -151,7 +135,6 @@
     height: var(--height, 0%);
     max-height: var(--height, 0%);
     background: var(--bg-colour, #3b3d68);
-    padding: .7rem;
     width: 100%;
     word-wrap:normal;
     box-sizing: border-box;
@@ -164,6 +147,7 @@
 }
 
 .block-info {
+    padding: .7rem;
     position: sticky;
     top: 0;
 }
