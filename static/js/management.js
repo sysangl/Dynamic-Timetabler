@@ -157,7 +157,6 @@ async function setupManagement () {
 }
 
 function sortTable(column) {
-    console.log(`Sorting column ${column+1}`)
     const table = document.getElementById('item-table')
     var switching = true;
     var shouldSwitch = false;
@@ -202,11 +201,8 @@ function sortTable(column) {
         if (index != column) {
             element.classList.add('fa-sort');
         }
-
         document.getElementsByClassName('table-sort-arrows')[column].classList.add(`fa-sort-${sortDirection}`)   
-
     }
-
 }
 
 setupManagement();

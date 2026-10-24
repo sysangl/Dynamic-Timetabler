@@ -121,13 +121,13 @@
 }
 
 #filter-container {
-    height: 200px;
-    animation: height 0.5s;
+    max-height: 256px;
+    transition: max-height 0.2s ease;
     overflow: hidden;
 }
 
 #filter-container.hidden {
-    height: 0;
+    max-height: 0px;
 }
 
 .filter-group {
@@ -140,6 +140,11 @@
 #filter-form {
     display: grid;
     grid-template-columns: 50% 50%;
+    grid-template-rows: 90% 10%;
+}
+
+#filter-actions {
+    place-self: bottom;
 }
 
 #item-forms.hidden {
