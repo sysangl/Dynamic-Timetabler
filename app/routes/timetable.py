@@ -170,11 +170,24 @@ def create_routes(app: Flask):
     @bp.route('/<string:item>/<int:id>', methods=['PUT'])
     @login_required
     def update_item(item,id):
-
         data = request.get_json()
-        activity = Activity.query.filter_by(id=id).first()
+
+        item_class = None
+        match item:
+            #case 'todos':
+            #    item_class = ToDo
+            #case 'tasks':
+            #    item_class = Task
+            case 'blocks':
+                item_class = Block
+            case _:
+                app.logger.info(f'"{item}" is not a valid timetable item')
+                app_logger.info(f'"{item}" is not a valid timetable item')
+                return {'error': f'"{item}" is not a valid timetable item'}, 404
+
+        activity = item_class.query.filter_by(id=id).first()
         if not activity:
-            return {'error':f'Activity with id "{id}" does not exist'}, 404
+            return {'error':f'"{item}" with id: {id} does not exist'}, 404
         for key in data.keys():
             try:
                 activity.__setattr__(key, data[key])

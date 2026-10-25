@@ -62,9 +62,9 @@
 </div>
 
 
-<div id="item-forms" class="hidden" >
-<div id="block-creation-form" class="form-container">
-    <form id="block-creation" class="form-body" method="post" action="{{ url_for('timetable.create_item', item='block') }}">
+<div id="item-forms" class="hidden">
+<div id="blocks-form-container" class="form-container">
+    <form id="blocks-form" class="item-form form-body" method="post" action="{{ url_for('timetable.create_item', item='block') }}">
 
         <fieldset class="card-section">
             <legend class="section-title">General information</legend>

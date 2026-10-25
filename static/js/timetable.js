@@ -248,12 +248,21 @@ async function deleteBlock() {
     closePopupMenu();
 }
 
-function editBlock() {
-    console.log("Edit")
+async function editBlock(target) {
+    console.log('edit')
+
 }
 
-function completeBlock() {
-    console.log("complete")
+async function completeBlock() {
+    const response = await fetch(`/api/timetable/block/${popupMenu._currentTarget.dataset.blockId}`, {
+        method : 'PUT',
+        body: JSON.stringify({completed : true})
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+    return response.json()
 }
 
 function markRescheduleBlock() {

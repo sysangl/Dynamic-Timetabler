@@ -2,13 +2,13 @@ itemFormContainer = document.getElementById('item-forms');
 filters = {dateRangeFrom:null, dateRangeTo:null};
 currentItemClass = 'all';
 filterForm =document.getElementById('filter-form');
-itemForms = itemFormContainer.getElementsByTagName('form');
-for (const form of itemForms) {
-    form.addEventListener('submit',async (e) => {
-        e.preventDefault();
-        form.submit();
-    })
-}
+itemForms = itemFormContainer.getElementsByClassName('item-form');
+// for (const form of itemForms) {
+//     form.addEventListener('submit',async (e) => {
+//         e.preventDefault();
+//         form.submit();
+//     })
+// }
 
 
 filterForm.addEventListener('submit', async (e) => {
@@ -37,7 +37,10 @@ filterForm.addEventListener('reset', async (e) => {
 
 function toggleForms() {
     document.getElementById('backdrop').classList.toggle('hidden')
-    itemFormContainer.classList.toggle('hidden')
+    console.log(itemFormContainer)
+    document.getElementById('item-forms').classList.toggle('hidden')
+    console.log(itemFormContainer)
+
 }
 
 async function fetchTimetableItems() {
@@ -120,13 +123,48 @@ async function generateItemTable(selectedItem='all', timetableItems = null) {
 
             const itemStatus = document.createElement('td')
             itemStatus.textContent = 'Uncompleted'
-
+            
+            row.ondblclick = ()=>{editItem(row.id)}
             row.append(itemTypeText, itemTitleText, itemStart, itemEnd, itemStatus)
             itemTable.append(row)
             itemCount += 1
         }
     }
     document.getElementById('item-counter').textContent = itemCount;
+}
+
+/**
+ * 
+ * @param {string} item
+ */
+async function editItem(item) {
+    const itemInfo = item.split('-')
+    const itemType = itemInfo[0]
+    const itemId = itemInfo[1]
+
+    const form = document.getElementById(`${itemType}-form`);
+    toggleForms();
+    form.addEventListener('submit', async function editFormSubmit(e) {
+        e.preventDefault();
+        console.log(e)
+        const formData = new FormData(form);
+        var object = {};
+        formData.forEach((value, key) => object[key] = value);
+        const response = await fetch(`/api/timetable/${itemType}/${itemId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type' : 'application/json'
+            },
+            body: JSON.stringify(object)
+        })
+        if (!response.ok) {
+            console.log(`Failed to update ${itemType} with id: ${itemId}`)
+        }
+        toggleForms();
+        form.removeEventListener('submit', editFormSubmit)
+        generateItemTable();
+    })
+    
 }
 
 function changeTable(selectedItem) {
