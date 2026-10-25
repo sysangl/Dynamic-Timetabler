@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="{{url_for('static', filename='css/vertical-timetable.css')}}"></link>
 {% endif %}
 
+{% if display_date %}
+    <div id="displayDate" data-date="{{display_date}}"></div>
+{% endif %}
+
+<div id="toolbar">
+    <button class="timetable-date-btn" type="button" onclick="prevDate()"><span class="fa-solid fa-chevron-left"></span></button>
+    <button class="timetable-date-btn" type="button" onclick="currentDate()"><span class="fa-solid fa-calendar-week"></span></button>
+    <button class="timetable-date-btn" type="button" onclick="nextDate()"><span class="fa-solid fa-chevron-right"></span></button>
+</div>
 
 <!-- main timetable screen -->
 <div id="timetable-container">

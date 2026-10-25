@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, Blueprint, url_for, redirect
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
-from helpers.datetime import combine_date_time
+from helpers.datetime import combine_date_time, parse_iso_date
 from sqlalchemy import func, Date
 from helpers.config import get_config
 import pytz
@@ -23,13 +23,7 @@ app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
 
 
-def parse_iso_date(s: str):
-    if not s:
-        return None
-    try:
-        return datetime.strptime(s, "%Y-%m-%d").date()
-    except ValueError:
-        return None
+
 
 def create_routes(app: Flask):
     @bp.route('/', methods=['GET'])

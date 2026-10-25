@@ -24,3 +24,11 @@ def combine_date_time(date_str: str, time_str: str, tz: str | None = None) -> da
         combined = combined.replace(tzinfo=tzinfo)
 
     return combined
+
+def parse_iso_date(s: str):
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        return None

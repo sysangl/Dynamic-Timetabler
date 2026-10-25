@@ -1,4 +1,10 @@
 
+displayDateElement = document.getElementById('displayDate');
+displayDate = new Date();
+if (displayDateElement) {
+    displayDate = new Date(displayDateElement.dataset.date)
+}
+
 /**
  *  Fetches all timetable items (unfiltered)
  * 
@@ -31,14 +37,22 @@ function clamp(value, min, max) {
 /**
  * Generates the days and their respective containers
  */
-function generateWeek() {
+function generateDays() {
+    window.dayContainers = window.dayContainers || [];
     const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const legend = document.getElementById("tt-legend");
     const schedule = document.getElementById("tt-schedule");
-    window.dayContainers = {};
     legend.innerHTML = '<div id="tt-time">-</div>';
     const msInDay = 24*60*60*1000;
-    const now = new Date();
+    var now;
+    if (displayDate) {
+        now = new Date(displayDate);
+    } else {
+        now = new Date();
+    }
+    window.dayContainers.forEach(element => {
+        element.remove();
+    });
     negative = false
     const dpv = window.settings['days_per_view']
     for (let inc = 0; inc < dpv; inc++) {
@@ -67,6 +81,7 @@ function generateWeek() {
         newDayCont.dataset.isoDate = nextDay.toISOString().slice(0,10)
         legend.appendChild(newDay)
         schedule.appendChild(newDayCont)
+        window.dayContainers.push(newDayCont)
     }
 }
 
@@ -353,21 +368,53 @@ async function clearTimetable() {
     })
 }
 
+function prevDate() {
+    console.log('previous')
+    const msInDay = 24*60*60*1000;
+    displayDate = new Date(Number(displayDate) - msInDay*(window.settings['days_per_view']));
+    rebuildTimetable();
+}
 
+function currentDate() {
+    displayDate = new Date();
+    rebuildTimetable();
+}
 
-async function initTimetable() {
-    // Build timetable (actual html and timetable divs)
-    window.settings = await fetchSettings();
+function nextDate() {
+    console.log('next')
+    const msInDay = 24*60*60*1000;
+    displayDate = new Date(Number(displayDate) + msInDay*(window.settings['days_per_view']));
+    rebuildTimetable();
+}
+
+function buildTimetable() {
     document.documentElement.style.setProperty('--days', window.settings['days_per_view']);
-    generateWeek(); // generate first column of the timetable
+    generateDays(); // generate first column of the timetable
     generateTimeline(); // generate top row of the timetable
     updateTime(); // set the timetable corner clock
     buildGrid(); // generate grid
     alignTimeMarker(); // make sure time marker is in the right place
+
+    document.getElementById('timetable-container').dispatchEvent(new Event('finishedBuilding'))
+}
+
+function rebuildTimetable() {
+    document.documentElement.style.setProperty('--days', window.settings['days_per_view']);
+    generateDays(); // generate first column of the timetable
+    updateTime();
+    renderTimetable().catch(err => console.error('Timetable render failed:', err))
+}
+
+async function initTimetable() {
+    // Build timetable (actual html and timetable divs)
+    window.settings = await fetchSettings();
+    displayDate = displayDate || null
+    buildTimetable();
+
     window.pageIntervals.temporary.push(setInterval(alignTimeMarker, 60*1000)); // update the time marker every 60 seconds
     window.pageIntervals.temporary.push(setInterval(updateTime, 5*1000)); // set the timetable corner clock
     alignTimetimetableView(); // scroll timetable to the current time
-    document.getElementById('timetable-container').dispatchEvent(new Event('finishedBuilding'))
+
 
     // Render timetable (events, block, content)
     renderTimetable().catch(err => console.error('Timetable render failed:', err))
