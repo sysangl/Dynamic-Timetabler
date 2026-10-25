@@ -6,8 +6,9 @@ from helpers.paths import resource_path
 
 server_logger = logging.getLogger("server")
 PROJECT_NAME = 'canopy-suite'
+DATA_DIRECTORY = Path.home() / f'.{PROJECT_NAME}'
 _DEFAULT_CFG = Path(resource_path('config')) / 'default.toml'
-_USER_CFG = Path.home() / f'.{PROJECT_NAME}' / 'default.toml'
+_USER_CFG = DATA_DIRECTORY / 'default.toml'
 
 _lock = threading.RLock()
 def _read_config(path: Path) -> dict:
@@ -55,3 +56,10 @@ def write_config(config:dict):
     with _USER_CFG.open("w",encoding="utf-8") as f:
         toml.dump(config, f)
     server_logger.info("Configuration created/updated")
+
+def _get_data_dir():
+    return DATA_DIRECTORY
+
+def _set_data_dir(dir:Path|str):
+    global DATA_DIRECTORY
+    DATA_DIRECTORY = Path(dir)

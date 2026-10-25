@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 from helpers.paths import resource_path
-from helpers.config import get_config, write_config, _deep_merge
+from helpers.config import get_config, write_config, _deep_merge, _get_data_dir, _set_data_dir
 import toml
 from run import run_server
 
@@ -131,10 +131,22 @@ class FolderSelectPage(tk.Frame):
         label.pack(anchor='n', pady=20)
         self.configure(background=BG_COLOUR)
 
+
+        self.e1 = tk.Label(self, text=_get_data_dir().as_posix(), justify='left',width=100)
+        self.e1.pack(anchor='nw',padx=(20,50))
+        b1 = tk.Button(self, text='...', command=self.data_folder)
+        b1.pack(anchor='ne',padx=(0,20))
+
         back_btn = ttk.Button(self, text='Back', command=lambda:controller.show_frame(ModeSelectPage))
-        back_btn.pack(anchor='sw',padx=20)
+        back_btn.pack(anchor='sw', padx=20)
         next_btn = ttk.Button(self, text='Next', command=lambda:controller.show_frame(SettingsPage))
         next_btn.pack(anchor='se', padx=20)
+
+    def data_folder(self):
+        dir = filedialog.askdirectory(initialdir=_get_data_dir())
+        _set_data_dir(dir)
+        print(_get_data_dir())
+        self.e1.configure(text=dir)
 
 class SettingsPage(tk.Frame):
     def __init__(self, parent, controller):
