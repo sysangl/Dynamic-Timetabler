@@ -127,8 +127,6 @@ class FolderSelectPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text='Select Installation Folder', font=HEADING_FONT)
         label.pack(anchor='n', pady=20)
-        label = ttk.Label(self, text='SKIP FOR NOW', font=HEADING_FONT)
-        label.pack(anchor='n', pady=20)
         self.configure(background=BG_COLOUR)
 
 

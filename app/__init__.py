@@ -9,7 +9,7 @@ from jinja2 import ChoiceLoader, FileSystemLoader
 from app.models import (
     db, pwd_hasher
 )
-from helpers.config import get_config, reload_config
+from helpers.config import get_config, reload_config, _get_data_dir
 from pathlib import Path
 from helpers.paths import resource_path
 from app.routes.auth import login_manager
@@ -21,8 +21,7 @@ def create_app():
     TEMPLATE_ROOT = resource_path('templates')
     STATIC_ROOT = resource_path('static')
     config = get_config()
-    home_dir = Path.home()
-    project_dir = home_dir / ".canopy-suite"
+    project_dir = _get_data_dir()
     project_dir.mkdir(parents=True, exist_ok=True)
     db_file = project_dir / "database.sqlite"
     sqlite_uri = f"sqlite:///{db_file.resolve().as_posix()}"

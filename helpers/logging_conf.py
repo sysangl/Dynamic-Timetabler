@@ -1,8 +1,9 @@
 import logging
 import logging.config
 from pathlib import Path
+from helpers.config import _get_data_dir
 
-_LOG_PATH = Path().home() / ".canopy-suite" / "logs"
+_LOG_PATH = _get_data_dir() / "logs"
 _LOG_FMT = "%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
 _DATE_FMT = "%Y-%m-%d %H:%M:%S"
 
