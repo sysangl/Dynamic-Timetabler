@@ -61,5 +61,6 @@ def _get_data_dir():
     return DATA_DIRECTORY
 
 def _set_data_dir(dir:Path|str):
-    global DATA_DIRECTORY
+    global DATA_DIRECTORY, _USER_CFG
     DATA_DIRECTORY = Path(dir)
+    _USER_CFG = DATA_DIRECTORY / 'default.toml'
