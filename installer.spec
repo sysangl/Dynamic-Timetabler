@@ -27,7 +27,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Canopy-v0.0.0.exe',
+    name='Canopy-Installer-v0.0.0.exe',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
