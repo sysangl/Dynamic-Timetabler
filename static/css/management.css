@@ -114,6 +114,7 @@
     margin-left: auto;
     align-self: center;
     justify-self: center;
+    flex-direction: column;
 }
 
 #item-table-body {
@@ -156,12 +157,13 @@
     justify-content: center;
     align-content: center;
     color: red;
+    padding: 2rem;
 }
 
 #backdrop {
     position: absolute;
     z-index: 1;
-    backdrop-filter: brightness(0.6);
+    backdrop-filter: brightness(0.6) blur(8px);
 }
 
 #backdrop.hidden {
