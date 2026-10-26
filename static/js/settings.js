@@ -1,11 +1,18 @@
 
-// apply settings to timetable. need to automatically parse and apply these settings
+/**
+ * Applies settings
+ * @param {Object} settings 
+ */
 async function applySettings(settings) {
     console.log('setting option values')
     console.log(settings);
     populateSettings(settings);
 }
 
+/**
+ * Fills the settings form with the current user's settings
+ * @param {Object} settings 
+ */
 function populateSettings(settings) {
     const formElements = $('#settings-form input:not(:disabled)');
     formElements.each(function(index, element) {
@@ -21,6 +28,9 @@ function populateSettings(settings) {
     })
 }
 
+/**
+ * Initialise settings (run on fragment load.)
+ */
 async function initSettings() {
     console.log("initialising settings")
     await applySettings(await fetchSettings());
@@ -31,10 +41,6 @@ async function initSettings() {
         console.log((new FormData(form)).get('timetable_view'))
         form.submit()
     })
-
 }
 
 initSettings();
-
-// window.pageInits = window.pageInits || {};
-// window.pageInits.settings = initSettings;

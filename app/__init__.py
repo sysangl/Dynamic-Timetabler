@@ -1,3 +1,7 @@
+"""
+Flask app factory
+"""
+
 import secrets
 from collections.abc import Mapping
 from pathlib import Path

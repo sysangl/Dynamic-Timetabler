@@ -1,3 +1,7 @@
+"""
+Helper module containing functions related to dates and times
+"""
+
 import zoneinfo
 from datetime import date, datetime, time
 
@@ -30,7 +34,7 @@ def combine_date_time(date_str: str, time_str: str, tz: str | None = None) -> da
 
     return combined
 
-def parse_iso_date(s: str):
+def parse_iso_date(s: str)->date|None:
     """
     Parses an ISO date string (eg. 2026-10-25), and returns the date object.
     """

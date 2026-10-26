@@ -3,6 +3,10 @@ filters = {dateRangeFrom:null, dateRangeTo:null};
 currentItemClass = document.getElementById('item-select').value.toLowerCase();
 filterForm =document.getElementById('filter-form');
 itemForms = itemFormContainer.getElementsByClassName('item-form');
+editFormOpen = false
+/**
+ * Stop the default behaviour of forms of reloading the page
+ */
 for (const form of itemForms) {
     form.addEventListener('submit',async (e) => {
         e.preventDefault();
@@ -35,8 +39,10 @@ for (const form of itemForms) {
         });
     })
 }
-editFormOpen = false
 
+/**
+ * Prevent reloading and resetting of the filter form
+ */
 filterForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -59,6 +65,11 @@ filterForm.addEventListener('reset', async (e) => {
     generateItemTable(currentItemClass, timetableItems=ti);
 });
 
+/**
+ * Toggle the item form containers.
+ * If editMode is set to true, the 'Create' button is changed to 'Update'
+ * @param {Boolean} editMode 
+ */
 function toggleForms(editMode=false) {
     document.getElementById('backdrop').classList.toggle('hidden')
     document.getElementById('item-forms').classList.toggle('hidden')
@@ -72,6 +83,10 @@ function toggleForms(editMode=false) {
     setupItemForm(editMode);
 }
 
+/**
+ * Gets the timetable items, with filters applied (if any).
+ * @returns {Promise<any>}
+ */
 async function fetchTimetableItems() {
     dateRangeFrom = filters.dateRangeFrom;
     dateRangeTo = filters.dateRangeTo;
@@ -96,6 +111,13 @@ async function fetchTimetableItems() {
     return await response.json()
 }
 
+/**
+ * Generates and populates the item table
+ * selectedItem is the item class to generate, defaults to the selected item in the dropdown
+ * timetableItems is what items to use, defaults to grabbing the item from the server
+ * @param {string} selectedItem 
+ * @param {JSON} timetableItems 
+ */
 async function generateItemTable(selectedItem=null, timetableItems = null) {
     selectedItem = selectedItem || currentItemClass
     timetableItems = timetableItems || await fetchTimetableItems()
@@ -165,7 +187,9 @@ async function generateItemTable(selectedItem=null, timetableItems = null) {
 }
 
 /**
- * 
+ * Edits an item.
+ * item is a string of the form, 'itemType-id'
+ * eg. 'block-5', 'routine-9'
  * @param {string} item
  */
 async function editItem(item) {
@@ -200,6 +224,11 @@ async function editItem(item) {
     editFormOpen = true;
 }
 
+/**
+ * Populates the item creation/update form
+ * @param {string} itemType 
+ * @param {Number|string} id 
+ */
 async function populateItemForm(itemType,id) {
     const formElements = $(`#${itemType}-form input:not(:disabled)`);
 
@@ -226,7 +255,10 @@ async function populateItemForm(itemType,id) {
     })
 }
 
-
+/**
+ * Changes the table to display the selected class of items
+ * @param {string} selectedItem 
+ */
 function changeTable(selectedItem) {
     if (selectedItem == 'all') {
         document.getElementById('create-new-btn').disabled = true
@@ -236,6 +268,7 @@ function changeTable(selectedItem) {
     currentItemClass = selectedItem
     generateItemTable(selectedItem = selectedItem)
 }
+
 
 async function setupManagement () {
     let settings = await fetchSettings()
@@ -265,6 +298,10 @@ async function setupManagement () {
     generateItemTable();
 }
 
+/**
+ * Sets up the current selected item class's form
+ * @param {Boolean} editMode 
+ */
 async function setupItemForm(editMode) {
     let settings = await fetchSettings()
     const now = new Date();
@@ -303,6 +340,10 @@ async function setupItemForm(editMode) {
 
 }
 
+/**
+ * Uses bubble-sort to sort the table by the selected column
+ * @param {Number} column 
+ */
 function sortTable(column) {
     const table = document.getElementById('item-table')
     var switching = true;
@@ -353,6 +394,7 @@ function sortTable(column) {
 }
 
 setupManagement();
+// close forms when Esc is pressed
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !itemFormContainer.classList.contains('hidden')) {
         toggleForms();

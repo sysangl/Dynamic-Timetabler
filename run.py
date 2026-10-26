@@ -1,4 +1,4 @@
-def run_server():
+def run_server() -> None:
     import atexit
     import logging
     import multiprocessing

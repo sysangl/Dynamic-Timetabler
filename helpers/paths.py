@@ -1,3 +1,7 @@
+"""
+Helper module for functions relating to paths
+"""
+
 import logging
 import os
 import sys
@@ -5,7 +9,7 @@ from pathlib import Path
 
 server_logger = logging.getLogger('server')
 
-def resource_path(relative_path):
+def resource_path(relative_path: str)->str:
     """
     Return the absolute path to a resource, whether the app is
     running from a PyInstaller bundle or from source.

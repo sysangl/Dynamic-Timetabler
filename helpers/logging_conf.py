@@ -1,3 +1,7 @@
+"""
+Sets up and configures logging
+"""
+
 import logging
 import logging.config
 

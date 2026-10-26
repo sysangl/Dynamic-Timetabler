@@ -7,7 +7,7 @@ if (displayDateElement) {
 
 /**
  *  Fetches all timetable items (unfiltered)
- * 
+ *  @returns {JSON}
  */
 async function fetchPayload() {
     const dates = document.getElementsByClassName('day-container')
@@ -238,6 +238,11 @@ async function editBlock(target) {
 
 }
 
+/**
+ * Marks the selected block as completed
+ * 
+ * @returns {JSON}
+ */
 async function completeBlock() {
     const response = await fetch(`/api/timetable/block/${popupMenu._currentTarget.dataset.blockId}`, {
         method : 'PUT',
@@ -254,6 +259,13 @@ function markRescheduleBlock() {
     console.log('mark resc')
 }
 
+/**
+ * Creates a block and splits it if it goes over visible time.
+ * Returns an array of HTMLDivElements
+ * 
+ * @param {Object} block 
+ * @returns {Array[HTMLDivElement]}
+ */
 function splitBlock(block) {
     const schedule = document.getElementById('tt-schedule');
     const pieces = [];
@@ -398,6 +410,10 @@ function rebuildTimetable() {
     renderTimetable().catch(err => console.error('Timetable render failed:', err))
 }
 
+
+/**
+ * Initialise the timetable
+ */
 async function initTimetable() {
     // Build timetable (actual html and timetable divs)
     window.settings = await fetchSettings();

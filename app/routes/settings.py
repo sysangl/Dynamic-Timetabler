@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint, redirect, request, url_for
 from flask_login import current_user, login_required
 
-from helpers.api import _json_error, _json_success
+from helpers.server import _json_error, _json_success
 
 from ..extensions import db
 from ..models import Settings

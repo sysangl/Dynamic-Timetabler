@@ -9,7 +9,7 @@ from flask_login import (
 )
 
 from app.models import User
-from helpers.api import _json_error, _json_success
+from helpers.server import _json_error, _json_success
 
 from ..extensions import db, login_manager
 

@@ -4,7 +4,7 @@ from typing import Any
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from helpers.api import _json_error
+from helpers.server import _json_error
 from helpers.datetime import parse_iso_date
 
 bp = Blueprint('app', __name__)

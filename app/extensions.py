@@ -1,3 +1,7 @@
+"""
+Contains flask extensions.
+"""
+
 from flask_argon2 import Argon2
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy

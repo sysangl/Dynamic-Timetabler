@@ -1,3 +1,7 @@
+"""
+Functions realted to server
+"""
+
 from typing import Any
 
 from flask import Response, jsonify

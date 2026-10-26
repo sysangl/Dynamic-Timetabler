@@ -1,9 +1,13 @@
+"""
+API routes related to users
+"""
+
 import logging
 
 from flask import Blueprint, jsonify, request
 
 from app.models import User, db
-from helpers.api import _json_error, _json_success
+from helpers.server import _json_error, _json_success
 
 bp = Blueprint('users', __name__)
 
