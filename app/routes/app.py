@@ -1,9 +1,10 @@
 import logging
 from typing import Any
 
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
+from helpers.api import _json_error
 from helpers.datetime import parse_iso_date
 
 bp = Blueprint('app', __name__)
@@ -53,7 +54,7 @@ def serve_timetable_dated(date):
     if parsed_date:
         return render_template('timetable', display_name=current_user.display_name, display_date = parsed_date, view=current_user.settings.timetable_view)
     else:
-        return jsonify({'error':f'"{date}" is not a valid date.'}), 400
+        return _json_error(f'"{date}" is not a valid date.', 400)
 
 @bp.route("/management")
 @login_required

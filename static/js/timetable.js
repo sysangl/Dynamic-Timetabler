@@ -41,15 +41,14 @@ function generateDays() {
     window.dayContainers.forEach(element => {
         element.remove();
     });
-    negative = false
     const dpv = window.settings['days_per_view']
     for (let inc = 0; inc < dpv; inc++) {
         var dayIdx = ((inc + window.settings['start_day']) % 7);
         const day = days[dayIdx+7-dpv];
-        if (dayIdx >= window.settings['start_day']) {
+        if (dayIdx < window.settings['start_day']) {
             dayIdx-=dpv
         }
-        const nextDay = new Date(Number(now) + msInDay*(1-now.getDay()+dayIdx));
+        const nextDay = new Date(now.getTime() + msInDay*(1-now.getDay()+dayIdx));
         const newDay = document.createElement('div');
         newDay.id = `day-${day}`;
         newDay.classList.add('tt-weekday');
