@@ -1,71 +1,52 @@
-import logging
 import secrets
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
 
 from flask import Flask
 from flask_migrate import Migrate
 
-# from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
-from jinja2 import ChoiceLoader, FileSystemLoader
-
-from app.models import db, pwd_hasher
-from app.routes.auth import login_manager
 from helpers.config import _get_data_dir, get_config
 from helpers.paths import resource_path
 
-# For production
-#engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")
+from .extensions import db, login_manager, pwd_hasher
 
-def create_app():
-    TEMPLATE_ROOT = resource_path('templates')
-    STATIC_ROOT = resource_path('static')
-    config = get_config()
-    project_dir = _get_data_dir()
-    project_dir.mkdir(parents=True, exist_ok=True)
-    db_file = project_dir / "database.sqlite"
-    sqlite_uri = f"sqlite:///{db_file.resolve().as_posix()}"
-    server_logger = logging.getLogger('server')
+__all__ = ['create_app']
 
-    app = Flask("Canopy", template_folder=TEMPLATE_ROOT, static_folder=STATIC_ROOT)
+def _default_config():
+    cfg = dict(get_config())
+    data_dir: Path = _get_data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
+    db_file = data_dir / 'database.sqlite'
+    cfg.setdefault('SQLALCHEMY_DATABASE_URI', f'sqlite:///{db_file.resolve().as_posix()}')
+    cfg.setdefault('SECRET_KEY', secrets.token_hex(32))
+    cfg.setdefault('SESSION_COOKIE_HTTPONLY', True)
+    cfg.setdefault('SESSION_COOKIE_SAMESITE', "Lax")
+    cfg.setdefault('ARGON2_HASH_LENGTH', 32)
+    cfg.setdefault('ARGON2_TIME_COST', 2)
+    cfg.setdefault('ARGON2_MEMORY_COST', 64 * 1024)
+    cfg.setdefault('ARGON2_PARALLELISM', 1)
+    return cfg
 
-    # APP CONFIGS ==============================
+def create_app(config: Mapping[str, Any] | None = None):
+    app = Flask(
+        "Canopy", 
+        template_folder=resource_path('templates'), 
+        static_folder=resource_path('static')
+        )
 
-    # DATABASE
-    #app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@localhost:5432/dynamic_timetable"
-    #app.config["SQLALCHEMY_DATABASE_URI"] = config['database']['uri']
-    app.secret_key = secrets.token_hex(32) if not config['server']['debug'] else 'debug'
-    app.config.update(
-        SQLALCHEMY_DATABASE_URI = sqlite_uri,
-        # ARGON (HASHING)
-        ARGON2_HASH_LENGTH = 32,
-        ARGON2_TIME_COST = 2,
-        ARGON2_MEMORY_COST = 64 * 1024,
-        ARGON2_PARALLELISM = 1,
-    )
+    app.config.from_mapping(_default_config() if config is None else dict(config))
     
     db.init_app(app)
     pwd_hasher.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login" # type: ignore
     Migrate(app,db)
-    
-    server_logger.info(f"Starting a server on 'http://{config['server']['host']}:{config['server']['host']}'")
-
-    assert app.static_folder is not None
-    assert app.jinja_loader is not None
-    app.jinja_env.loader = ChoiceLoader([
-        FileSystemLoader([TEMPLATE_ROOT,STATIC_ROOT])
-        ])
 
     with app.app_context():
         db.create_all()
 
     from .routes import initialise_routes
     initialise_routes(app)
-
-    @app.cli.command("list-tables")
-    def list_tables():
-        """for debugging, should print names of tables"""
-        for table in db.metadata.sorted_tables:
-            print(table.name)
-
+    
     return app

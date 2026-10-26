@@ -1,206 +1,22 @@
+from __future__ import annotations
 
-# types
-import logging
 import uuid
 from datetime import datetime
 
 import pytz
-from flask_argon2 import Argon2
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey
-from sqlalchemy.dialects.sqlite import DATETIME, INTEGER, JSON
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from helpers.config import get_config
-
-# from sqlalchemy.dialects.postgresql import (
-#     UUID,
-#     ARRAY,
-#     TIMESTAMP,
-#     INTEGER
-# )
-
-pwd_hasher = Argon2()
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
-# Time table blocking
-# What appears on and what is stored in the timetable
-#
-
-db_logger = logging.getLogger('database')
-
-
-
-# Settings
-#
-#
-class Settings(db.Model):
-    """
-    The user's preferences and settings
-    Has one-to-one relationship with User table
-    """
-    id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
-    default_block_length : Mapped[int] = mapped_column(default=30) # minutes
-    default_block_colour : Mapped[str] = mapped_column(default="#155764") # minutes
-    start_day : Mapped[int] = mapped_column(default=0)
-    start_hour : Mapped[int] = mapped_column(default=0)
-    timetable_view : Mapped[str] = mapped_column(default='horizontal')
-    days_per_view : Mapped[int] = mapped_column(default=7) 
-
-    user: Mapped["User"] = relationship(
-        "User",
-        back_populates="settings",
-        uselist=False,          # one‑to‑one
-        foreign_keys="[User.settings_id]",
-        remote_side="[User.settings_id]"
-    )
-
-    __tablename__ = "settings"
-    def __init__(self,
-                default_block_length :int = 30,
-                start_day:int = 0,
-                start_hour:int = 0
-                ) -> None:
-        try:
-            super().__init__()
-            self.default_block_length = default_block_length
-            self.start_day = start_day
-            self.start_hour = start_hour
-        except Exception:
-            db_logger.exception("Failed to create Settings instance")
-            raise
-
-
-    def serialise(self)->dict:
-        return {
-            "id": str(self.id),
-            "default_block_length": self.default_block_length,
-            "default_block_colour" : self.default_block_colour,
-            "start_day": self.start_day,
-            "start_hour": self.start_hour,
-            "timetable_view": self.timetable_view,
-            "days_per_view": self.days_per_view
-        }
-
-
-# Other
-#
-#
-class User(db.Model):
-    """
-    Stores users, so multiple people can use the same server to store different timetables.
-    Has a one-to-one relationship with Settings table
-    """
-
-    __tablename__ = "users"
-    id : Mapped[int] = mapped_column(INTEGER,primary_key=True, autoincrement=True)
-    username : Mapped[str] = mapped_column(nullable=False, unique=True)
-    display_name : Mapped[str | None] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
-    is_admin : Mapped[bool] = mapped_column(nullable=False, default=False)
-
-    settings_id : Mapped[int] = mapped_column(
-        INTEGER, 
-        ForeignKey("settings.id", ondelete="CASCADE"),
-        nullable=False, 
-        unique=True
-    )
-    settings : Mapped[Settings] = relationship(
-        "Settings", 
-        back_populates="user",
-        single_parent=True,
-        uselist=False,
-        cascade="all, delete-orphan",
-        foreign_keys="[User.settings_id]",
-        remote_side="[Settings.id]"
-    )
-    blocks = db.relationship(
-        "Block",
-        back_populates="owner",
-        cascade="all, delete-orphan",
-        lazy="dynamic",
-    )
-    active: Mapped[bool] = mapped_column(default=True)
-
-
-    @property
-    def is_authenticated(self): 
-        return True
-
-    @property
-    def is_active(self): 
-        return getattr(self, "active", True)
-
-    @property
-    def is_anonymous(self): 
-        return False
-
-    def get_id(self):
-        return str(self.id) 
-
-    _password_hash: Mapped[str] = mapped_column(nullable=False)
-
-    @property
-    def password(self) -> str:
-        raise AttributeError("Password hashes are write-only")
-
-    @password.setter
-    def password(self, plain_password: str) -> None:
-        if not plain_password:
-            raise ValueError("Password may not be empty")
-        self._password_hash = pwd_hasher.generate_password_hash(plain_password)
-
-    def verify_password(self, plain_password: str)->bool:
-        if not self._password_hash:
-            return False
-        try:
-            return pwd_hasher.check_password_hash(self._password_hash, plain_password)
-        except Exception:
-            db_logger.exception("Password verification failed")
-            return False
-
-    def __init__(self,
-                username : str,
-                display_name : str | None = None,
-                is_admin : bool = False,
-                ) -> None:
-        try:
-            super().__init__()
-            self.username = username
-            self.display_name = display_name or username
-            self.is_admin = is_admin
-            self.settings = Settings()
-        except Exception:
-            db_logger.exception("Failed to create User instance")
-            raise
-
-
-    # __table_args__ = (
-    #     UniqueConstraint(
-    #         "settings_id",
-    #         name="uq_user_settings_id"   # <-- give the constraint a stable name
-    #     ),
-    # )
-
-    def serialise(self) -> dict:
-        return {
-            "id" : self.id,
-            "username": self.username,
-            "display_name": self.display_name,
-            "is_admin": self.is_admin,
-            # embed the Settings payload (or ``None`` if it ever becomes optional)
-            "settings": self.settings.serialise() if self.settings else None,
-            #"no_of_blocks": self.blocks.all()
-        }
-
+from . import db, db_logger
+from .base import BaseModel
+from .user import User
 
 
 class ToDo(db.Model):
     """
     The most basic thing, essentially just a ToDo list.
     """
-    id : Mapped[int] = mapped_column(INTEGER, primary_key=True, autoincrement=True)
+    id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     title : Mapped[str] = mapped_column(nullable=False)
     completed : Mapped[bool] = mapped_column(nullable=False, default=False)
 
@@ -223,11 +39,11 @@ class Task(db.Model):
     """
     A ToDo with more information and can be set for a certain date and time
     """
-    id : Mapped[int] = mapped_column(INTEGER, primary_key=True, autoincrement=True)
+    id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     title : Mapped[str] = mapped_column(nullable=False)
     completed : Mapped[bool] = mapped_column(nullable=False, default=False)
     description : Mapped[str] = mapped_column(default="")
-    start_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    start_datetime : Mapped[datetime] = mapped_column(DateTime, nullable=False)
     reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
     def __init__(self, 
                 title:str, 
@@ -237,7 +53,7 @@ class Task(db.Model):
         try:
             self.title = title
             self.description = description
-            self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone(get_config()["general"]["timezone"]))
+            self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone('UTC'))
         except Exception:
             db_logger.exception("Failed to create Task instance")
             raise
@@ -254,16 +70,16 @@ class Block(db.Model):
     """
     Occupies a span of time.
     """
-    id : Mapped[int] = mapped_column(INTEGER, primary_key=True, autoincrement=True)
+    id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     title : Mapped[str] = mapped_column(nullable=False)
     completed : Mapped[bool] = mapped_column(nullable=False, default=False)
     description : Mapped[str] = mapped_column(default="")
-    start_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    start_datetime : Mapped[datetime] = mapped_column(DateTime, nullable=False)
     reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
-    end_datetime : Mapped[datetime] = mapped_column(DATETIME, nullable=False)
+    end_datetime : Mapped[datetime] = mapped_column(DateTime, nullable=False)
     colour : Mapped[str] = mapped_column(nullable=False, default="#75547e")
     owner_id : Mapped[int] = mapped_column(
-        INTEGER,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -324,11 +140,6 @@ class Block(db.Model):
             'owner' : self.owner.id
         }
 
-
-# Activities
-# For auto-generating timetables, blocks are created from these and their constraints
-#
-
 class Activity(db.Model):
     """
     Base Activity that drives auto timetable generation
@@ -350,7 +161,7 @@ class Activity(db.Model):
     # repeat_interval -> [0,0,0,0,0]
     # repeat every [hour, day, week, month, year]
     # postgreSQL - Production
-    #repeat_interval : Mapped[list[int]]= mapped_column(ARRAY(INTEGER), default=lambda: [0,0,0,0,0]) 
+    #repeat_interval : Mapped[list[int]]= mapped_column(ARRAY(Integer), default=lambda: [0,0,0,0,0]) 
     # sqlite - Dev
     repeat_interval : Mapped[list[int]]= mapped_column(JSON, default=lambda: [0,0,0,0,0]) 
     
@@ -370,7 +181,7 @@ class Activity(db.Model):
     #  an array [X,Y], Y will be the number of hours
     # this simpler approach may cause problems with detecting boundaries of, for example, each week
     # PostgreSQL - Production
-    #frequency : Mapped[list[int]] = mapped_column(ARRAY(INTEGER), default=lambda: [0,0,0])
+    #frequency : Mapped[list[int]] = mapped_column(ARRAY(Integer), default=lambda: [0,0,0])
     # sqlite - Dev
     frequency : Mapped[list[int]] = mapped_column(JSON, default=lambda: [0,0,0])
         
@@ -403,7 +214,7 @@ class Activity(db.Model):
 
     # reset the time counter every [hour, day, week, month, year] 
     # PostgreSQL - for production
-    #time_limit_reset : Mapped[list[int]] = mapped_column(ARRAY(INTEGER), default=lambda: [0,0,0,0,0])
+    #time_limit_reset : Mapped[list[int]] = mapped_column(ARRAY(Integer), default=lambda: [0,0,0,0,0])
     # sqlite - for dev
     time_limit_reset : Mapped[list[int]] = mapped_column(JSON, default=lambda: [0,0,0,0,0])
 
@@ -498,3 +309,4 @@ class Routine(db.Model):
         self.routine_length = routine_length
         self.repeats_every = repeats_every
         self.blocks = []
+        

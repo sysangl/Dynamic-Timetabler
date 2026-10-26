@@ -2,18 +2,17 @@ import logging
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import (
-    LoginManager,
     current_user,
     login_required,
     login_user,
     logout_user,
 )
 
-from app.models import User, db
+from app.models import User
+
+from ..extensions import db, login_manager
 
 bp = Blueprint("auth", __name__)
-
-login_manager = LoginManager()
 
 db_logger = logging.getLogger("database")
 server_logger = logging.getLogger("server")

@@ -3,7 +3,6 @@ import logging
 
 from flask import Flask, jsonify
 
-from .activities import bp as activities_bp
 from .app import bp as app_bp
 from .auth import bp as auth_bp
 from .settings import bp as settings_bp
@@ -24,7 +23,6 @@ def initialise_routes(app: Flask) -> None:
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
 
-    app.register_blueprint(activities_bp,url_prefix="/api/activities")
     app.register_blueprint(app_bp,url_prefix="/app")
     app.register_blueprint(settings_bp,url_prefix="/api/users/settings")
     app.register_blueprint(timetable_bp,url_prefix="/api/timetable")
