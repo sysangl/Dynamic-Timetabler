@@ -6,33 +6,33 @@ from flask import Flask, jsonify
 from .app import bp as app_bp
 from .auth import bp as auth_bp
 from .settings import bp as settings_bp
-from .settings import create_routes as settings_create_routes
 from .timetable import bp as timetable_bp
-from .timetable import create_routes as timetable_create_routes
 from .users import bp as users_bp
-from .users import create_routes as user_create_routes
 
+BLUEPRINTS = (
+    (auth_bp, "/auth"),
+    (app_bp,"/app"),
+    (settings_bp,"/api/users/settings"),
+    (timetable_bp,"/api/timetable"),
+    (users_bp,"/api/users"),
+)
 
-def initialise_routes(app: Flask) -> None:
-    logger = logging.getLogger("server")
-    logger.info("Initialising routes")
+def _register_blueprints(app: Flask)->None:
+    for blueprint, prefix in BLUEPRINTS:
+        app.register_blueprint(blueprint, url_prefix=prefix)
 
-    timetable_create_routes(app)
-    settings_create_routes(app)
-    user_create_routes(app)
-
-    app.register_blueprint(auth_bp, url_prefix="/auth")
-
-    app.register_blueprint(app_bp,url_prefix="/app")
-    app.register_blueprint(settings_bp,url_prefix="/api/users/settings")
-    app.register_blueprint(timetable_bp,url_prefix="/api/timetable")
-    app.register_blueprint(users_bp,url_prefix="/api/users")
-
+def _register_utility_routes(app: Flask)->None:
     @app.route("/health")
     def health():
         """health-check ep"""
         return jsonify({"status":"ok"})
 
-    # @app.errorhandler(404)
-    # def page_not_found(e):
-    #     return 404 template
+def register_routes(app: Flask) -> None:
+    log = logging.getLogger("app")
+    log.info("Initialising routes")
+
+    log.info("Registering blueprints")
+    _register_blueprints(app)
+
+    log.info("Registering utility routes")
+    _register_utility_routes(app)

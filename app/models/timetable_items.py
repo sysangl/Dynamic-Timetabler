@@ -8,7 +8,6 @@ from sqlalchemy import JSON, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger
-from .base import BaseModel
 from .user import User
 
 

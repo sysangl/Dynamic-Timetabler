@@ -4,7 +4,6 @@ from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger, pwd_hasher
-from .base import BaseModel
 
 
 class Settings(db.Model):

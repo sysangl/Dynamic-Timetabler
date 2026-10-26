@@ -1,218 +1,215 @@
 import logging
 from datetime import datetime
 
-from flask import Blueprint, Flask, jsonify, redirect, request, url_for
+from flask import Blueprint, request
 from flask_login import current_user, login_required
+from sqlalchemy.exc import SQLAlchemyError
 
-from app.models import Block, db
+from helpers.api import _json_error, _json_success
 from helpers.config import get_config
 from helpers.datetime import combine_date_time, parse_iso_date
 
+from ..extensions import db
+from ..models import Block
+
 bp = Blueprint('timetable', __name__)
 
-server_logger = logging.getLogger('server')
-app_logger = logging.getLogger('app')
-db_logger = logging.getLogger('database')
+log = logging.getLogger('app')
 
 
-def create_routes(app: Flask):
-    @bp.route('/', methods=['GET'])
-    @login_required
-    def get():
-        server_logger.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
 
-        try:
-            #todos = ToDo.query.filter().all()
-            #tasks = Task.query.all()
-            blocks = Block.query.filter(
-                    Block.owner_id == current_user.id,
-                ).all()
+@bp.route('/', methods=['GET'])
+@login_required
+def get_items():
+    log.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
 
-            payload = {
-                #"todos": [todo.serialise() for todo in todos],
-                #"tasks": [task.serialise() for task in tasks],
-                "blocks": [block.serialise() for block in blocks]
-            }
+    try:
+        #todos = ToDo.query.filter().all()
+        #tasks = Task.query.all()
+        blocks = Block.query.filter(
+                Block.owner_id == current_user.id,
+            ).all()
 
+        payload = {
+            #"todos": [todo.serialise() for todo in todos],
+            #"tasks": [task.serialise() for task in tasks],
+            "blocks": [block.serialise() for block in blocks]
+        }
 
-        except Exception:
-            server_logger.exception("Failed to fetch timetable items")
-            raise
-        return jsonify(payload), 200
-
-
-    @bp.route('/range/', methods=['GET'])
-    @login_required
-    def get_range():
-        start_date = parse_iso_date(request.args.get('start','').strip())
-        end_date = parse_iso_date(request.args.get('end','').strip())
-        from_date = parse_iso_date(request.args.get('from',''.strip()))
-        until_date = parse_iso_date(request.args.get('until',''.strip()))
-
-        server_logger.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
-
-        if not (from_date or until_date):
-            if not start_date or not end_date:
-                start_date = datetime.now().date()
-                end_date = start_date
-            else:
-                if end_date < start_date:
-                    start_date, end_date = end_date, start_date
-
-        app.logger.info(f'Getting blocks for {start_date or from_date} - {end_date or until_date}')
-
-        try:
-            blocks = []
-            if from_date and until_date:
-                start_date=from_date
-                end_date=until_date
-            if start_date and end_date:
-                blocks = Block.query.filter(
-                        Block.owner_id == current_user.id,
-                        Block.start_datetime <= datetime.combine(end_date, datetime.max.time()),
-                        Block.end_datetime >= datetime.combine(start_date, datetime.min.time())
-                    ).all()
-            elif from_date:
-                blocks = Block.query.filter(
-                        Block.owner_id == current_user.id,
-                        Block.end_datetime >= datetime.combine(from_date, datetime.min.time())
-                    ).all()
-            elif until_date:
-                    blocks = Block.query.filter(
-                        Block.owner_id == current_user.id,
-                        Block.start_datetime <= datetime.combine(until_date, datetime.max.time()),
-                    ).all()
-
-            payload = {
-                #"todos": [todo.serialise() for todo in todos],
-                #"tasks": [task.serialise() for task in tasks],
-                "blocks": [block.serialise() for block in blocks]
-            }
+        return _json_success(payload)
+    except Exception:
+        log.exception("Failed to fetch timetable items.")
+        return _json_error("Failed to retrieve timetable items.", 500)
 
 
-        except Exception:
-            server_logger.exception("Failed to fetch timetable items")
-            raise
-        return jsonify(payload), 200
+@bp.route('/range/', methods=['GET'])
+@login_required
+def get_items_in_range():
+    start_str = request.args.get('start','') or request.args.get('from','')
+    end_str = request.args.get('end','') or request.args.get('until','')
+    start_date = parse_iso_date(start_str.strip()) if start_str else None
+    end_date = parse_iso_date(end_str.strip()) if end_str else None
+
+    log.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
+
+    if not start_date and not end_date:
+        start_date = datetime.now().date()
+        end_date = start_date
+    if start_date and end_date and end_date < start_date:
+        start_date, end_date = end_date, start_date
+
+    log.info(f'Getting blocks for {start_date} - {end_date}')
+
+    try:
+        blocks = []
+        blocks = Block.query.filter(
+                Block.owner_id == current_user.id,
+            )
+        if start_date:
+            blocks = blocks.filter(
+                    Block.end_datetime >= datetime.combine(start_date, datetime.min.time())
+                )
+        if end_date:
+            blocks = blocks.filter(
+                Block.start_datetime <= datetime.combine(end_date, datetime.max.time()),
+            )
+
+        payload = {
+            #"todos": [todo.serialise() for todo in todos],
+            #"tasks": [task.serialise() for task in tasks],
+            "blocks": [block.serialise() for block in blocks.all()]
+        }
+
+        return _json_success(payload)
+
+    except Exception:
+        log.exception("Failed to fetch timetable items")
+        return _json_error("Failed to fetch timetable items.", 500)
 
 
-    @bp.route('/<string:item>/<int:id>',methods=['GET'])
-    @login_required
-    def get_item(item, id):
-        item_class = None
-        match item:
-            #case 'todos':
-            #    item_class = ToDo
-            #case 'tasks':
-            #    item_class = Task
-            case 'blocks':
-                item_class = Block
-            case _:
-                return {'error': f'"{item}" is not a valid timetable item'}, 404
-        tti = item_class.query.filter_by(id=id).first()
-        if not tti:
-            return {'error':f'{item} with id "{id}" does not exist'}, 404
-        result = tti.serialise() if tti else -1
-        return jsonify(result)
-    
+@bp.route('/<string:item>/<int:id>',methods=['GET'])
+@login_required
+def get_item(item: str, id: int):
+    item_class = None
+    match item:
+        #case 'todos':
+        #    item_class = ToDo
+        #case 'tasks':
+        #    item_class = Task
+        case 'blocks':
+            item_class = Block
+        case _:
+            return {'error': f'"{item}" is not a valid timetable item'}, 404
+    tti = item_class.query.filter_by(id=id).first()
+    if not tti:
+        return _json_error(f'{item} with id "{id}" does not exist', 404)
+    return _json_success(tti.serialise())
 
-    @bp.route('/<string:item>/create', methods=['POST'])
-    @login_required
-    def create_item(item):
-        app.logger.info(f"Attempting to create a {item} from: {request.form}")
-        app_logger.info(f"Attempting to create a {item} from: {request.form}")
 
-        item_class = None
-        match item:
-            #case 'todos':
-            #    item_class = ToDo
-            #case 'tasks':
-            #    item_class = Task
-            case 'block':
-                item_class = Block
-            case _:
-                app.logger.info(f'"{item}" is not a valid timetable item')
-                app_logger.info(f'"{item}" is not a valid timetable item')
-                return {'error': f'"{item}" is not a valid timetable item'}, 404
-        #assert type(item_class) is ToDo | Task| Block
-        data : dict = dict(request.form)
+@bp.route('/<string:item>/create', methods=['POST'])
+@login_required
+def create_item(item: str):
+    log.info(f"Attempting to create a {item} from: {request.form}")
+    log.info(f"Attempting to create a {item} from: {request.form}")
 
-        data['start_datetime'] = combine_date_time(request.form.get('start_date'),request.form.get('start_time'), tz=get_config()["general"]["timezone"]) # type: ignore
-        data['end_datetime'] = combine_date_time(request.form.get('end_date'),request.form.get('end_time'), tz=get_config()["general"]["timezone"]) #type: ignore
+    item_class = None
+    match item:
+        #case 'todos':
+        #    item_class = ToDo
+        #case 'tasks':
+        #    item_class = Task
+        case 'block':
+            item_class = Block
+        case _:
+            log.info(f'"{item}" is not a valid timetable item')
+            return _json_error(f'"{item}" is not a valid timetable item', 404)
+    data : dict = dict(request.form)
 
-        created_item = item_class(
-            **data,
-            owner = current_user # type: ignore
-        )
-        created_item.owner_id = current_user.id
-        try:
-            db.session.add(created_item)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            db_logger.exception(f'Database error while trying to create "{item}" instance')
-            return jsonify({'error':f'Database error while trying to create {item} instance'}), 500
-            
-        db_logger.info(f'Successfully created a "{item}" instance for {current_user.username}')
-        return redirect(url_for('app.serve_management'))
+    tz = get_config()["general"]["timezone"]
+    data['start_datetime'] = combine_date_time(request.form.get('start_date'),request.form.get('start_time'), tz=tz) # type: ignore
+    data['end_datetime'] = combine_date_time(request.form.get('end_date'),request.form.get('end_time'), tz=tz) #type: ignore
 
-    @bp.route('/<string:item>/<int:id>', methods=['PUT'])
-    @login_required
-    def update_item(item,id):
-        data = request.get_json()
-
-        item_class = None
-        match item:
-            #case 'todos':
-            #    item_class = ToDo
-            #case 'tasks':
-            #    item_class = Task
-            case 'blocks':
-                item_class = Block
-            case _:
-                app.logger.info(f'"{item}" is not a valid timetable item')
-                app_logger.info(f'"{item}" is not a valid timetable item')
-                return {'error': f'"{item}" is not a valid timetable item'}, 404
-
-        item = item_class.query.filter_by(id=id).first()
-        if not item:
-            return {'error':f'"{item}" with id: {id} does not exist'}, 404
-        for key in data:
-            try:
-                item.__setattr__(key, data[key])
-            except Exception as e:
-                return {'error' : f'Invalid key : {e!s}'}, 500
-
+    created_item = item_class(
+        **data,
+        owner = current_user # type: ignore
+    )
+    created_item.owner_id = current_user.id
+    try:
+        db.session.add(created_item)
         db.session.commit()
-        return jsonify(item.serialise())
+        log.info(f'Successfully created a "{item}" instance for {current_user.username}')
+        # return redirect(url_for('app.serve_management'))
+        return _json_success({f'{item}':created_item.serialise()})
+    except Exception:
+        db.session.rollback()
+        log.exception(f'Database error while trying to create "{item}" instance')
+        return _json_error(f'Database error while trying to create {item} instance', 500)
+        
 
-    @bp.route('/<string:item>/<int:id>', methods=['DELETE'])
-    @login_required
-    def delete_item(item, id):
-        item_class = None
-        match item:
-            #case 'todos':
-            #    item_class = ToDo
-            #case 'tasks':
-            #    item_class = Task
-            case 'block':
-                item_class = Block
-            case _:
-                app.logger.info(f'"{item}" is not a valid timetable item')
-                app_logger.info(f'"{item}" is not a valid timetable item')
-                return {'error': f'"{item}" is not a valid timetable item'}, 404
-        item_to_delete = item_class.query.filter_by(id=id).first()
-        if not item_to_delete:
-            return {'error':f'{item} with id "{id}" does not exist'}, 404
-        if item_to_delete.owner_id != current_user.id:
-            return {'error':f'{item} with id "{id}" does not belong to User:{current_user.username} (id:{current_user.id})'}, 403
-        assert type(item_to_delete) is not None
+
+@bp.route('/<string:item>/<int:id>', methods=['PUT'])
+@login_required
+def update_item(item,id):
+    data = request.get_json()
+
+    item_class = None
+    match item:
+        #case 'todos':
+        #    item_class = ToDo
+        #case 'tasks':
+        #    item_class = Task
+        case 'blocks':
+            item_class = Block
+        case _:
+            log.info(f'"{item}" is not a valid timetable item')
+            log.info(f'"{item}" is not a valid timetable item')
+            return {'error': f'"{item}" is not a valid timetable item'}, 404
+
+    item = item_class.query.filter_by(id=id).first()
+    if not item:
+        return {'error':f'"{item}" with id: {id} does not exist'}, 404
+    for key in data:
         try:
-            db.session.delete(item_to_delete)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            db_logger.exception(f'Database error while trying to delete {item}:"{item_to_delete.title}"')
-            return jsonify({'error':f'Database error while trying to delete {item}:"{item_to_delete.title}'})
-        db_logger.info(f'Successfully deleted {item}:"{item_to_delete.title}"')
-        return jsonify({'success': f'{item} {item_to_delete.title} ({item_to_delete.id}) deleted successfully'}), 200
+            item.__setattr__(key, data[key])
+        except Exception as e:  # noqa: BLE001
+            return _json_error(f'Invalid key : {e!s}', 500)
+
+    try:
+        db.session.commit()
+        log.info(f'Updated {item} (id: {id}) for user {current_user.username}')
+        return _json_success(item.serialise())
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception(f'Database error while updating {item} (id:{id}) for user {current_user.username}')
+        return _json_error(f'Failed to update {item}.', 500)
+
+@bp.route('/<string:item>/<int:id>', methods=['DELETE'])
+@login_required
+def delete_item(item, id):
+    item_class = None
+    match item:
+        #case 'todos':
+        #    item_class = ToDo
+        #case 'tasks':
+        #    item_class = Task
+        case 'block':
+            item_class = Block
+        case _:
+            log.info(f'"{item}" is not a valid timetable item')
+            return _json_error(f'"{item}" is not a valid timetable item', 404)
+
+    item_to_delete = item_class.query.filter_by(id=id).first()
+    if not item_to_delete:
+        return _json_error(f'{item} with id "{id}" does not exist', 404)
+    if item_to_delete.owner_id != current_user.id:
+        return _json_error(f'{item} with id "{id}" does not belong to User:{current_user.username} (id:{current_user.id})', 403)
+
+    try:
+        db.session.delete(item_to_delete)
+        db.session.commit()
+        log.info(f'Successfully deleted {item}:"{item_to_delete.title}"')
+        return _json_success({'message':f'{item} {item_to_delete.title} ({item_to_delete.id}) deleted successfully'})
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception(f'Database error while trying to delete {item}:"{item_to_delete.title}"')
+        return _json_error(f'Database error while trying to delete {item}:"{item_to_delete.title}', 500)

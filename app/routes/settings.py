@@ -1,81 +1,74 @@
 import logging
 
-from flask import Blueprint, Flask, jsonify, redirect, request, url_for
+from flask import Blueprint, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
 
-from app.models import Settings, User, db
+from ..extensions import db
+from ..models import Settings
 
 bp = Blueprint('settings', __name__)
 
-db_logger = logging.getLogger("database")
-app_logger = logging.getLogger("app")
+log = logging.getLogger("app")
 
-def create_routes(app: Flask):
-    @bp.route('/update', methods=['POST'])
-    @login_required
-    def update():
-        """
-        Expected JSON (any subset of fields is valid)
-        {
-            "default_block_length": 45,
-            "start_day": 0,
-            "start_hour": 5,
-        }
-        """
-        user_id = current_user.id
-        app.logger.info("Attempting to update settings")
-        app.logger.info(f"Recieved - {request.form}")
-        app_logger.info(f"Attempting to update settings for User {user_id}")
+@bp.route('/update', methods=['POST'])
+@login_required
+def update_settings():
+    """
+    Update the current user's settings.
 
-        allowed_fields = {
-            "default_block_length": int,
-            "default_block_colour": str,
-            "start_day": int,
-            "start_hour": int,
-            "timetable_view" : str,
-            "days_per_view" : int,
-        }
+    Example JSON : 
+    {
+        "default_block_length": 45,
+        "start_day": 0,
+        "start_hour": 5,
+    }
+    """
+    user_id = current_user.id
+    log.info("Attempting to update settings")
+    log.info(f"Recieved - {request.form}")
+    log.info(f"Attempting to update settings for User {user_id}")
 
-        settings : Settings = current_user.settings # type: ignore
+    allowed_fields = {
+        "default_block_length": int,
+        "default_block_colour": str,
+        "start_day": int,
+        "start_hour": int,
+        "timetable_view" : str,
+        "days_per_view" : int,
+    }
 
-        for key in request.form:
-            if key not in allowed_fields:
-                return jsonify({"error" : f"'{key}' is not a valid setting field."}), 400
+    settings : Settings = current_user.settings # type: ignore
 
-            try:
-                val = request.form.get(key)
-                if not val : raise ValueError
-                cast_val = allowed_fields[key](val)
-            except (ValueError, TypeError):
-                return jsonify({"error" : f"'{key}' is not a valid setting field"}), 400
-            setattr(settings, key, cast_val)
+    for key in request.form:
+        if key not in allowed_fields:
+            return jsonify({"error" : f"'{key}' is not a valid setting field."}), 400
 
-        db_logger.info(f'Attempting to update settings for User:{current_user.username} (id:{user_id})')
         try:
-            current_user.settings = settings
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            db_logger.exception(f'Database error while updating settings for User (id:{user_id})')
-            return jsonify({"error":"Database error while updating settings"}), 500
-        db_logger.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
-        app_logger.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
-        return redirect(url_for('app.serve_settings'))
+            val = request.form.get(key)
+            if not val : raise ValueError
+            cast_val = allowed_fields[key](val)
+        except (ValueError, TypeError):
+            return jsonify({"error" : f"'{key}' is not a valid setting field"}), 400
+        setattr(settings, key, cast_val)
 
-    @bp.route('/', methods=['GET'])
-    @login_required
-    def get():
-        """
-        Returns the user's settings
-        """
-        user_id = current_user.id
-        app_logger.info(f"Fetching settings for User {user_id}")
-        user = User.query.filter_by(id=user_id).first()
-        if user is None:
-            return jsonify({"error": f"User {user_id} not found"}), 404
+    log.info(f'Attempting to update settings for User:{current_user.username} (id:{user_id})')
+    try:
+        current_user.settings = settings
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        log.exception(f'Database error while updating settings for User (id:{user_id})')
+        return jsonify({"error":"Database error while updating settings"}), 500
+    log.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
+    log.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
+    return redirect(url_for('app.serve_settings'))
 
-        settings : Settings = user.settings
-        data = settings.serialise()
-
-        return jsonify({"settings":data})
+@bp.route('/', methods=['GET'])
+@login_required
+def get_settings():
+    """
+    Returns the current user's settings
+    """
+    settings : Settings = current_user.settings
+    return jsonify({"settings":settings.serialise()})
 

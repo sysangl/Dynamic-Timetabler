@@ -40,13 +40,12 @@ def create_app(config: Mapping[str, Any] | None = None):
     db.init_app(app)
     pwd_hasher.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = "auth.login" # type: ignore
     Migrate(app,db)
 
     with app.app_context():
         db.create_all()
 
-    from .routes import initialise_routes
-    initialise_routes(app)
+    from .routes import register_routes
+    register_routes(app)
     
     return app
