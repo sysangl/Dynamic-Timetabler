@@ -122,7 +122,7 @@ class User(db.Model):
             return False
         try:
             return pwd_hasher.check_password_hash(self._password_hash, plain_password)
-        except Exception:
+        except Exception:  # noqa: BLE001
             db_logger.exception("Password verification failed")
             return False
 

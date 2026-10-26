@@ -1,12 +1,14 @@
-from typing import Any, Optional
+from typing import Any
+
+from flask import Response, jsonify
 
 
-def _json_success(payload: Optional[dict[str, Any]] = None) -> tuple[dict[str, Any], int]:
-    """Return a 200 JSON payload with ``status: "success"``."""
+def _json_success(payload: dict[str, Any] | None = None, status_code:int = 200) -> tuple[Response, int]:
+    """Return a JSON payload with ``status: "success"``."""
     result: dict[str, Any] = {"status": "success"}
     if payload:
         result.update(payload)
-    return result, 200
+    return jsonify(result), status_code
 
 
 def _json_error(message: str, status_code: int = 400) -> tuple[dict[str, Any], int]:

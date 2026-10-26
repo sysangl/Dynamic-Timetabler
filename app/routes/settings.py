@@ -1,7 +1,9 @@
 import logging
 
-from flask import Blueprint, jsonify, redirect, request, url_for
+from flask import Blueprint, redirect, request, url_for
 from flask_login import current_user, login_required
+
+from helpers.api import _json_error, _json_success
 
 from ..extensions import db
 from ..models import Settings
@@ -41,14 +43,14 @@ def update_settings():
 
     for key in request.form:
         if key not in allowed_fields:
-            return jsonify({"error" : f"'{key}' is not a valid setting field."}), 400
+            return _json_error(f"'{key}' is not a valid setting field.", 400)
 
         try:
             val = request.form.get(key)
             if not val : raise ValueError
             cast_val = allowed_fields[key](val)
         except (ValueError, TypeError):
-            return jsonify({"error" : f"'{key}' is not a valid setting field"}), 400
+            return _json_error(f"'{key}' is not a valid setting field", 400)
         setattr(settings, key, cast_val)
 
     log.info(f'Attempting to update settings for User:{current_user.username} (id:{user_id})')
@@ -58,8 +60,7 @@ def update_settings():
     except Exception:
         db.session.rollback()
         log.exception(f'Database error while updating settings for User (id:{user_id})')
-        return jsonify({"error":"Database error while updating settings"}), 500
-    log.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
+        return _json_error('Database error while updating settings', 500)
     log.info(f'Successfully updated settings for User:{current_user.username} (id:{user_id})')
     return redirect(url_for('app.serve_settings'))
 
@@ -70,5 +71,5 @@ def get_settings():
     Returns the current user's settings
     """
     settings : Settings = current_user.settings
-    return jsonify({"settings":settings.serialise()})
+    return _json_success({"settings":settings.serialise()})
 

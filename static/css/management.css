@@ -151,6 +151,13 @@
     display: none !important;
 }
 
+#form-error-messages {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    color: red;
+}
+
 #backdrop {
     position: absolute;
     z-index: 1;

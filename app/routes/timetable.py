@@ -109,9 +109,7 @@ def get_item(item: str, id: int):
 @bp.route('/<string:item>/create', methods=['POST'])
 @login_required
 def create_item(item: str):
-    log.info(f"Attempting to create a {item} from: {request.form}")
-    log.info(f"Attempting to create a {item} from: {request.form}")
-
+    data = request.get_json()
     item_class = None
     match item:
         #case 'todos':
@@ -123,11 +121,10 @@ def create_item(item: str):
         case _:
             log.info(f'"{item}" is not a valid timetable item')
             return _json_error(f'"{item}" is not a valid timetable item', 404)
-    data : dict = dict(request.form)
 
     tz = get_config()["general"]["timezone"]
-    data['start_datetime'] = combine_date_time(request.form.get('start_date'),request.form.get('start_time'), tz=tz) # type: ignore
-    data['end_datetime'] = combine_date_time(request.form.get('end_date'),request.form.get('end_time'), tz=tz) #type: ignore
+    data['start_datetime'] = combine_date_time(data.get('start_date'),data.get('start_time'), tz=tz) # type: ignore
+    data['end_datetime'] = combine_date_time(data.get('end_date'),data.get('end_time'), tz=tz) #type: ignore
 
     created_item = item_class(
         **data,
@@ -139,7 +136,7 @@ def create_item(item: str):
         db.session.commit()
         log.info(f'Successfully created a "{item}" instance for {current_user.username}')
         # return redirect(url_for('app.serve_management'))
-        return _json_success({f'{item}':created_item.serialise()})
+        return _json_success(created_item.serialise(), 201)
     except Exception:
         db.session.rollback()
         log.exception(f'Database error while trying to create "{item}" instance')

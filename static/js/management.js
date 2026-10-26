@@ -6,7 +6,33 @@ itemForms = itemFormContainer.getElementsByClassName('item-form');
 for (const form of itemForms) {
     form.addEventListener('submit',async (e) => {
         e.preventDefault();
-        form.submit();
+
+        const formData = new FormData(form)
+        var object = {};
+        formData.forEach((value, key) => object[key] = value);
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(object)
+        })
+        .then(response => {
+            if (!response.ok) {
+            throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Success:', data);
+            form.reset();
+            generateItemTable();
+            toggleForms();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('form-error-messages').textContent = 'Item creation failed. Please try again.';
+        });
     })
 }
 editFormOpen = false
@@ -70,7 +96,8 @@ async function fetchTimetableItems() {
     return await response.json()
 }
 
-async function generateItemTable(selectedItem='all', timetableItems = null) {
+async function generateItemTable(selectedItem=null, timetableItems = null) {
+    selectedItem = selectedItem || currentItemClass
     timetableItems = timetableItems || await fetchTimetableItems()
     const itemTable = document.getElementById('item-table-body')
     itemTable.innerHTML = "";
@@ -82,6 +109,7 @@ async function generateItemTable(selectedItem='all', timetableItems = null) {
         if ((selectedItem != itemType) && (selectedItem != 'all')) {
             continue
         }
+        if (itemType == 'status') continue;
         for (const item of items) {
             const row = document.createElement('tr');
             row.onclick = (e) => {

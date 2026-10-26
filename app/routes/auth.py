@@ -9,13 +9,13 @@ from flask_login import (
 )
 
 from app.models import User
+from helpers.api import _json_error, _json_success
 
 from ..extensions import db, login_manager
 
 bp = Blueprint("auth", __name__)
 
-db_logger = logging.getLogger("database")
-server_logger = logging.getLogger("server")
+log = logging.getLogger("app")
 
 @login_manager.user_loader
 def load_user(user_id:int) -> User | None:
@@ -29,12 +29,12 @@ def register():
     password = data.get("password")
 
     if not username or not password:
-        return jsonify({'error':'Username & Password required'}), 400
+        return _json_error('Username & Password required', 400)
 
     if User.query.filter_by(username=username).first():
-        return jsonify({'error': 'Username already taken'}), 409
+        return _json_error('Username already taken', 409)
 
-    db_logger.info("Creating a new User")
+    log.info("Creating a new User")
     try:
         new_user = User(username=username,display_name=display_name)
         new_user.password = password
@@ -42,10 +42,10 @@ def register():
         db.session.commit()
     except Exception:
         db.session.rollback()
-        db_logger.exception("Database error while creating new User")
-        return jsonify({'error':'Database error while creating new User'})
-    db_logger.info(f'Created new User:{username} (id:{new_user.id})')
-    return jsonify({'msg':'Registered new User', 'user_id':new_user.id}), 201
+        log.exception("Database error while creating new User")
+        return _json_error('Database error while creating new User', 500)
+    log.info(f'Created new User:{username} (id:{new_user.id})')
+    return _json_success({'msg':'Registered new User', 'user_id':new_user.id}, 201)
 
 @bp.route('/login', methods=["GET","POST"])
 def login():
@@ -57,18 +57,18 @@ def login():
         password = request.form.get('password')
         next_url = request.args.get('next')
 
-        server_logger.info(f'Attempting to login to {username}')
+        log.info(f'Attempting to login to {username}')
 
         user = User.query.filter_by(username=username).first()
         if user and user.verify_password(password):
             login_user(user)
             flash("Welcome back!","success")
-            server_logger.info(f'Logged into {username} (id:{user.id})')
+            log.info(f'Logged into {username} (id:{user.id})')
             if not next_url or not next_url.startswith('/'):
                 next_url = url_for('app.dashboard')
             return redirect(next_url)
         
-        server_logger.info(f'Failed to login to {username}')
+        log.info(f'Failed to login to {username}')
         flash("Invalid credentials", "danger")
 
     return render_template('login.html')
@@ -76,7 +76,7 @@ def login():
 @bp.route("/logout")
 @login_required
 def logout():
-    server_logger.info(f'Logging out user {current_user.username} (id:{current_user.id})')
+    log.info(f'Logging out user {current_user.username} (id:{current_user.id})')
     logout_user()
     flash("You have been logged out.")
     return redirect(url_for('auth.login'))
@@ -90,7 +90,7 @@ def unauthorized():
     has_json_flag = request.args.get("format") == "json"
 
     if is_ajax or wants_json or has_json_flag:
-        return jsonify(error="authentication required"), 401
+        return _json_error('authentication required', 401)
 
     login_url = url_for(login_manager.login_view, next=request.full_path) # type: ignore
     return redirect(login_url)
