@@ -33,18 +33,6 @@ def create_routes(app: Flask):
         try:
             activity = Activity(
                 **data
-                # name = data['name'],
-                # description = data['description'],
-                # priority = data['priority'], # type: ignore
-                # repeat_mode     = data['repeat_mode'], # type: ignore
-                # repeat_interval = data['repeat_interval'], # type: ignore
-                # frequency       = data['frequency'], # type: ignore
-                # even_frequency_spacing = data['even_frequency_spacing'], # type: ignore
-                # min_length       = data['min_length'], # type: ignore
-                # max_length       = data['max_length'], # type: ignore
-                # min_time         = data['min_time'], # type: ignore
-                # max_time         = data['max_time'], # type: ignore
-                # time_limit_reset = data['time_limit_reset'], # type: ignore
             )
         except TypeError as e:
             return jsonify({'error':'Recieved invalid datatype in a field.'})

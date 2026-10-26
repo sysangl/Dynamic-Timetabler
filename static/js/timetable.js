@@ -22,18 +22,6 @@ async function fetchPayload() {
     return response.json()
 }
 
-
-/**
- * Clamps a number
- * @param {number} value 
- * @param {number} min 
- * @param {number} max 
- * @returns {number}
- */
-function clamp(value, min, max) {
-    return Math.max(Math.min(value,max), min)
-}
-
 /**
  * Generates the days and their respective containers
  */
@@ -236,8 +224,6 @@ function closePopupMenu() {
     }
 }
 
-
-
 async function deleteBlock() {
     const popupMenu = document.getElementById('popup-menu');
     const blockId = popupMenu._currentTarget.dataset.blockId
@@ -365,7 +351,6 @@ async function renderTimetable() {
     })
 }
 
-
 async function clearTimetable() {
     const dayContainers = Array.from({ length: 7 }, (_, i) => {
         // The DOM has: <section id="day-container-Mon"><div class="day-inner"></div></section>
@@ -424,7 +409,6 @@ async function initTimetable() {
     window.pageIntervals.temporary.push(setInterval(updateTime, 5*1000)); // set the timetable corner clock
     alignTimetimetableView(); // scroll timetable to the current time
 
-
     // Render timetable (events, block, content)
     renderTimetable().catch(err => console.error('Timetable render failed:', err))
     window.addEventListener('resize', closePopupMenu);
@@ -439,7 +423,6 @@ async function initTimetable() {
     })
 
     document.getElementById('backdrop').addEventListener('click', closePopupMenu)
-
     document.addEventListener('keydown', (e) => {
         const popupMenu  = document.getElementById('popup-menu')
         if (!popupMenu) return;
@@ -447,7 +430,6 @@ async function initTimetable() {
             closePopupMenu();
         }
     });
-
 }
 
 initTimetable();

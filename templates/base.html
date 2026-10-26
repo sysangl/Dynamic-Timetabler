@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Timetable</title>
+    <title>Canopy Suite</title>
     <link rel="icon" href="{{url_for('static', filename='favicon.ico')}}"/>
     <script src="{{url_for('static',filename='js/jquery-4.0.0.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/helper.js')}}"></script>
@@ -18,9 +18,8 @@
             src: url("{{url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf')}}");
         }
     </style>
-    
 
-    <!-- common script -->
+    <!-- common script w/ helper funcs -->
     <script src="{{url_for('static',filename='js/base.js')}}"></script>
 
     <div id="topbar">
@@ -46,7 +45,6 @@
     <div id="content">
         {% include page ~ ".html" %}
     </div>
-
 
     <!-- client side router script -->
     <script src="{{url_for('static',filename='js/router.js')}}"></script>

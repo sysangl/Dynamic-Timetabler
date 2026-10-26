@@ -61,6 +61,9 @@ class Graph():
             n.union(edge.endpoints)
         return n
 
+    def endpoints(self, edge: Edge)->set[Node]:
+        return edge.endpoints
+
 # operations:
 # 	CREATE         : → GRAPH
 # 	ADD_NODE       : GRAPH x ELEMENT → GRAPH

@@ -1,10 +1,6 @@
-from flask import Flask, jsonify, request, render_template, abort,redirect, Blueprint,url_for
+from flask import jsonify, request, render_template, abort,redirect, Blueprint,url_for
 from flask_login import current_user, login_required
-from app.models import (
-    db
-)
 from helpers.datetime import parse_iso_date
-
 
 bp = Blueprint('app', __name__)
 
@@ -45,8 +41,6 @@ def serve_timetable_dated(date):
     else:
         return jsonify({'error':f'"{date}" is not a valid date.'}), 400
 
-
-
 @bp.route("/management")
 @login_required
 def serve_management():
@@ -62,9 +56,6 @@ def serve_settings():
         return page_fragment('settings')
     else:
         return render_template("base.html", page='settings', display_name=current_user.display_name)
-
-
-
 
 @bp.route("/page/<string:page>", methods=['GET'])
 @login_required

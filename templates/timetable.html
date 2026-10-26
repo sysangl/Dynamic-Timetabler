@@ -6,7 +6,7 @@
 {% else %}
     <link rel="stylesheet" href="{{url_for('static', filename='css/vertical-timetable.css')}}"></link>
 {% endif %}
-
+<!-- what date to display -->
 {% if display_date %}
     <div id="displayDate" data-date="{{display_date}}"></div>
 {% endif %}
@@ -48,10 +48,6 @@
 </div>
 
 <div id="backdrop"></div>
-
-
-<!-- generate timetable script -->
-<!-- <script src="{{url_for('static',filename='js/build_timetable.js')}}"></script> -->
 
 <!-- timetable functionality script -->
 <script src="{{url_for('static',filename='js/timetable.js')}}"></script>

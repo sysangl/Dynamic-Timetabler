@@ -1,9 +1,7 @@
 <!-- shared forms css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}"></link>
 
-
 <form id="settings-form" class="form-body" method="post" action="{{ url_for('settings.update') }}">
-
     <fieldset class="card-section">
         <legend class="section-title">General</legend>
 
@@ -54,7 +52,6 @@
         <button id="settings-save-button" class="submit-button" type="submit">SAVE</button>
     </div>
 </form>
-
 
 <!-- settings script -->
 <script src="{{url_for('static',filename='js/settings.js')}}"></script>

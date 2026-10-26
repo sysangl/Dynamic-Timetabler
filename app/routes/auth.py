@@ -1,8 +1,7 @@
 from flask import request, jsonify, session, Blueprint, redirect, url_for, render_template, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from app.models import User,db
-import logging, time
-from helpers.paths import resource_path
+import logging
 
 bp = Blueprint("auth", __name__)
 

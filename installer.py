@@ -19,8 +19,6 @@ BTN_BG = '#6ea2aa'
 BTN_BG_DISABLED = "#55797e"
 BTN_FG = FG_COLOUR
 
-
-
 def finalise_settings(config:dict, controller):
     current_config = original_config
     new_config = _deep_merge(current_config, config)
@@ -32,7 +30,6 @@ def finalise_installation(controller, run: bool = True):
     controller.destroy()
     if run:
         run_server()
-
 
 class installerApp(tk.Tk):
     def __init__(self, screenName: str | None = None, baseName: str | None = None, className: str = 'Tk', useTk: bool = True, sync: bool = False, use: str | None = None) -> None:
@@ -58,7 +55,6 @@ class installerApp(tk.Tk):
                 )
         style.configure("Accent.TButton",font=BTN_FONT, foreground=BTN_FG, background=BTN_BG, borderwidth=0, focusthickness=0, padding=(10,5))
 
-
         container = tk.Frame(self)
         container.pack(side='top',fill='both',expand=True)
 
@@ -74,7 +70,6 @@ class installerApp(tk.Tk):
     def show_frame(self, container):
         frame=self.frames[container]
         frame.tkraise()
-
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -92,9 +87,6 @@ class ModeSelectPage(tk.Frame):
         label = ttk.Label(self, text='Select Installation Mode', font=HEADING_FONT)
         label.pack(anchor='n', pady=20)
         self.configure(background=BG_COLOUR)
-
-
-        installation_modes = ['Portable', 'User Install']
 
         installation_mode = tk.StringVar(self, 'portable')
         r1=tk.Radiobutton(
@@ -116,7 +108,6 @@ class ModeSelectPage(tk.Frame):
         r2.pack(anchor='w', padx=20, pady=5)
         r2['state'] = 'disabled'
 
-
         back_btn = ttk.Button(self, text='Back', command=lambda:controller.show_frame(StartPage))
         back_btn.pack(anchor='sw',padx=20)
         next_btn = ttk.Button(self, text='Next', command=lambda:controller.show_frame(FolderSelectPage))
@@ -128,7 +119,6 @@ class FolderSelectPage(tk.Frame):
         label = ttk.Label(self, text='Select Installation Folder', font=HEADING_FONT)
         label.pack(anchor='n', pady=20)
         self.configure(background=BG_COLOUR)
-
 
         self.e1 = tk.Label(self, text=_get_data_dir().as_posix(), justify='left',width=100)
         self.e1.pack(anchor='nw',padx=(20,50))
@@ -166,7 +156,6 @@ class SettingsPage(tk.Frame):
         canvas.create_window((0,0), window=self.scroll_frame, anchor='w')
 
         self.scroll_frame.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
-
 
         config = original_config
         row = 0
@@ -222,7 +211,6 @@ class SettingsPage(tk.Frame):
 
         finalise_settings(edited_config, self.controller)
 
-
 class FinalisePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -241,12 +229,10 @@ class FinalisePage(tk.Frame):
         run_check = tk.Checkbutton(self, variable=run_var, text='Run program on exit?')
         run_check.pack(anchor='center', pady=10)
 
-        
         back_btn = ttk.Button(self, text='Back', command=lambda:controller.show_frame(SettingsPage))
         back_btn.pack(anchor='sw',padx=20)
         next_btn = ttk.Button(self, text='Finish', command=lambda:finalise_installation(controller, run_var.get()))
         next_btn.pack(anchor='se', padx=20)
-
 
 app = installerApp()
 app.mainloop()

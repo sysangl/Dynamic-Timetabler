@@ -1,11 +1,8 @@
-# import os, toml, multiprocessing
-import sys, os, logging, secrets
-from flask import Flask, request, jsonify, render_template, redirect, render_template_string
+import logging, secrets
+from flask import Flask
 from flask_migrate import Migrate
-from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
+# from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
 from jinja2 import ChoiceLoader, FileSystemLoader
-# from sqlalchemy import create_engine
-# from route_init import initialise_routes
 from app.models import (
     db, pwd_hasher
 )

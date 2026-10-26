@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request, Blueprint, redirect, url_for
 from flask_login import login_required, current_user
-
 from app.models import (
     db,
     User,
@@ -13,9 +12,7 @@ bp = Blueprint('settings', __name__)
 db_logger = logging.getLogger("database")
 app_logger = logging.getLogger("app")
 
-
 def create_routes(app: Flask):
-
     @bp.route('/update', methods=['POST'])
     @login_required
     def update():

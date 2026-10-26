@@ -1,12 +1,8 @@
 from flask import Flask, request, jsonify, Blueprint, url_for, redirect
 from flask_login import login_required, current_user
-from sqlalchemy.orm import joinedload
-from datetime import datetime, timedelta
+from datetime import datetime
 from helpers.datetime import combine_date_time, parse_iso_date
-from sqlalchemy import func, Date
 from helpers.config import get_config
-import pytz
-
 from app.models import (
     db,
     ToDo,
@@ -21,8 +17,6 @@ bp = Blueprint('timetable', __name__)
 server_logger = logging.getLogger('server')
 app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
-
-
 
 
 def create_routes(app: Flask):

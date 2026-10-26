@@ -3,14 +3,13 @@ filters = {dateRangeFrom:null, dateRangeTo:null};
 currentItemClass = document.getElementById('item-select').value.toLowerCase();
 filterForm =document.getElementById('filter-form');
 itemForms = itemFormContainer.getElementsByClassName('item-form');
-// for (const form of itemForms) {
-//     form.addEventListener('submit',async (e) => {
-//         e.preventDefault();
-//         form.submit();
-//     })
-// }
+for (const form of itemForms) {
+    form.addEventListener('submit',async (e) => {
+        e.preventDefault();
+        form.submit();
+    })
+}
 editFormOpen = false
-
 
 filterForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -33,8 +32,6 @@ filterForm.addEventListener('reset', async (e) => {
     const ti = await fetchTimetableItems();
     generateItemTable(currentItemClass, timetableItems=ti);
 });
-
-
 
 function toggleForms(editMode=false) {
     document.getElementById('backdrop').classList.toggle('hidden')

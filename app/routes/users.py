@@ -12,12 +12,6 @@ bp = Blueprint('users', __name__)
 app_logger = logging.getLogger('app')
 db_logger = logging.getLogger('database')
 def create_routes(app: Flask):
-
-    @bp.route('/health',methods=['GET'])
-    def user_healthcheck():
-        return jsonify({'status':'ok'})
-
-
     @bp.route('/', methods=['GET'])
     def get_users():
         users = User.query.all()

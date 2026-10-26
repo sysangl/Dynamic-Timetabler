@@ -4,6 +4,9 @@ import zoneinfo
 bp = Blueprint('app', __name__)
 
 def combine_date_time(date_str: str, time_str: str, tz: str | None = None) -> datetime:
+    """
+    Takes in a date string and time string (in ISO) with an optional timezone string and produces a datetime
+    """
     try:
         d: date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError as exc:
@@ -26,6 +29,9 @@ def combine_date_time(date_str: str, time_str: str, tz: str | None = None) -> da
     return combined
 
 def parse_iso_date(s: str):
+    """
+    Parses an ISO date string (eg. 2026-10-25), and returns the date object.
+    """
     if not s:
         return None
     try:
