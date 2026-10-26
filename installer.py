@@ -1,8 +1,14 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import filedialog, ttk
+
+from helpers.config import (
+    _deep_merge,
+    _get_data_dir,
+    _set_data_dir,
+    get_config,
+    write_config,
+)
 from helpers.paths import resource_path
-from helpers.config import get_config, write_config, _deep_merge, _get_data_dir, _set_data_dir
-import toml
 from run import run_server
 
 ALEO = resource_path('static/fonts/Aleo/static/Aleo-Regular.ttf')

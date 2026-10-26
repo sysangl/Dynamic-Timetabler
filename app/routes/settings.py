@@ -1,11 +1,9 @@
-from flask import Flask, jsonify, request, Blueprint, redirect, url_for
-from flask_login import login_required, current_user
-from app.models import (
-    db,
-    User,
-    Settings
-)
 import logging
+
+from flask import Blueprint, Flask, jsonify, redirect, request, url_for
+from flask_login import current_user, login_required
+
+from app.models import Settings, User, db
 
 bp = Blueprint('settings', __name__)
 
@@ -40,7 +38,7 @@ def create_routes(app: Flask):
 
         settings : Settings = current_user.settings # type: ignore
 
-        for key in request.form.keys():
+        for key in request.form:
             if key not in allowed_fields:
                 return jsonify({"error" : f"'{key}' is not a valid setting field."}), 400
 

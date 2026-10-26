@@ -1,15 +1,16 @@
-import logging, secrets
+import logging
+import secrets
+
 from flask import Flask
 from flask_migrate import Migrate
+
 # from flask_migrate.cli import upgrade as db_upgrade, init as db_init, migrate as db_migrate
 from jinja2 import ChoiceLoader, FileSystemLoader
-from app.models import (
-    db, pwd_hasher
-)
-from helpers.config import get_config, reload_config, _get_data_dir
-from pathlib import Path
-from helpers.paths import resource_path
+
+from app.models import db, pwd_hasher
 from app.routes.auth import login_manager
+from helpers.config import _get_data_dir, get_config
+from helpers.paths import resource_path
 
 # For production
 #engine = create_engine("postgresql://postgres:postgres@localhost:5432/dynamic_timetable")

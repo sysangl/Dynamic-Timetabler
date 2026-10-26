@@ -1,9 +1,11 @@
 def run_server():
-    from app import create_app
-    from helpers.config import get_config, reload_config
-    from helpers.logging_conf import initialise_logging
+    import atexit
+    import logging
     import multiprocessing
-    import logging, atexit
+
+    from app import create_app
+    from helpers.config import get_config
+    from helpers.logging_conf import initialise_logging
 
     initialise_logging()
     multiprocessing.freeze_support()

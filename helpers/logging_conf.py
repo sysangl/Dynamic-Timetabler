@@ -1,6 +1,6 @@
 import logging
 import logging.config
-from pathlib import Path
+
 from helpers.config import _get_data_dir
 
 _LOG_PATH = _get_data_dir() / "logs"
@@ -22,8 +22,6 @@ def _rotating_handler(name: str) -> dict:
 
 
 def initialise_logging():
-
-    global _LOG_PATH
     _LOG_PATH.mkdir(parents=True, exist_ok=True)
     print("Activating Loggers")
     

@@ -1,11 +1,8 @@
-from flask import Flask, jsonify, request, Blueprint
-from app.models import (
-    db,
-    User,
-    Settings
-)
 import logging
 
+from flask import Blueprint, Flask, jsonify, request
+
+from app.models import User, db
 
 bp = Blueprint('users', __name__)
 

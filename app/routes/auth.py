@@ -1,7 +1,15 @@
-from flask import request, jsonify, session, Blueprint, redirect, url_for, render_template, flash
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from app.models import User,db
 import logging
+
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
+
+from app.models import User, db
 
 bp = Blueprint("auth", __name__)
 

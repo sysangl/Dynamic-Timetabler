@@ -3,7 +3,6 @@ import atexit
 import logging
 import os
 import signal
-import sys
 import threading
 from datetime import datetime
 

@@ -1,7 +1,10 @@
-import toml,logging
+import logging
+import shutil
+import threading
 from pathlib import Path
-import threading, shutil
-from pathlib import Path
+
+import toml
+
 from helpers.paths import resource_path
 
 server_logger = logging.getLogger("server")

@@ -1,11 +1,16 @@
 
-class Node():
-    linked_edges: set[Edge] = set()
-    outgoing_edges: set[Edge] = set()
-    incoming_edges: set[Edge] = set()
-    
+class Edge:
+    def __init__(self, source: Node, dest: Node, weight: float | None=None, directed=False) -> None:  # noqa: F821
+        self.endpoints : set[Node] = {source, dest}
+        self.source : Node = source
+        self.destination : Node = dest
+        self.weight : int|float|None = weight
+
+class Node:
     def __init__(self) -> None:
-        pass
+        self.linked_edges: set[Edge] = set()
+        self.outgoing_edges: set[Edge] = set()
+        self.incoming_edges: set[Edge] = set()
 
     def remove_edge(self, edge: Edge):
         if self not in edge.endpoints:
@@ -17,19 +22,11 @@ class Node():
         if edge in self.incoming_edges:
             self.incoming_edges.remove(edge)
 
-class Edge():
-    def __init__(self, source: Node, dest: Node, weight: int|float|None=None, directed=False) -> None:
-        self.endpoints : set[Node] = set([source, dest])
-        self.source : Node = source
-        self.destination : Node = dest
-        self.weight : int|float|None = weight
 
-class Graph():
-    nodes: set[Node] = set()
-    edges: set[Edge] = set()
-
+class Graph:
     def __init__(self) -> None:
-        pass
+        self.nodes: set[Node] = set()
+        self.edges: set[Edge] = set()
 
     def add_node(self, node: Node):
         self.nodes.add(node)
@@ -63,15 +60,3 @@ class Graph():
 
     def endpoints(self, edge: Edge)->set[Node]:
         return edge.endpoints
-
-# operations:
-# 	CREATE         : → GRAPH
-# 	ADD_NODE       : GRAPH x ELEMENT → GRAPH
-# 	ADD_EDGE       : GRAPH x ELEMENT x ELEMENT → GRAPH
-# 	REMOVE_NODE    : GRAPH x ELEMENT → GRAPH
-# 	REMOVE_EDGE    : GRAPH x ELEMENT → GRAPH
-# 	ADJACENT       : GRAPH x ELEMENT x ELEMENT → BOOLEAN
-# 	NEIGHBOURS     : GRAPH x ELEMENT → SET
-# 	NODES          : GRAPH → SET
-# 	EDGES          : GRAPH → SET
-# 	ENDPOINTS      : ELEMENT → ARRAY

@@ -1,18 +1,18 @@
 
 # types
-import uuid, pytz, logging
+import logging
+import uuid
 from datetime import datetime
-from typing import List, Optional
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy.dialects.sqlite import (
-    DATETIME,
-    JSON,
-    INTEGER
-)
+
+import pytz
 from flask_argon2 import Argon2
-from helpers.config import get_config, reload_config
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey
+from sqlalchemy.dialects.sqlite import DATETIME, INTEGER, JSON
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from helpers.config import get_config
+
 # from sqlalchemy.dialects.postgresql import (
 #     UUID,
 #     ARRAY,
@@ -97,7 +97,7 @@ class User(db.Model):
     __tablename__ = "users"
     id : Mapped[int] = mapped_column(INTEGER,primary_key=True, autoincrement=True)
     username : Mapped[str] = mapped_column(nullable=False, unique=True)
-    display_name : Mapped[Optional[str]] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
+    display_name : Mapped[str | None] = mapped_column(ForeignKey("settings.id", ondelete="CASCADE"))
     is_admin : Mapped[bool] = mapped_column(nullable=False, default=False)
 
     settings_id : Mapped[int] = mapped_column(
@@ -324,12 +324,6 @@ class Block(db.Model):
             'owner' : self.owner.id
         }
 
-class ClassBlock(Block):
-    """
-    
-    """
-    pass
-
 
 # Activities
 # For auto-generating timetables, blocks are created from these and their constraints
@@ -397,14 +391,14 @@ class Activity(db.Model):
 
     # the following are in minutes
     # minimum length of one block of this activity
-    min_length : Mapped[Optional[int]] = mapped_column()
+    min_length : Mapped[int | None] = mapped_column()
     # maximum length of one block of this activity
-    max_length : Mapped[Optional[int]] = mapped_column()
+    max_length : Mapped[int | None] = mapped_column()
     # minimum amount of time spenton the activity
-    min_time : Mapped[Optional[int]] = mapped_column()
+    min_time : Mapped[int | None] = mapped_column()
     # maximum time spent on activity
     # e.g. max game time of 4 hours total every day
-    max_time : Mapped[Optional[int]] = mapped_column()
+    max_time : Mapped[int | None] = mapped_column()
 
 
     # reset the time counter every [hour, day, week, month, year] 
@@ -422,16 +416,22 @@ class Activity(db.Model):
                 description:str="",
                 priority:int=0,
                 repeat_mode:int=0,
-                repeat_interval:list[int]=[0,0,0,0,0],
-                frequency:list[int]=[0,0,0,0,0],
+                repeat_interval:list[int]|None=None,
+                frequency:list[int]|None=None,
                 even_frequency_spacing:bool=True,
                 min_length:int=45,
                 max_length:int=-1,
                 min_time:int=-1,
                 max_time:int=-1,
-                time_limit_reset:list[int]=[0,0,0,0,0],
+                time_limit_reset:list[int]|None=None,
                 **extra
                 ) -> None:
+        if time_limit_reset is None:
+            time_limit_reset = [0, 0, 0, 0, 0]
+        if frequency is None:
+            frequency = [0, 0, 0, 0, 0]
+        if repeat_interval is None:
+            repeat_interval = [0, 0, 0, 0, 0]
         try:
             super().__init__()
             self.name = name
@@ -477,7 +477,7 @@ class Routine(db.Model):
     name : Mapped[str] = mapped_column(nullable=False, default="New Routine")
 
     start_date : Mapped[datetime] = mapped_column(nullable=False)
-    end_date : Mapped[Optional[datetime]] = mapped_column()
+    end_date : Mapped[datetime | None] = mapped_column()
 
     # length of time the routine encompases and when it repeats. defaukt : a 7day routine that repeats every week
     routine_length : Mapped[int] = mapped_column(nullable=False, default=7)

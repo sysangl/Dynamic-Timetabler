@@ -1,5 +1,6 @@
-from flask import jsonify, request, render_template, abort,redirect, Blueprint,url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+
 from helpers.datetime import parse_iso_date
 
 bp = Blueprint('app', __name__)

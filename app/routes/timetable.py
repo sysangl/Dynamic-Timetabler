@@ -1,16 +1,12 @@
-from flask import Flask, request, jsonify, Blueprint, url_for, redirect
-from flask_login import login_required, current_user
-from datetime import datetime
-from helpers.datetime import combine_date_time, parse_iso_date
-from helpers.config import get_config
-from app.models import (
-    db,
-    ToDo,
-    Task,
-    Block,
-    Activity
-)
 import logging
+from datetime import datetime
+
+from flask import Blueprint, Flask, jsonify, redirect, request, url_for
+from flask_login import current_user, login_required
+
+from app.models import Block, db
+from helpers.config import get_config
+from helpers.datetime import combine_date_time, parse_iso_date
 
 bp = Blueprint('timetable', __name__)
 
@@ -152,7 +148,7 @@ def create_routes(app: Flask):
         try:
             db.session.add(created_item)
             db.session.commit()
-        except Exception as e:
+        except Exception:
             db.session.rollback()
             db_logger.exception(f'Database error while trying to create "{item}" instance')
             return jsonify({'error':f'Database error while trying to create {item} instance'}), 500
@@ -178,18 +174,17 @@ def create_routes(app: Flask):
                 app_logger.info(f'"{item}" is not a valid timetable item')
                 return {'error': f'"{item}" is not a valid timetable item'}, 404
 
-        activity = item_class.query.filter_by(id=id).first()
-        if not activity:
+        item = item_class.query.filter_by(id=id).first()
+        if not item:
             return {'error':f'"{item}" with id: {id} does not exist'}, 404
-        for key in data.keys():
+        for key in data:
             try:
-                activity.__setattr__(key, data[key])
+                item.__setattr__(key, data[key])
             except Exception as e:
-                return {'error' : f'Invalid key : {str(e)}'}, 500
+                return {'error' : f'Invalid key : {e!s}'}, 500
 
         db.session.commit()
-        return jsonify(activity.serialise())
-        
+        return jsonify(item.serialise())
 
     @bp.route('/<string:item>/<int:id>', methods=['DELETE'])
     @login_required
