@@ -22,7 +22,6 @@ document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('activ
 async function fetchSettings() {
     if (window.settings == null) {
         try {
-            console.log("Attempting to fetch settings")
             const response = await fetch(`http://localhost:58362/api/users/settings`, {
                 method: 'GET',
                 headers: {
@@ -42,7 +41,6 @@ async function fetchSettings() {
             throw err;
         }
     } else {
-        console.log("Using cached settings")
         return window.settings;
     }
 

@@ -119,7 +119,6 @@ def create_routes(app: Flask):
                 item_class = Block
             case _:
                 return {'error': f'"{item}" is not a valid timetable item'}, 404
-        assert type(item_class) is ToDo | Task| Block
         tti = item_class.query.filter_by(id=id).first()
         if not tti:
             return {'error':f'{item} with id "{id}" does not exist'}, 404

@@ -1,6 +1,6 @@
 itemFormContainer = document.getElementById('item-forms');
 filters = {dateRangeFrom:null, dateRangeTo:null};
-currentItemClass = 'all';
+currentItemClass = document.getElementById('item-select').value.toLowerCase();
 filterForm =document.getElementById('filter-form');
 itemForms = itemFormContainer.getElementsByClassName('item-form');
 // for (const form of itemForms) {
@@ -9,6 +9,7 @@ itemForms = itemFormContainer.getElementsByClassName('item-form');
 //         form.submit();
 //     })
 // }
+editFormOpen = false
 
 
 filterForm.addEventListener('submit', async (e) => {
@@ -35,12 +36,17 @@ filterForm.addEventListener('reset', async (e) => {
 
 
 
-function toggleForms() {
+function toggleForms(editMode=false) {
     document.getElementById('backdrop').classList.toggle('hidden')
-    console.log(itemFormContainer)
     document.getElementById('item-forms').classList.toggle('hidden')
-    console.log(itemFormContainer)
-
+    for (const container of document.getElementById('item-forms').children)  {
+        if (container.id != `${currentItemClass}-form-container`){
+            container.classList.add('hidden')
+        } else {
+            container.classList.remove('hidden')
+        }
+    }
+    setupItemForm(editMode);
 }
 
 async function fetchTimetableItems() {
@@ -143,7 +149,8 @@ async function editItem(item) {
     const itemId = itemInfo[1]
 
     const form = document.getElementById(`${itemType}-form`);
-    toggleForms();
+    toggleForms(editMode=true);
+    populateItemForm(itemType, itemId)
     form.addEventListener('submit', async function editFormSubmit(e) {
         e.preventDefault();
         console.log(e)
@@ -160,12 +167,40 @@ async function editItem(item) {
         if (!response.ok) {
             console.log(`Failed to update ${itemType} with id: ${itemId}`)
         }
-        toggleForms();
         form.removeEventListener('submit', editFormSubmit)
+        editFormOpen = false
+        toggleForms();
         generateItemTable();
     })
-    
+    editFormOpen = true;
 }
+
+async function populateItemForm(itemType,id) {
+    const formElements = $(`#${itemType}-form input:not(:disabled)`);
+
+    const response = await fetch(`/api/timetable/${itemType}/${id}`, {
+        method : 'GET'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+
+    const itemData = await response.json()
+
+    formElements.each(function(index, element) {
+        // const $element = $(element);
+        if (element.classList.contains('form-btn')) return;
+        if (element.type == 'radio') {
+            if (element.value == itemData[element.name]) {
+                element.checked = true;
+            }
+        } else {
+            element.value = itemData[element.name]
+        }
+    })
+}
+
 
 function changeTable(selectedItem) {
     if (selectedItem == 'all') {
@@ -202,8 +237,45 @@ async function setupManagement () {
     document.getElementById('filter-date-from').value = sDate;
     document.getElementById('filter-date-to').value = sDate;
 
-
     generateItemTable();
+}
+
+async function setupItemForm(editMode) {
+    let settings = await fetchSettings()
+    const now = new Date();
+    const future = new Date(now.getTime() + settings.default_block_length * 60 * 1000);
+
+    const sDate = now.toISOString().split('T')[0];
+    const eDate = future.toISOString().split('T')[0];
+
+    const sHours   = String(now.getHours()).padStart(2, '0');
+    const sMinutes = String(now.getMinutes()).padStart(2, '0');
+    const sTime = `${sHours}:${sMinutes}`;  
+
+    const eHours   = String(future.getHours()).padStart(2, '0');
+    const eMinutes = String(future.getMinutes()).padStart(2, '0');
+    const eTime = `${eHours}:${eMinutes}`;  
+    if (editMode) {
+        document.getElementById(`${currentItemClass}-form`).getElementsByClassName('submit-button')[0].textContent = 'Update'
+    } else {
+        document.getElementById(`${currentItemClass}-form`).getElementsByClassName('submit-button')[0].textContent = 'Create'
+    }
+    switch (currentItemClass.toLowerCase()) {
+        case 'blocks':
+            $(`#${currentItemClass.toLowerCase()}-form #title`)[0].value = '';
+            $(`#${currentItemClass.toLowerCase()}-form #description`)[0].value = '';
+            $(`#${currentItemClass.toLowerCase()}-form #sdate`)[0].value = sDate;
+            $(`#${currentItemClass.toLowerCase()}-form #edate`)[0].value = eDate;
+            $(`#${currentItemClass.toLowerCase()}-form #stime`)[0].value = sTime;
+            $(`#${currentItemClass.toLowerCase()}-form #etime`)[0].value = eTime;
+            $(`#${currentItemClass.toLowerCase()}-form #colour`)[0].value = settings.default_block_colour;
+            break;
+    
+        default:
+            break;
+    }
+
+
 }
 
 function sortTable(column) {

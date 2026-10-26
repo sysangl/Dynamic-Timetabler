@@ -43,6 +43,7 @@ class Settings(db.Model):
     """
     id : Mapped[int] = mapped_column(INTEGER, primary_key=True,autoincrement=True)
     default_block_length : Mapped[int] = mapped_column(default=30) # minutes
+    default_block_colour : Mapped[str] = mapped_column(default="#155764") # minutes
     start_day : Mapped[int] = mapped_column(default=0)
     start_hour : Mapped[int] = mapped_column(default=0)
     timetable_view : Mapped[str] = mapped_column(default='horizontal')
@@ -76,6 +77,7 @@ class Settings(db.Model):
         return {
             "id": str(self.id),
             "default_block_length": self.default_block_length,
+            "default_block_colour" : self.default_block_colour,
             "start_day": self.start_day,
             "start_hour": self.start_hour,
             "timetable_view": self.timetable_view,
@@ -271,6 +273,11 @@ class Block(db.Model):
         back_populates="blocks"
     )
 
+    start_date : Mapped[str] = mapped_column(default='')
+    start_time : Mapped[str] = mapped_column(default='')
+    end_date : Mapped[str] = mapped_column(default='')
+    end_time : Mapped[str] = mapped_column(default='')
+
     def __init__(self, 
                 title:str, 
                 start_datetime: datetime,
@@ -278,6 +285,10 @@ class Block(db.Model):
                 end_datetime: datetime,
                 description:str = "", 
                 colour:str = "",
+                start_date:str="",
+                start_time:str="",
+                end_date:str="",
+                end_time:str="",
                 **extra
                 ) -> None:
         try:
@@ -288,6 +299,10 @@ class Block(db.Model):
             # self.multiday = self.start_datetime.date().isocalendar
             self.colour = colour
             self.owner = owner
+            self.start_date = start_date
+            self.start_time = start_time
+            self.end_date = end_date
+            self.end_time = end_time
         except Exception:
             db_logger.exception("Failed to create Block instance")
             raise
@@ -301,6 +316,10 @@ class Block(db.Model):
             'description' : str(self.description),
             'start_datetime' : self.start_datetime.isoformat(),
             'end_datetime' : self.end_datetime.isoformat(),
+            'start_date': self.start_date,
+            'start_time': self.start_time,
+            'end_date' : self.end_date,
+            'end_time' : self.end_time,
             'colour' : self.colour,
             'owner' : self.owner.id
         }

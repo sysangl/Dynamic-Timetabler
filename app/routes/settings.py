@@ -34,6 +34,7 @@ def create_routes(app: Flask):
 
         allowed_fields = {
             "default_block_length": int,
+            "default_block_colour": str,
             "start_day": int,
             "start_hour": int,
             "timetable_view" : str,

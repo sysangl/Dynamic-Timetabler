@@ -380,7 +380,7 @@ async function clearTimetable() {
 function prevDate() {
     console.log('previous')
     const msInDay = 24*60*60*1000;
-    displayDate = new Date(Number(displayDate) - msInDay*(window.settings['days_per_view']));
+    displayDate = new Date(displayDate.getTime() - msInDay*(window.settings['days_per_view']));
     rebuildTimetable();
 }
 
@@ -392,7 +392,7 @@ function currentDate() {
 function nextDate() {
     console.log('next')
     const msInDay = 24*60*60*1000;
-    displayDate = new Date(Number(displayDate) + msInDay*(window.settings['days_per_view']));
+    displayDate = new Date(displayDate.getTime() + msInDay*(window.settings['days_per_view']));
     rebuildTimetable();
 }
 

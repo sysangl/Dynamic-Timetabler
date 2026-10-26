@@ -16,10 +16,10 @@
         <div></div>
         <button onclick="document.getElementById('filter-container').classList.toggle('hidden')"><span class="fa-solid fa-filter"></span></button>
         <select id="item-select" class="field-input" >
-            <option onclick="changeTable('all')" selected>All</option>
-            <option onclick="changeTable('blocks')">Blocks</option>
-            <option onclick="changeTable('tasks')" disabled>Tasks</option>
-            <option onclick="changeTable('routines')" disabled>Routines</option>
+            <option onclick="changeTable('all')" value="all" selected>All</option>
+            <option onclick="changeTable('blocks')" value="blocks">Blocks</option>
+            <option onclick="changeTable('tasks')" value="tasks" disabled>Tasks</option>
+            <option onclick="changeTable('routines')" value="routines" disabled>Routines</option>
         </select>
         <button id="create-new-btn" onclick="toggleForms()" disabled>CREATE NEW</button>
     </header>
@@ -114,7 +114,8 @@
         </fieldset>
 
         <div class="form-actions">
-            <button id="management-create-button" class="submit-button" type="submit">CREATE</button>
+            <button id="form-cancel-button" class="cancel-button form-btn" type="reset">Clear</button>
+            <button id="form-submit-button" class="submit-button form-btn" type="submit">Create</button>
         </div>
     </form>
 </div>
