@@ -121,7 +121,10 @@ class Block(db.Model):
         except Exception:
             db_logger.exception("Failed to create Block instance")
             raise
-        
+
+    def overlaps(self, block: Block)->bool:
+        return max(self.start_datetime, block.start_datetime) < min(self.end_datetime, block.end_datetime)
+
     
     def serialise(self)->dict:
         return {
@@ -210,6 +213,9 @@ class Activity(db.Model):
     # e.g. max game time of 4 hours total every day
     max_time : Mapped[int | None] = mapped_column()
 
+    # is the start/end time fixed?
+    fixed_start : Mapped[bool] = mapped_column()
+    fixed_end : Mapped[bool] = mapped_column()
 
     # reset the time counter every [hour, day, week, month, year] 
     # PostgreSQL - for production
