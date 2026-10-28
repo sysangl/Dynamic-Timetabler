@@ -295,35 +295,306 @@ def greedy_initial(activities: list[Activity], schedule_size:int=SCHEDULE_SIZE, 
     return blocks, table, activity_to_blocks
 
 if __name__ == "__main__":
+    # ai -generated activities
     activities = [
+        # ------------------------------------------------------------------
+        #  0 – Full‑time work (fixed 9 am‑5 pm Mon‑Fri)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Work',
+            frequency=5,                     # Mon‑Fri
+            even_spacing=False,
+            min_weekly_minutes=2400,          # 40 h / week
+            max_block_minutes=480,           # 8 h per day
+            min_start_minutes=9*60,          # 09:00 (irrelevant – already fixed)
+            fixed=[
+                (0, 9*60, 480),   # Monday
+                (1, 9*60, 480),   # Tuesday
+                (2, 9*60, 480),   # Wednesday
+                (3, 9*60, 480),   # Thursday
+                (4, 9*60, 480),   # Friday
+            ],
+            priority=1,
+        ),
+
+        # ------------------------------------------------------------------
+        #  1 – Study (evenly spaced, night‑time, 3×/week)
+        # ------------------------------------------------------------------
         Activity(
             name='Study',
-            min_weekly_minutes=240,
-            max_block_minutes=120,
             frequency=3,
             even_spacing=True,
+            min_weekly_minutes=240,
+            max_block_minutes=120,
+            min_start_minutes=20*60,        # cannot start before 20:00
             fixed=[],
-            min_start_minutes=20*60,
-            priority=2
+            priority=2,
         ),
+
+        # ------------------------------------------------------------------
+        #  2 – Piano lesson (fixed Thursday 18:00‑19:00)
+        # ------------------------------------------------------------------
         Activity(
             name='Piano',
-            min_weekly_minutes=60,
-            max_block_minutes=60,
             frequency=1,
             even_spacing=False,
-            fixed=[(3, 18*60, 60)],
-            priority=3
+            min_weekly_minutes=60,
+            max_block_minutes=60,
+            min_start_minutes=0,            # not used – fixed overrides it
+            fixed=[(3, 18*60, 60)],          # Thursday 18:00‑19:00
+            priority=3,
         ),
+
+        # ------------------------------------------------------------------
+        #  3 – Exercise (early‑morning, 2×/week)
+        # ------------------------------------------------------------------
         Activity(
             name='Exercise',
-            min_weekly_minutes=120,
-            max_block_minutes=60,
             frequency=2,
             even_spacing=False,
-            min_start_minutes=5*60,
+            min_weekly_minutes=120,
+            max_block_minutes=60,
+            min_start_minutes=5*60,         # cannot start before 05:00
             fixed=[],
-            priority=1
+            priority=1,
+        ),
+
+        # ------------------------------------------------------------------
+        #  4 – Yoga (morning, 2×/week, try to spread)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Yoga',
+            frequency=2,
+            even_spacing=True,
+            min_weekly_minutes=90,
+            max_block_minutes=60,
+            min_start_minutes=6*60,
+            fixed=[],
+            priority=2,
+        ),
+
+        # ------------------------------------------------------------------
+        #  5 – Cooking (evenings, 3×/week)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Cooking',
+            frequency=3,
+            even_spacing=False,
+            min_weekly_minutes=180,
+            max_block_minutes=120,
+            min_start_minutes=17*60,
+            fixed=[],
+            priority=3,
+        ),
+
+        # ------------------------------------------------------------------
+        #  6 – Grocery shopping (once a week, midday)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Grocery Shopping',
+            frequency=1,
+            even_spacing=False,
+            min_weekly_minutes=60,
+            max_block_minutes=60,
+            min_start_minutes=10*60,
+            fixed=[],
+            priority=4,
+        ),
+
+        # ------------------------------------------------------------------
+        #  7 – Cleaning (once a week, morning)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Cleaning',
+            frequency=1,
+            even_spacing=False,
+            min_weekly_minutes=120,
+            max_block_minutes=120,
+            min_start_minutes=9*60,
+            fixed=[],
+            priority=4,
+        ),
+
+        # ------------------------------------------------------------------
+        #  8 – Laundry (once a week, early‑morning)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Laundry',
+            frequency=1,
+            even_spacing=False,
+            min_weekly_minutes=60,
+            max_block_minutes=60,
+            min_start_minutes=8*60,
+            fixed=[],
+            priority=4,
+        ),
+
+        # ------------------------------------------------------------------
+        #  9 – Reading (evenly spaced, night, 3×/week)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Reading',
+            frequency=3,
+            even_spacing=True,
+            min_weekly_minutes=180,
+            max_block_minutes=90,
+            min_start_minutes=20*60,
+            fixed=[],
+            priority=5,
+        ),
+
+        # ------------------------------------------------------------------
+        # 10 – Spanish (language learning, 2×/week, evening)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Spanish',
+            frequency=2,
+            even_spacing=True,
+            min_weekly_minutes=120,
+            max_block_minutes=60,
+            min_start_minutes=19*60,
+            fixed=[],
+            priority=5,
+        ),
+
+        # ------------------------------------------------------------------
+        # 11 – Programming (evenly spaced, night, 3×/week)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Programming',
+            frequency=3,
+            even_spacing=True,
+            min_weekly_minutes=300,
+            max_block_minutes=180,
+            min_start_minutes=18*60,
+            fixed=[],
+            priority=2,
+        ),
+
+        # ------------------------------------------------------------------
+        # 12 – Meditation (daily, early‑morning, 30 min)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Meditation',
+            frequency=7,
+            even_spacing=True,
+            min_weekly_minutes=30,
+            max_block_minutes=30,
+            min_start_minutes=6*60,
+            fixed=[],
+            priority=1,
+        ),
+
+        # ------------------------------------------------------------------
+        # 13 – Gardening (twice a week, morning)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Gardening',
+            frequency=2,
+            even_spacing=False,
+            min_weekly_minutes=180,
+            max_block_minutes=180,
+            min_start_minutes=9*60,
+            fixed=[],
+            priority=4,
+        ),
+
+        # ------------------------------------------------------------------
+        # 14 – Dog Walking (six short walks a week, mornings)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Dog Walking',
+            frequency=6,
+            even_spacing=False,
+            min_weekly_minutes=180,
+            max_block_minutes=30,
+            min_start_minutes=7*60,
+            fixed=[],
+            priority=3,
+        ),
+
+        # ------------------------------------------------------------------
+        # 15 – Family Time (evenings, twice a week)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Family Time',
+            frequency=2,
+            even_spacing=False,
+            min_weekly_minutes=300,
+            max_block_minutes=180,
+            min_start_minutes=19*60,
+            fixed=[],
+            priority=2,
+        ),
+
+        # ------------------------------------------------------------------
+        # 16 – Friends Meet (fixed Saturday night)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Friends Meet',
+            frequency=1,
+            even_spacing=False,
+            min_weekly_minutes=120,
+            max_block_minutes=180,
+            min_start_minutes=0,
+            fixed=[(5, 18*60, 180)],   # Saturday 18:00‑21:00
+            priority=3,
+        ),
+
+        # ------------------------------------------------------------------
+        # 17 – Movie Night (fixed Sunday night)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Movie Night',
+            frequency=1,
+            even_spacing=False,
+            min_weekly_minutes=180,
+            max_block_minutes=180,
+            min_start_minutes=0,
+            fixed=[(6, 20*60, 180)],   # Sunday 20:00‑23:00
+            priority=4,
+        ),
+
+        # ------------------------------------------------------------------
+        # 18 – Volunteer (once a week, mid‑morning)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Volunteer',
+            frequency=1,
+            even_spacing=False,
+            min_weekly_minutes=240,
+            max_block_minutes=240,
+            min_start_minutes=9*60,
+            fixed=[],
+            priority=3,
+        ),
+
+        # ------------------------------------------------------------------
+        # 19 – Gaming (late‑night, 3×/week)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Gaming',
+            frequency=3,
+            even_spacing=False,
+            min_weekly_minutes=240,
+            max_block_minutes=120,
+            min_start_minutes=22*60,
+            fixed=[],
+            priority=5,
+        ),
+
+        # ------------------------------------------------------------------
+        # 20 – Music Practice (instrument, 2×/week, early‑evening)
+        # ------------------------------------------------------------------
+        Activity(
+            name='Music Practice',
+            frequency=2,
+            even_spacing=False,
+            min_weekly_minutes=120,
+            max_block_minutes=60,
+            min_start_minutes=16*60,
+            fixed=[],
+            priority=3,
         ),
     ]
 
