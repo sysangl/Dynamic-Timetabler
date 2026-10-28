@@ -1,21 +1,32 @@
 import math
 import random
-from datetime import datetime
-from typing import Optional
 
 # from  import Block
 
-type State = list[list[int]]
+type State = list[list[int | None]]
 
 
 class Activity:
     id_registry = 0
-    def __init__(self, title:str='Activity', start_slot=5, end_slot=20) -> None:
-        self.id = self.generate_id()
-        self.title = title
-        self.frequency = (1,7,random.randint(0,6))
-        self.start_slot = start_slot
-        self.end_slot = end_slot
+
+    def __init__(self) -> None:
+        self.id:int = self.generate_id()
+        self.name : str
+        self.frequency:int = 1
+        self.even_spacing:bool = False
+        self.immovable = 0
+        self.min_weekly_minutes: int = 0
+        self.max_block_minutes: int = 60
+        self.priority = 1
+    
+    @property
+    def min_weekly_slots(self)->int:
+        return math.ceil(self.min_weekly_minutes / SLOT_SIZE)
+    
+    @property
+    def max_block_slots(self)->int:
+        return max(1,self.max_block_minutes//SLOT_SIZE)
+
 
     @classmethod
     def generate_id(cls)->int:
@@ -23,30 +34,20 @@ class Activity:
         return cls.id_registry
 
     def __str__(self) -> str:
-        return f"<Activity {self.id}: {self.title}"
+        return f"<Activity {self.id}: {self.name}"
 
 
 class _Block:
     id_registry = 0
 
-    def __init__(self,
-                day,
-                start_slot,
-                end_slot,
-                start_day=0,
-                end_day=0,
-                activity_id=-1
-                ) -> None:
+    def __init__(self) -> None:
         self.id = self.generate_id()
-        self.immovable = True
-        self.activity_id = activity_id
+        self.move_penalty: float = 0
+        self.activity_id: int
 
-        self.start_day = start_day
-        self.end_day = end_day
-        self.start_slot = start_slot
-        self.end_slot = end_slot
-        self.slot_length = start_slot-end_slot
-        self.day = day
+        self.start:int
+        self.length:int
+        self.day:int
 
     @classmethod
     def generate_id(cls)->int:
@@ -72,10 +73,12 @@ class _Block:
 
 # parameters
 DAYS = 7
+SCHEDULE_SIZE = 7
 MINS_IN_DAY = 24 * 60
 SLOT_SIZE = 60 #mins
-SLOTS_PER_DAY = int(MINS_IN_DAY/SLOT_SIZE)
+SLOTS_PER_DAY = MINS_IN_DAY//SLOT_SIZE
 
+MAX_PRIORITY = 10
 #penalty modifs
 HARD = math.inf
 HARD_SOFT = 100.0
@@ -84,7 +87,7 @@ NORMAL = 1.0
 
 # vars
 
-TIMETABLE: State = [ [ -1 for y in range( SLOTS_PER_DAY ) ] for x in range( DAYS ) ]
+TIMETABLE: State = [ [ 0 for y in range( SLOTS_PER_DAY ) ] for x in range( DAYS ) ]
 
 
 INITIAL_TEMPERATURE = 1e6
@@ -97,7 +100,7 @@ state_previous:list[_Block] = []
 
 block_lookup:dict[int, _Block] = {}
 activity_lookup:dict[int, Activity] = {}
-occupancy:dict[tuple[int,int], int] = {}
+state:State = []
 activity_to_blocks:dict[int, set[int]] = {}
 
 def register_activity(a: Activity):
@@ -113,33 +116,88 @@ def register_block(b: _Block):
 def unregister_block(b: _Block):
     activity_to_blocks[b.activity_id].remove(b.id)
 
-def clear_block(b:_Block):
-    for slot in range(b.start_slot, b.start_slot + b.slot_length):
-        occupancy[(b.day,slot)] = -1
+def clear_block(state:State,b:_Block):
+    for slot in range(b.start, b.start + b.length):
+        state[b.day][slot] = 0
     unregister_block(b)
 
+def find_free_slots(day:int, required_size: int, state:State)->int | None:
+    start = 0
+    free_slots = 0
+    row = state[day]
+    for slot, block_id in enumerate(row):
+        if block_id is None:
+            if free_slots == 0:
+                start=slot
+            free_slots += 1
+            if free_slots>=required_size:
+                return start
+        else:
+            free_slots = 0
+    return None
+
+def allocate_lengths(needed:int, sessions:int, max_len:int)->list[int]:
+    base_len = max(1, min(max_len, needed//sessions))
+    lengths = [base_len] * sessions
+    remaining = needed - base_len * sessions
+
+    i=0
+    while remaining > 0:
+        if lengths[i] < max_len:
+            lengths[i] += 1
+            remaining -= 1
+        i = (i+1)%sessions
+        if i == 0 and all(l == max_len for l in lengths):
+            break
+    return lengths
+
 def can_place(state:State, b:_Block):
-    for slot in range(b.start_slot, b.start_slot + b.slot_length):
-        if state[b.day][slot] not in {-1, b.id}:
+    for slot in range(b.start, b.start + b.length):
+        if state[b.day][slot] not in {0, b.id}:
             return False
     return True
 
 def place_block(state:State, b: _Block):
-    for slot in range(b.start_slot, b.end_slot):
+    for slot in range(b.start, b.start + b.length):
         state[b.day][slot] = b.id
     return state
 
-def generate_initial_solution(activities: dict[int, Activity])->State:
-    solution:State = TIMETABLE
-    for activity in activities.values():
-        for current_day in range(DAYS):
-            if current_day % (activity.frequency[0]*activity.frequency[1])==activity.frequency[2]:
-                block = _Block(day=current_day, start_slot=activity.start_slot, end_slot=activity.end_slot, activity_id=activity.id)
-                print(block)
-                if can_place(solution, block):
-                    print(f'placing {block} at {current_day}:{activity.start_slot}:{activity.end_slot}')
-                    solution = place_block(solution, block)
-    return solution
+def schedule_activity():
+    pass
+
+def place_fixed_blocks(state:State, activities: list[Activity]) -> State:
+    return state
+
+def greedy_initial(activities, schedule_size:int=SCHEDULE_SIZE, slots_per_day:int=SLOTS_PER_DAY, slot_size:int=SLOT_SIZE):
+    table: State = [[None for _ in range(slots_per_day) ] for _ in range(SCHEDULE_SIZE)]
+    blocks: dict[int, _Block] = {}
+
+    table = place_fixed_blocks(table, activities)
+
+    def activity_sort_key(activity: Activity):
+        return (activity.priority, -int(activity.even_spacing), -activity.min_weekly_minutes)
+
+    sorted_activities = sorted(activities, key=activity_sort_key)
+
+    for a in sorted_activities:
+        schedule_activity()
+
+
+    return blocks, table
+
+
+
+# def generate_initial_solution(activities: dict[int, Activity])->State:
+#     solution:State = TIMETABLE
+#     for activity in activities.values():
+#         for current_day in range(DAYS):
+#             if current_day % (activity.frequency[0]*activity.frequency[1])==activity.frequency[2]:
+#                 block = _Block(day=current_day, start_slot=activity.start_slot, end_slot=activity.end_slot, activity_id=activity.id)
+#                 print(block)
+#                 if can_place(solution, block):
+#                     print(f'placing {block} at {current_day}:{activity.start_slot}:{activity.end_slot}')
+#                     solution = place_block(solution, block)
+#     return solution
 
 
 def cool(T):
@@ -152,6 +210,7 @@ def generate_new_neighbour(state: list[_Block]):
 def shift_move(state)->tuple[State,float]:
     # shift a block one day before or after, and shift it by k hours (random)
     delta_cost = 0
+    
     return state, delta_cost
 
 def resize_block(state)->tuple[State,float]:
@@ -214,10 +273,12 @@ def simulated_annealing(state0: State, T:float):
 
 acts:list[str] =[]
 for i in range(4):
-    a = Activity(title=f'Activty {i}')
+    a = Activity()
     acts.append(str(a))
     register_activity(a)
 
 
 print('a: ', acts)
-print('t: ', generate_initial_solution(activity_lookup))
+# # al=generate_initial_solution(activity_lookup)
+# for day in al:
+#     print('t: ', day)
