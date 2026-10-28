@@ -30,6 +30,7 @@ class PENALTY_WEIGHTS:
     PRIORITY = 3.0
     IDLE = 4.0
     BALANCE = 3.0
+    FRAGMENT = 4.0
 
 
 MAX_PRIORITY = 10
@@ -369,8 +370,11 @@ class CostEvaluator:
             if block.length > activity.max_block_slots:
                 return LIMIT.HARD
 
+        if len(block_list) > activity.frequency:
+            cost += (len(block_list)-activity.frequency) * PENALTY_WEIGHTS.FRAGMENT
+
         #scale w/ prio
-        return cost * activity.priority
+        return cost * activity.priority * 0.5
 
     def update_activities(self, activity_ids):
         delta = 0
@@ -379,9 +383,12 @@ class CostEvaluator:
             new = self.calculate_cost(a_id)
             self.activity_cost[a_id] = new
             delta += (new - old)
+
+        ## whole table penalties
         # cost for not using time
         empty = sum(day.count(None) for day in table)
         delta += empty * PENALTY_WEIGHTS.IDLE
+
         self.total_cost += delta
         return delta
 
@@ -583,8 +590,67 @@ def split_block(
             day_load: list[int],
             evaluator:CostEvaluator)->ChangeResult:
     # if length>max length, split block
-    delta_cost = 0
-    return ChangeResult(LIMIT.HARD, undo=lambda: None)
+    
+    oversized = [b for b in blocks.values() if b.length > activities[b.activity_id].max_block_slots]
+
+    if not oversized:
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+    parent = random.choice(oversized)
+    activity = activities[parent.activity_id]
+
+    parent_copy = _Block(
+        id=parent.id,
+        activity_id=parent.activity_id,
+        day=parent.day,
+        start=parent.start,
+        length=parent.length
+    )
+
+    split_point = random.randint(1,parent.length-1)
+
+    child1 = _Block(activity_id=parent.activity_id, day=parent.day, start=parent.start, length=split_point)
+    child2 = _Block(activity_id=parent.activity_id, day=parent.day, start=parent.start+split_point, length=parent.length-split_point)
+
+    clear_block(table, parent)
+    day_load[parent.day] -= 1
+
+    # check placement
+    # restore
+    if not (can_place(table, child1) and can_place(table, child2)):
+        place_block(table, parent)
+        day_load[parent.day] += 1
+        return ChangeResult(delta=LIMIT.HARD, undo=lambda: None)
+
+    place_block(table, child1)
+    place_block(table, child2)
+
+    del blocks[parent.id]
+    blocks[child1.id] = child1
+    blocks[child2.id] = child2
+    atb[activity.id].remove(parent.id)
+    atb[activity.id].update({child1.id, child2.id})
+    day_load[parent.day] += 2
+
+    delta_cost = evaluator.update_activities({activity.id})
+
+    def undo():
+        clear_block(table, child1)
+        clear_block(table, child2)
+        day_load[parent.day] -= 2
+        del blocks[child1.id]
+        del blocks[child2.id]
+        atb[activity.id].remove(child1.id)
+        atb[activity.id].remove(child2.id)
+
+        place_block(table, parent_copy)
+        blocks[parent_copy.id] = parent_copy
+        atb[activity.id].add(parent_copy.id)
+        day_load[parent.day] += 1
+
+        evaluator.update_activities({activity.id})
+
+    return ChangeResult(delta_cost, undo=undo)
 
 def random_reschedule(
             table: Table,
