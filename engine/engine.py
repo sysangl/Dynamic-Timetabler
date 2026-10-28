@@ -28,6 +28,9 @@ class PENALTY_WEIGHTS:
     EVEN_SPACING = 2.0
     OVERLOAD = 3.0
     PRIORITY = 3.0
+    IDLE = 4.0
+    BALANCE = 3.0
+
 
 MAX_PRIORITY = 10
 # parameters
@@ -376,6 +379,9 @@ class CostEvaluator:
             new = self.calculate_cost(a_id)
             self.activity_cost[a_id] = new
             delta += (new - old)
+        # cost for not using time
+        empty = sum(day.count(None) for day in table)
+        delta += empty * PENALTY_WEIGHTS.IDLE
         self.total_cost += delta
         return delta
 
@@ -429,7 +435,7 @@ def shift_move(
     day_load[new_day]+=1
     delta_cost = evaluator.update_activities(affected)
 
-    delta_cost += activity.priority * PENALTY_WEIGHTS.PRIORITY
+    delta_cost += 0.5 * activity.priority * PENALTY_WEIGHTS.PRIORITY
 
     def undo():
         clear_block(table, block)
@@ -673,6 +679,8 @@ class Annealer:
                                 self.blocks, self.day_load, self.evaluator),
             lambda: swap_blocks(self.table, activities, self.atb,
                             self.blocks, self.day_load, self.evaluator),
+        ]
+        _ =[
             lambda: random_reschedule(self.table, activities, self.atb,
                                         self.blocks, self.day_load, self.evaluator,
                                         self.scheduler, max_priority_allowed=5)
@@ -693,12 +701,12 @@ class Annealer:
 
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost/T)):
                     current_cost += delta_cost
-                    # print(current_cost)
+                    #print(f'Accepted d={round(delta_cost,3)!s:6s}  current cost={round(current_cost,3)!s:6s}')
                     if current_cost < best_cost:
                         best_cost = current_cost
                         best_table = copy.deepcopy(self.table)
                         best_blocks = copy.deepcopy(self.blocks)
-                        #print(f'Updating cost: {current_cost} -> {best_cost}')
+                        #print(f'Updating cost: {round(best_cost,3)!s:6s}')
                 else:
                     change.undo()
             T *= self.cooling
@@ -987,24 +995,7 @@ if __name__ == "__main__":
 
     blocks, table, activity_to_blocks, day_load = greedy_initial(activities)
 
-    for day in range(SCHEDULE_SIZE):
-        print(f'----- day {day}-------------------')
-        day_blocks = [b for b in blocks.values() if b.day == day]
-        day_blocks.sort(key=lambda b: b.start)
 
-        for block in day_blocks:
-            activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * SLOT_SIZE
-            end_mins = (block.start + block.length) * SLOT_SIZE
-            start_hours = start_mins // 60
-            start_mins = start_mins % 60
-            end_hours = end_mins // 60
-            end_mins = end_mins % 60
-            print(
-                f"  {activity.name:12s}  [{block.id:02d}]  "
-                f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
-                f"(len={block.length} slots)"
-            )
 
     evaluator = CostEvaluator(
         activities={a.id:a for a in activities},
@@ -1026,7 +1017,29 @@ if __name__ == "__main__":
 
     best_table, best_blocks, best_cost = annealer.run()
 
-    print('RESULTS =======================================')
+    print('\n\nRESULTS =======================================')
+
+    for day in range(SCHEDULE_SIZE):
+        print(f'----- day {day}-------------------')
+        day_blocks = [b for b in blocks.values() if b.day == day]
+        day_blocks.sort(key=lambda b: b.start)
+
+        for block in day_blocks:
+            activity = next(a for a in activities if a.id == block.activity_id)
+            start_mins = block.start * SLOT_SIZE
+            end_mins = (block.start + block.length) * SLOT_SIZE
+            start_hours = start_mins // 60
+            start_mins = start_mins % 60
+            end_hours = end_mins // 60
+            end_mins = end_mins % 60
+            print(
+                f"  {activity.name:12s}  [{block.id:02d}]  "
+                f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
+                f"(len={block.length} slots)"
+            )
+
+    print('\n\nOptimised =======================================')
+
 
     for day in range(SCHEDULE_SIZE):
         print(f'----- day {day}-------------------')
