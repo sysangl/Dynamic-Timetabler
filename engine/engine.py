@@ -194,7 +194,6 @@ def can_place(table:Table, b:_Block):
 def place_block(table:Table, b: _Block):
     for slot in range(b.start, b.start + b.length):
         table[b.day][slot] = b.id
-    return table
 
 def schedule_activity(activity:_Activity, table:Table, blocks:dict[int, _Block], activity_to_blocks:ATB, day_load:list[int]):
     needed_sessions = max(activity.frequency, 1)
@@ -459,14 +458,23 @@ def swap_blocks(
     if b1 == b2:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
-    #check if fixed block?
-
     a1 = activities[b1.activity_id]
     a2 = activities[b2.activity_id]
+
+    if any((b1.day, b1.start, b1.length)==fixed for fixed in a1.fixed_blocks):
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+    if any((b2.day, b2.start, b2.length)==fixed for fixed in a2.fixed_blocks):
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
     
     old1 = (b1.day, b1.start)
     old2 = (b2.day, b2.start)
     affected = {a1.id, a2.id}
+
+    test1 = _Block(id=b1.id, activity_id=b2.activity_id, day=b2.day, start=b2.start, length=b1.length)
+    test2 = _Block(id=b2.id, activity_id=b1.activity_id, day=b1.day, start=b1.start, length=b2.length)
+
+    if not (can_place(table, test1) and can_place(table, test2)):
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     clear_block(table, b1)
     clear_block(table, b2)
@@ -829,9 +837,9 @@ if __name__ == "__main__":
         even_spacing=False,
         min_weekly_minutes=60,
         max_block_minutes=60,
-        min_start_minutes=8*60,
+        min_start_minutes=9*60,
         fixed=[],
-        priority=1,
+        priority=2,
     ),
 
     # ------------------------------------------------------------------
