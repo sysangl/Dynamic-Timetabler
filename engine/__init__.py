@@ -1,33 +1,70 @@
 import math
-
-# from app.models.timetable_items import Block
-
+import random
+from datetime import datetime
 from typing import Optional
 
-import random
-
-from datetime import datetime
+# from  import Block
 
 type State = list[list[int]]
 
-class Block:
+
+class Activity:
+    id_registry = 0
+    def __init__(self, title:str='Activity', start_slot=5, end_slot=20) -> None:
+        self.id = self.generate_id()
+        self.title = title
+        self.frequency = (1,7,random.randint(0,6))
+        self.start_slot = start_slot
+        self.end_slot = end_slot
+
+    @classmethod
+    def generate_id(cls)->int:
+        cls.id_registry = cls.id_registry+1
+        return cls.id_registry
+
+    def __str__(self) -> str:
+        return f"<Activity {self.id}: {self.title}"
+
+
+class _Block:
+    id_registry = 0
+
     def __init__(self,
-                id:int,
-                sdt:datetime,
-                edt:datetime,
+                day,
+                start_slot,
+                end_slot,
+                start_day=0,
+                end_day=0,
+                activity_id=-1
                 ) -> None:
-        self.id = id
-        self.start_datetime = sdt
-        self.end_datetime = edt
+        self.id = self.generate_id()
+        self.immovable = True
+        self.activity_id = activity_id
 
-b:list[Block] =[]
-for i in range(4):
-    sdt = datetime(2026,10,7+i, random.randint(1,23),random.randint(0,59))
-    edt = datetime(2026,10,7+i, random.randint(1,23),random.randint(0,59))
-    if sdt > edt:
-        sdt, edt = edt, sdt
+        self.start_day = start_day
+        self.end_day = end_day
+        self.start_slot = start_slot
+        self.end_slot = end_slot
+        self.slot_length = start_slot-end_slot
+        self.day = day
 
-    b.append(Block(i, sdt, edt))
+    @classmethod
+    def generate_id(cls)->int:
+        cls.id_registry = cls.id_registry+1
+        return cls.id_registry
+
+    def __str__(self) -> str:
+        return f"<Block {self.id}: Activity {self.activity_id}>"
+
+    # def _convert_to_db_block(self)->Block|None:
+    #     return None
+    #     b = Block(
+    #     )
+    #     return b
+
+
+
+
 
 # plan
 # use simulated annealing <3
@@ -37,6 +74,7 @@ for i in range(4):
 DAYS = 7
 MINS_IN_DAY = 24 * 60
 SLOT_SIZE = 60 #mins
+SLOTS_PER_DAY = int(MINS_IN_DAY/SLOT_SIZE)
 
 #penalty modifs
 HARD = math.inf
@@ -46,58 +84,68 @@ NORMAL = 1.0
 
 # vars
 
-TIMETABLE: State = [ [ -1 for y in range( int(MINS_IN_DAY/SLOT_SIZE) ) ] for x in range( DAYS ) ]
+TIMETABLE: State = [ [ -1 for y in range( SLOTS_PER_DAY ) ] for x in range( DAYS ) ]
 
-blocks: list[Block] = []
+
 INITIAL_TEMPERATURE = 1e6
 T = INITIAL_TEMPERATURE
 T_MIN = 1e-5 # need to tweak to find optimal
 a = 0.95 # cooling factor
 
-state_previous:list[Block] = []
+state_previous:list[_Block] = []
 # need to generate initial solution, get user to do it instead?
 
+block_lookup:dict[int, _Block] = {}
+activity_lookup:dict[int, Activity] = {}
+occupancy:dict[tuple[int,int], int] = {}
+activity_to_blocks:dict[int, set[int]] = {}
 
-def get_blocks(blocks)->dict[int, Block]:
-    # blocks:list[Block] = Block.query.all()
+def register_activity(a: Activity):
+    activity_lookup[a.id]=a
 
-    tmp:dict[int, Block] = {}
-    for block in blocks:
-        tmp[block.id]=block
-    return tmp
+def unregister_activity(a: Activity):
+    activity_lookup.pop(a.id)
 
 
-def generate_initial_solution(blocks: dict[int, Block])->State:
+def register_block(b: _Block):
+    activity_to_blocks[b.activity_id].add(b.id)
+
+def unregister_block(b: _Block):
+    activity_to_blocks[b.activity_id].remove(b.id)
+
+def clear_block(b:_Block):
+    for slot in range(b.start_slot, b.start_slot + b.slot_length):
+        occupancy[(b.day,slot)] = -1
+    unregister_block(b)
+
+def can_place(state:State, b:_Block):
+    for slot in range(b.start_slot, b.start_slot + b.slot_length):
+        if state[b.day][slot] not in {-1, b.id}:
+            return False
+    return True
+
+def place_block(state:State, b: _Block):
+    for slot in range(b.start_slot, b.end_slot):
+        state[b.day][slot] = b.id
+    return state
+
+def generate_initial_solution(activities: dict[int, Activity])->State:
     solution:State = TIMETABLE
-    for id, block in blocks.items():
-        day_start = block.start_datetime.date().weekday()
-        mins_start = block.start_datetime.time().hour * 60 + block.start_datetime.time().min.minute
-
-        day_end = block.end_datetime.date().weekday()
-        mins_end = block.end_datetime.time().hour * 60 + block.end_datetime.time().min.minute
-
-        current_day = day_start
-        current_slot = int(mins_start/SLOT_SIZE)
-        while current_day <= day_end:
-
-            solution[current_day][current_slot] = id
-            
-            current_slot +=1
-
-            if current_slot>=24:
-                current_day += 1
-
-            if current_slot==int(mins_end/SLOT_SIZE) and current_day==day_end:
-                break
+    for activity in activities.values():
+        for current_day in range(DAYS):
+            if current_day % (activity.frequency[0]*activity.frequency[1])==activity.frequency[2]:
+                block = _Block(day=current_day, start_slot=activity.start_slot, end_slot=activity.end_slot, activity_id=activity.id)
+                print(block)
+                if can_place(solution, block):
+                    print(f'placing {block} at {current_day}:{activity.start_slot}:{activity.end_slot}')
+                    solution = place_block(solution, block)
     return solution
 
-print('blocks: ', b)
-print('initial: ', generate_initial_solution(get_blocks(b)))
 
 def cool(T):
     return T*a
 
-def generate_new_neighbour(state: list[Block]):
+def generate_new_neighbour(state: list[_Block]):
     return
 
 # different changes
@@ -140,9 +188,6 @@ def propose_change(state: State)->tuple[State,float]:
             return split_move(state)
         case 'random':
             return random_reschedule(state)
-
-
-        
     return state, math.inf
 
 def revert_change():
@@ -165,3 +210,14 @@ def simulated_annealing(state0: State, T:float):
         T = cool(T)
 
     return best
+
+
+acts:list[str] =[]
+for i in range(4):
+    a = Activity(title=f'Activty {i}')
+    acts.append(str(a))
+    register_activity(a)
+
+
+print('a: ', acts)
+print('t: ', generate_initial_solution(activity_lookup))
