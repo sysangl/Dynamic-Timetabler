@@ -117,9 +117,14 @@ class _Block:
                 activity_id:int,
                 day:int,
                 start:int,
-                length:int
+                length:int,
+
+                id:int=-1
                 ) -> None:
-        self.id:int = self.generate_id()
+        if id < 0:
+            self.id:int = self.generate_id()
+        else:
+            self.id:int = id
         # self.move_penalty: float
         self.activity_id: int=activity_id
         # the following uses engine specific units (slots) not minutes
@@ -447,7 +452,60 @@ def swap_blocks(
             evaluator:CostEvaluator)->ChangeResult:
     # swap two blocks of different activities
     delta_cost = 0
-    return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+    b1 = random.choice(list(blocks.values()))
+    b2 = random.choice(list(blocks.values()))
+
+    if b1 == b2:
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+    #check if fixed block?
+
+    a1 = activities[b1.activity_id]
+    a2 = activities[b2.activity_id]
+    
+    old1 = (b1.day, b1.start)
+    old2 = (b2.day, b2.start)
+    affected = {a1.id, a2.id}
+
+    clear_block(table, b1)
+    clear_block(table, b2)
+
+    day_load[b1.day] -= 1
+    day_load[b2.day] -= 1
+
+    b1.day, b1.start = b2.day, b2.start
+    b2.day, b2.start = old1
+
+    place_block(table, b1)
+    place_block(table, b2)
+
+    day_load[b1.day] += 1
+    day_load[b2.day] += 1
+
+    delta_cost = evaluator.update_activities(affected)
+
+    def undo():
+
+        clear_block(table, b1)
+        clear_block(table, b2)
+
+        day_load[b1.day] -= 1
+        day_load[b2.day] -= 1
+
+        b1.day, b1.start = old1
+        b2.day, b2.start = old2
+
+        place_block(table, b1)
+        place_block(table, b2)
+
+        day_load[b1.day] += 1
+        day_load[b2.day] += 1
+
+        evaluator.update_activities(affected)
+
+
+    return ChangeResult(delta_cost, undo=undo)
 
 def resize_block(
             table: Table,
