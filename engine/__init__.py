@@ -26,13 +26,13 @@ class LIMIT:
     NORMAL = 1.0
 
 class PENALTY_WEIGHTS:
-    MIN_TIME = 1.0
+    MIN_TIME = 20.0
     FREQ = 2.0
     EVEN_SPACING = 5.0
     OVERLOAD = 3.0
     PRIORITY = 3.0
     IDLE = 3.0
-    BALANCE = 10.0
+    BALANCE = 20.0
     FRAGMENT = 8.0
     EARLY_BOUND = 200.0
     LATE_BOUND = 600.0
@@ -140,7 +140,7 @@ class _Block:
                 day:int,
                 start:int,
                 length:int,
-
+                fixed: bool = False,
                 id:int=-1
                 ) -> None:
         if id < 0:
@@ -153,6 +153,7 @@ class _Block:
         self.start:int=start
         self.length:int=length
         self.day:int=day
+        self.fixed: bool = fixed
 
     @classmethod
     def generate_id(cls)->int:
@@ -259,10 +260,10 @@ def greedy_schedule(activity:_Activity, table:Table, blocks:dict[int, _Block], a
 
         placed = False
 
-        slot_variation = random.randint(-120//_Schedule.SLOT_SIZE, 120//_Schedule.SLOT_SIZE,)
+        slot_variation = random.randint(_Schedule.SLOTS_PER_DAY//20, _Schedule.SLOTS_PER_DAY//20)
 
         for day in candidate_days:
-            free_slots_start = find_free_slots(day, block_length, table, start_from=clamp(activity.min_start_slot+slot_variation, 0, 24))
+            free_slots_start = find_free_slots(day, block_length, table, start_from=clamp(activity.min_start_slot+slot_variation, 0, _Schedule.SLOTS_PER_DAY-block_length))
             if free_slots_start is not None:
                 b = _Block(
                     activity_id=activity.id,
@@ -365,7 +366,8 @@ def place_fixed_blocks(table:Table, activities: list[_Activity], blocks: dict[in
                 activity_id=activity.id,
                 day=day,
                 start=start,
-                length=length
+                length=length,
+                fixed=True
             )
             if not can_place(table, b):
                 raise ValueError(f'fixed block for activity {activity.id} overlaps another block')
@@ -451,7 +453,7 @@ class CostEvaluator:
 
             early_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.EARLY_SLOTS > slot)
             late_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.LATE_SLOTS < slot)
-            cost += (early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND)
+            cost += (early_oob*2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob*2 * PENALTY_WEIGHTS.LATE_BOUND)
 
             if b.start < activity.min_start_slot:
                 cost += (b.start-activity.min_start_slot)**2
@@ -460,14 +462,13 @@ class CostEvaluator:
         if len(block_list) > activity.frequency:
             cost += (len(block_list)-activity.frequency) * PENALTY_WEIGHTS.FRAGMENT
 
-        #scale w/ prio
-        return cost * activity.priority
+        return cost
 
     def _idle_penalty(self):
         # cost for not using time
         empty = sum(day.count(None) for day in self.table)
         idle_prev = self.idle
-        idle_current = empty * PENALTY_WEIGHTS.IDLE
+        idle_current = (empty * PENALTY_WEIGHTS.IDLE)/_Schedule.SLOTS_PER_DAY
         self.idle = idle_current
         return idle_current - idle_prev 
 
@@ -496,9 +497,7 @@ def shift_move(
             day_load: list[int],
             evaluator:CostEvaluator)->ChangeResult:
     # shift a block one day before or after, and shift it by k hours (random)
-    movable = [b for b in blocks.values()
-                if not any(b.day == d and b.start == s and b.length == l
-                for d, s, l in activities[b.activity_id].fixed_blocks)]
+    movable = [b for b in blocks.values() if not b.fixed]
     if not movable:
         return ChangeResult(LIMIT.HARD,undo=lambda: None)
 
@@ -510,10 +509,10 @@ def shift_move(
     affected = {activity.id}
 
     day_offset = random.choice([-1,0,1])
-    start_offset = random.choice([-2,-1,0,1,2])
+    start_offset = random.choice(range(-int(_Schedule.SLOTS_PER_DAY//12),int(_Schedule.SLOTS_PER_DAY//12)))
     
-    new_day = clamp(old_day+day_offset, 0,6)
-    new_start = clamp(old_start+start_offset, 0, 23)
+    new_day = clamp(old_day+day_offset, 0,_Schedule.SIZE-1)
+    new_start = clamp(old_start+start_offset, 0, _Schedule.SLOTS_PER_DAY-1)
 
     # if new_start < activity.min_start_slot:
     #     return ChangeResult(LIMIT.HARD, undo=lambda: None) # maybe make the penalty scale with prio? or use the soft hard hybrid
@@ -633,9 +632,7 @@ def resize_block(
             evaluator:CostEvaluator)->ChangeResult:
     # change the length of a block by 1 slot
 
-    movable = [b for b in blocks.values()
-                if not any(b.day == d and b.start == s and b.length == l
-                for d, s, l in activities[b.activity_id].fixed_blocks)]
+    movable = [b for b in blocks.values() if not b.fixed]
     if not movable:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
@@ -845,10 +842,12 @@ def random_reschedule(
             scheduler:Callable,
             max_priority_allowed:int=5)->ChangeResult:
     # completely delete an activity's blocks and re-insert using greedy (lowest priority)
-    low_prio_activities = [a for a in activities
-                        if a.priority <= max_priority_allowed]
+
+    low_prio_activities = [a for a in activities if a.priority <= max_priority_allowed and not a.fixed_blocks]
     if not low_prio_activities:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+
 
     activity = random.choice(low_prio_activities)
 
@@ -986,7 +985,31 @@ class Annealer:
         print(f'Undo Counter   : {undo_counter}')
         return best_table, best_blocks, best_cost
 
+def reset_ids(table: Table, atb:ATB, blocks:dict[int, _Block], start_from:int=0):
+    sorted_blocks: list[_Block] = sorted(blocks.values(), key=lambda b: (b.day, b.start))
 
+    old_to_new: dict[int, int] = {}
+    new_blocks: dict[int, _Block] = {}
+
+    for new_id, block in enumerate(sorted_blocks, start=start_from):
+        old_id = block.id
+        block.id = new_id
+        old_to_new[old_id] = new_id
+        new_blocks[new_id] = block
+
+    for day_idx, day in enumerate(table):
+        for slot_idx, slot in enumerate(day):
+            if slot is not None:
+                table[day_idx][slot_idx] = old_to_new[slot]
+
+
+    for activity_id, block_ids in atb.items():
+        atb[activity_id] = {old_to_new[block_id] for block_id in block_ids}
+
+    blocks.clear()
+    blocks.update(new_blocks)
+
+    return table, blocks
 
 if __name__ == "__main__":
     # ai -generated activities
@@ -1269,10 +1292,6 @@ if __name__ == "__main__":
 
     blocks, table, activity_to_blocks, day_load = greedy_initial(activities)
 
-
-
-
-
     
     annealer = Annealer(
         table=table,
@@ -1310,6 +1329,12 @@ if __name__ == "__main__":
     print('\n\nOptimised ======================================')
 
     best_table, best_blocks, best_cost = annealer.run()
+
+    new_atb:dict[int, set[int]] = {}
+    for id, block in best_blocks.items():
+        new_atb.setdefault(block.activity_id, set()).add(id)
+
+    best_table, best_blocks = reset_ids(best_table, activity_to_blocks, best_blocks)
 
     for day in range(_Schedule.SIZE):
         print(f'----- day {day}-------------------')
