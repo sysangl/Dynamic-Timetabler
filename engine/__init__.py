@@ -32,10 +32,10 @@ class PENALTY_WEIGHTS:
     OVERLOAD = 3.0
     PRIORITY = 3.0
     IDLE = 3.0
-    BALANCE = 20.0
+    BALANCE = 10.0
     FRAGMENT = 8.0
-    EARLY_BOUND = 40.0
-    LATE_BOUND = 60.0
+    EARLY_BOUND = 200.0
+    LATE_BOUND = 600.0
 
 
 # parameters
@@ -221,7 +221,7 @@ def place_block(table:Table, b: _Block):
     for slot in range(b.start, b.start + b.length):
         table[b.day][slot] = b.id
 
-def schedule_activity(activity:_Activity, table:Table, blocks:dict[int, _Block], activity_to_blocks:ATB, day_load:list[int]):
+def greedy_schedule(activity:_Activity, table:Table, blocks:dict[int, _Block], activity_to_blocks:ATB, day_load:list[int]):
     needed_sessions = max(activity.frequency, 1)
 
     total_needed = max(activity.min_weekly_slots, needed_sessions)
@@ -282,7 +282,7 @@ def schedule_activity(activity:_Activity, table:Table, blocks:dict[int, _Block],
             for reduced_length in range(block_length-1, 0,-1):
                 for day in candidate_days:
                     free_slots_start = find_free_slots(day, reduced_length, table, start_from=activity.min_start_slot+slot_variation)
-                    if free_slots_start:
+                    if free_slots_start is not None:
                         b = _Block(
                             activity_id=activity.id,
                             day=day,
@@ -301,6 +301,58 @@ def schedule_activity(activity:_Activity, table:Table, blocks:dict[int, _Block],
 
         if not placed:
             raise RuntimeError(f'Unable to place a block for activity {activity.id} with a length of {block_length}')
+
+
+def random_schedule(activity:_Activity, table:Table, blocks:dict[int, _Block], activity_to_blocks:ATB, day_load:list[int]):
+    needed_sessions = max(activity.frequency, 1)
+
+    total_needed = max(activity.min_weekly_slots, needed_sessions)
+
+    lengths = allocate_lengths(total_needed, needed_sessions, activity.max_block_slots)
+    days = range(_Schedule.SIZE)
+
+    while len(lengths) != 0:
+        block_length = lengths.pop()
+
+        placed = False
+        for day in days:
+            free_slots_start = find_free_slots(day, block_length, table, start_from=random.randint(0,23))
+            if free_slots_start is not None:
+                b = _Block(
+                    activity_id=activity.id,
+                    day=day,
+                    start=free_slots_start,
+                    length=block_length
+                    )
+                place_block(table, b)
+                blocks[b.id] = b
+                activity_to_blocks[activity.id].add(b.id)
+                day_load[day] += 1
+                placed = True
+
+        if not placed:
+            for reduced_length in range(block_length-1, 0,-1):
+                for day in days:
+                    free_slots_start = find_free_slots(day, reduced_length, table, start_from=random.randint(0,24))
+                    if free_slots_start is not None:
+                        b = _Block(
+                            activity_id=activity.id,
+                            day=day,
+                            start=free_slots_start,
+                            length=reduced_length
+                            )
+                        place_block(table, b)
+                        blocks[b.id] = b
+                        activity_to_blocks[activity.id].add(b.id)
+                        day_load[day] += 1
+                        placed = True
+                        break
+                if placed:
+                    break
+
+        if not placed:
+            raise RuntimeError(f'Unable to place a block for activity {activity.id} with a length of {block_length}')
+
 
 
 def place_fixed_blocks(table:Table, activities: list[_Activity], blocks: dict[int,_Block], activity_to_blocks:ATB, day_load:list[int]):
@@ -328,7 +380,7 @@ def greedy_initial(activities: list[_Activity], schedule_size:int=_Schedule.SIZE
     blocks: dict[int, _Block] = {}
     activity_to_blocks:ATB = {}
     activity_to_blocks = {a.id: set() for a in activities}
-    day_load:list[int] = [0]*slot_size
+    day_load:list[int] = [0]*slots_per_day
 
     place_fixed_blocks(table, activities, blocks, activity_to_blocks, day_load)
 
@@ -337,7 +389,7 @@ def greedy_initial(activities: list[_Activity], schedule_size:int=_Schedule.SIZE
     for a in sorted_activities:
         if len(a.fixed_blocks) >= a.frequency:
             continue
-        schedule_activity(a, table, blocks, activity_to_blocks, day_load)
+        greedy_schedule(a, table, blocks, activity_to_blocks, day_load)
 
     return blocks, table, activity_to_blocks, day_load
 
@@ -399,7 +451,7 @@ class CostEvaluator:
 
             early_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.EARLY_SLOTS > slot)
             late_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.LATE_SLOTS < slot)
-            cost += early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND
+            cost += (early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND)
 
             if b.start < activity.min_start_slot:
                 cost += (b.start-activity.min_start_slot)**2
@@ -514,6 +566,9 @@ def swap_blocks(
 
     a1 = activities[b1.activity_id]
     a2 = activities[b2.activity_id]
+
+    if a1 == a2:
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     if any((b1.day, b1.start, b1.length)==fixed for fixed in a1.fixed_blocks):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
@@ -801,7 +856,7 @@ def random_reschedule(
     removed: list[tuple[int, _Block]] = []
     for block_id in list(atb[activity.id]):
         b = blocks[block_id]
-        removed.append((block_id, block))
+        removed.append((block_id, b))
         clear_block(table, b)
         day_load[b.day] -= 1
         del blocks[block_id]
@@ -812,7 +867,14 @@ def random_reschedule(
     try:
         scheduler(activity, table, blocks, atb, day_load)
     except RuntimeError:
-        delta_cost = LIMIT.HARD
+
+        for block_id, block in removed:
+            place_block(table, block)
+            blocks[block_id] = block
+            atb[activity.id].add(block_id)
+            day_load[block.day] += 1
+        evaluator.activity_cost[activity.id] = old_cost
+        return ChangeResult(LIMIT.HARD, undo=lambda:None)
 
     new_cost = evaluator.calculate_cost(activity.id)
     evaluator.activity_cost[activity.id] = new_cost
@@ -835,7 +897,7 @@ def random_reschedule(
         evaluator.activity_cost[activity.id] = old_cost
         evaluator.total_cost -= delta_cost
 
-    return ChangeResult(delta_cost, undo=undo,mark_undo=delta_cost==LIMIT.HARD)
+    return ChangeResult(delta_cost, undo=undo)
 
 class Annealer:
 
@@ -865,20 +927,20 @@ class Annealer:
                                     self.table
                                     )
 
-        self.T = 1e9
-        self.T_MIN = 1e-6
-        self.cooling = 0.85
-        self.cycles = 100000
+        self.T = 10000
+        self.T_MIN = 1e-4
+        self.cooling = 0.95
+        self.cycles = 1000
 
         self.change_factories = [
             lambda: shift_move(self.table, activities, self.atb,
                             self.blocks, self.day_load, self.evaluator),
             lambda: resize_block(self.table, activities, self.atb,
                                 self.blocks, self.day_load, self.evaluator),
+            lambda: merge_blocks(self.table, activities, self.atb,
+                            self.blocks, self.day_load, self.evaluator),
             lambda: swap_blocks(self.table, activities, self.atb,
                             self.blocks, self.day_load, self.evaluator),
-        ]
-        _=[
             lambda: random_reschedule(self.table, activities, self.atb,
                                         self.blocks, self.day_load, self.evaluator,
                                         self.scheduler, max_priority_allowed=5)
@@ -1218,7 +1280,7 @@ if __name__ == "__main__":
         blocks=blocks,
         atb=activity_to_blocks,
         day_load=day_load,
-        scheduler=schedule_activity
+        scheduler=greedy_schedule
     )
 
     initial_cost = annealer.evaluator.total_cost
