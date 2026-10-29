@@ -1,5 +1,3 @@
-import random
-
 from classes import (
     ATB,
     Table,

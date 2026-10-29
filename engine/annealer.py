@@ -94,6 +94,15 @@ class CostEvaluator:
         self.idle = idle_current
         return idle_current - idle_prev 
 
+    def _balance_penalty(self):
+        # penalise for heaping everything into one day
+        blocks_per_day = collections.Counter(b.day for b in self.blocks.values())
+        total = sum(blocks_per_day)
+        delta_cost = 0
+        for count in blocks_per_day:
+            delta_cost += (count-(total/_Schedule.SIZE)) ** 2 * PENALTY_WEIGHTS.BALANCE
+
+
     def update_activities(self, activity_ids):
         delta = 0
         for a_id in activity_ids:
