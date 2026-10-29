@@ -1334,7 +1334,7 @@ if __name__ == "__main__":
     for id, block in best_blocks.items():
         new_atb.setdefault(block.activity_id, set()).add(id)
 
-    best_table, best_blocks = reset_ids(best_table, activity_to_blocks, best_blocks)
+    best_table, best_blocks = reset_ids(best_table, new_atb, best_blocks)
 
     for day in range(_Schedule.SIZE):
         print(f'----- day {day}-------------------')
