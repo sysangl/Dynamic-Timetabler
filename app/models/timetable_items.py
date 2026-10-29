@@ -151,80 +151,23 @@ class Activity(db.Model):
 
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
     description : Mapped[str] = mapped_column(nullable=False, default="")
-    # set the priority of this acitivity
-    # lower priority means this activity's blocks can be moved around
     priority : Mapped[int] = mapped_column(nullable = False,default=0)
-
-    # 0 - no repeat/oneshot
-    # 1 - repeat every X
-    # 2 - use frequency
     repeat_mode : Mapped[int] = mapped_column(nullable = False,default=0)
-
-    # repeat_interval -> [0,0,0,0,0]
-    # repeat every [hour, day, week, month, year]
-    # postgreSQL - Production
-    #repeat_interval : Mapped[list[int]]= mapped_column(ARRAY(Integer), default=lambda: [0,0,0,0,0]) 
-    # sqlite - Dev
     repeat_interval : Mapped[list[int]]= mapped_column(JSON, default=lambda: [0,0,0,0,0]) 
-    
-
-    # e.g. 2 times a week, 5 times a year
-    # stored as [X, Y, Z]
-    # means X times every Y Z's
-    # for example [2, 1, 2] means, 2 times every 1 week.
-    # Z values :
-    # 0 - hours
-    # 1 - days
-    # 2 - weeks
-    # 3 - months
-    # 4 - years
-    #
-    # note: i will see how this system goes, if it is too messy, then i will just use
-    #  an array [X,Y], Y will be the number of hours
-    # this simpler approach may cause problems with detecting boundaries of, for example, each week
-    # PostgreSQL - Production
-    #frequency : Mapped[list[int]] = mapped_column(ARRAY(Integer), default=lambda: [0,0,0])
-    # sqlite - Dev
     frequency : Mapped[list[int]] = mapped_column(JSON, default=lambda: [0,0,0])
-        
-
-    
-    # try to evenly space frequencies, or just have multiple instances randomly
-    # TRUE   |   FALSE
-    # -      |   -
-    # X      |   X
-    # -      |   X
-    # -      |   -
-    # X      |   -
-    # -      |   X
-    # -      |   -
-    # X      |   -
-    # -      |   -
     even_frequency_spacing : Mapped[bool] = mapped_column(default=True)
 
-    # the following are in minutes
-    # minimum length of one block of this activity
     min_length : Mapped[int | None] = mapped_column()
-    # maximum length of one block of this activity
     max_length : Mapped[int | None] = mapped_column()
-    # minimum amount of time spenton the activity
     min_time : Mapped[int | None] = mapped_column()
-    # maximum time spent on activity
-    # e.g. max game time of 4 hours total every day
     max_time : Mapped[int | None] = mapped_column()
 
     # is the start/end time fixed?
     fixed_start : Mapped[bool] = mapped_column()
     fixed_end : Mapped[bool] = mapped_column()
 
-    # reset the time counter every [hour, day, week, month, year] 
-    # PostgreSQL - for production
-    #time_limit_reset : Mapped[list[int]] = mapped_column(ARRAY(Integer), default=lambda: [0,0,0,0,0])
-    # sqlite - for dev
     time_limit_reset : Mapped[list[int]] = mapped_column(JSON, default=lambda: [0,0,0,0,0])
 
-
-    # time spent doing this activity in minutes
     time_spent : Mapped[int] = mapped_column(default=0)
 
     def __init__(self,
