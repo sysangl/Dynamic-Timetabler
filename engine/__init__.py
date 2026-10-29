@@ -2,8 +2,10 @@ import collections
 import copy
 import math
 import random
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 # from  import Block
 
@@ -15,6 +17,7 @@ type Table = list[list[int | None]]
 class ChangeResult:
     delta: float
     undo: Callable
+    mark_undo: bool = False
 
 class LIMIT:
     HARD = math.inf
@@ -23,26 +26,41 @@ class LIMIT:
     NORMAL = 1.0
 
 class PENALTY_WEIGHTS:
-    MIN_TIME = 1.0
-    FREQ = 2.0
-    EVEN_SPACING = 2.0
-    OVERLOAD = 3.0
-    PRIORITY = 3.0
-    IDLE = 4.0
-    BALANCE = 3.0
-    FRAGMENT = 4.0
+    MIN_TIME = 10.0
+    FREQ = 20.0
+    EVEN_SPACING = 20.0
+    OVERLOAD = 30.0
+    PRIORITY = 30.0
+    IDLE = 40.0
+    BALANCE = 30.0
+    FRAGMENT = 40.0
+    EARLY_BOUND = 20.0
+    LATE_BOUND = 30.0
 
 
-MAX_PRIORITY = 10
 # parameters
 # DAYS = 7
-SCHEDULE_SIZE = 7
-MINS_IN_DAY = 24 * 60
-SLOT_SIZE = 10 #mins
-SLOTS_PER_DAY = MINS_IN_DAY//SLOT_SIZE
+
 
 MAX_PRIORITY = 10
 #penalty modifs
+
+class _Schedule:
+    def __init__(self) -> None:
+        self.table: Table = []
+
+    SIZE = 7
+    MINS_IN_DAY = 24 * 60
+    SLOT_SIZE = 10 #mins
+    SLOTS_PER_DAY = MINS_IN_DAY//SLOT_SIZE
+    EARLY = 6*60
+    EARLY_SLOTS = EARLY//SLOT_SIZE
+
+    LATE=22*60
+    LATE_SLOTS = LATE//SLOT_SIZE
+
+    def __call__(self, *args: Any, **kwds: Any) -> Table:
+        return self.table
 
 class _Activity:
     """
@@ -85,23 +103,23 @@ class _Activity:
     
     @property
     def min_weekly_slots(self)->int:
-        return math.ceil(self.min_weekly_minutes / SLOT_SIZE)
+        return math.ceil(self.min_weekly_minutes / _Schedule.SLOT_SIZE)
     
     @property
     def max_block_slots(self)->int:
-        return max(1,self.max_block_minutes//SLOT_SIZE)
+        return max(1,self.max_block_minutes//_Schedule.SLOT_SIZE)
 
     @property
     def min_start_slot(self)->int:
-        return math.floor(self.min_start_minutes / SLOT_SIZE)
+        return math.floor(self.min_start_minutes / _Schedule.SLOT_SIZE)
 
     @property
     def fixed_blocks(self)->list[tuple[int, int, int]]:
         # convert fixed block minuts to slots
         output = []
         for day, start_mins, length_mins in self.fixed:
-            start_slot = start_mins // SLOT_SIZE
-            length = max(1, length_mins//SLOT_SIZE)
+            start_slot = start_mins // _Schedule.SLOT_SIZE
+            length = max(1, length_mins// _Schedule.SLOT_SIZE)
             output.append((day,start_slot, length))
         return output
 
@@ -189,7 +207,7 @@ def allocate_lengths(needed:int, sessions:int, max_len:int)->list[int]:
 
 def can_place(table:Table, b:_Block):
     for slot in range(b.start, b.start + b.length):
-        if slot >= SLOTS_PER_DAY or not (0<=b.day<SCHEDULE_SIZE):
+        if slot >= _Schedule.SLOTS_PER_DAY or not (0<=b.day<_Schedule.SIZE):
             return False
         if table[b.day][slot] not in {None, b.id}:
             return False
@@ -209,7 +227,7 @@ def schedule_activity(activity:_Activity, table:Table, blocks:dict[int, _Block],
 
 
     if activity.even_spacing:
-        target_days = [min(max(0, round(i * SCHEDULE_SIZE / needed_sessions)), SCHEDULE_SIZE-1) for i in range(needed_sessions)]
+        target_days = [min(max(0, round(i * _Schedule.SIZE / needed_sessions)), _Schedule.SIZE-1) for i in range(needed_sessions)]
     else:
         target_days = [None] * needed_sessions
 
@@ -218,27 +236,29 @@ def schedule_activity(activity:_Activity, table:Table, blocks:dict[int, _Block],
         if activity.even_spacing:
             ideal = target_days[idx]
             offsets = []
-            for day in range(SCHEDULE_SIZE):
+            for day in range(_Schedule.SIZE):
                 offsets.append(day)
                 offsets.append(-day)
             for offset in offsets:
                 day = ideal + offset
-                if 0<=day<SCHEDULE_SIZE and day not in used_days:
+                if 0<=day<_Schedule.SIZE and day not in used_days:
                     candidate_days.append(day)
             if not candidate_days:
-                candidate_days = list(range(SCHEDULE_SIZE))
+                candidate_days = list(range(_Schedule.SIZE))
 
         else:
             activities_per_day = [
-                (day, sum(1 for id in activity_to_blocks[activity.id] if blocks[id].day == day), day_load[day]) for day in range(SCHEDULE_SIZE)
+                (day, sum(1 for id in activity_to_blocks[activity.id] if blocks[id].day == day), day_load[day]) for day in range(_Schedule.SIZE)
             ]
             activities_per_day.sort(key=lambda x: (x[1],x[2]))
             candidate_days = [day for day,_,_ in activities_per_day]
 
         placed = False
 
+        slot_variation = random.randint(-120//_Schedule.SLOT_SIZE, 120//_Schedule.SLOT_SIZE,)
+
         for day in candidate_days:
-            free_slots_start = find_free_slots(day, block_length, table, start_from=activity.min_start_slot)
+            free_slots_start = find_free_slots(day, block_length, table, start_from=clamp(activity.min_start_slot+slot_variation, 0, 24))
             if free_slots_start is not None:
                 b = _Block(
                     activity_id=activity.id,
@@ -257,7 +277,7 @@ def schedule_activity(activity:_Activity, table:Table, blocks:dict[int, _Block],
         if not placed:
             for reduced_length in range(block_length-1, 0,-1):
                 for day in candidate_days:
-                    free_slots_start = find_free_slots(day, reduced_length, table, start_from=activity.min_start_slot)
+                    free_slots_start = find_free_slots(day, reduced_length, table, start_from=activity.min_start_slot+slot_variation)
                     if free_slots_start:
                         b = _Block(
                             activity_id=activity.id,
@@ -299,12 +319,12 @@ def place_fixed_blocks(table:Table, activities: list[_Activity], blocks: dict[in
             activity_to_blocks[activity.id].add(b.id)
             day_load[day] += 1
 
-def greedy_initial(activities: list[_Activity], schedule_size:int=SCHEDULE_SIZE, slots_per_day:int=SLOTS_PER_DAY, slot_size:int=SLOT_SIZE):
-    table: Table = [[None for _ in range(slots_per_day) ] for _ in range(SCHEDULE_SIZE)]
+def greedy_initial(activities: list[_Activity], schedule_size:int=_Schedule.SIZE, slots_per_day:int=_Schedule.SLOTS_PER_DAY, slot_size:int=_Schedule.SLOT_SIZE):
+    table: Table = [[None for _ in range(slots_per_day) ] for _ in range(_Schedule.SIZE)]
     blocks: dict[int, _Block] = {}
     activity_to_blocks:ATB = {}
     activity_to_blocks = {a.id: set() for a in activities}
-    day_load:list[int] = [0]*SCHEDULE_SIZE
+    day_load:list[int] = [0]*slot_size
 
     place_fixed_blocks(table, activities, blocks, activity_to_blocks, day_load)
 
@@ -327,7 +347,8 @@ class CostEvaluator:
                 activities: dict[int, _Activity],
                 blocks: dict[int, _Block],
                 atb: ATB,
-                day_load: list[int]
+                day_load: list[int],
+                table:Table,
                 ) -> None:
 
         self.activities = activities
@@ -336,6 +357,8 @@ class CostEvaluator:
         self.day_load = day_load
         self.activity_cost = {a_id: self.calculate_cost(a_id) for a_id in self.activities}
         self.total_cost = sum(self.activity_cost.values())
+        self.idle = 0
+        self.table = table
 
     def calculate_cost(self, a_id:int):
         activity = self.activities[a_id]
@@ -353,28 +376,44 @@ class CostEvaluator:
         #cost for even spacing
         if activity.even_spacing and len(block_list) > 1:
             days = sorted(b.day for b in block_list)
-            ideal = SCHEDULE_SIZE / activity.frequency
+            ideal = _Schedule.SIZE / activity.frequency
             # calcultaing standard error, spesh coming in clutch
             standard_err = sum((days[day+1]-days[day]-ideal) for day in range(len(days)-1))
             cost += standard_err**2 * PENALTY_WEIGHTS.EVEN_SPACING
 
         #cost for over load
         blocks_per_day = collections.Counter(b.day for b in block_list)
-        target = math.ceil(activity.frequency/SCHEDULE_SIZE)
+        target = math.ceil(activity.frequency/_Schedule.SIZE)
         for count in blocks_per_day.values():
             if count > target:
                 cost += (count-target)**2 * PENALTY_WEIGHTS.OVERLOAD
 
         #cost for block size
-        for block in block_list:
-            if block.length > activity.max_block_slots:
-                return LIMIT.HARD
+        for b in block_list:
+            if b.length > activity.max_block_slots:
+                cost+= LIMIT.HARD_SOFT * 2
 
+            early_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.EARLY_SLOTS > slot)
+            late_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.LATE_SLOTS < slot)
+            cost += early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND
+
+            if b.start < activity.min_start_slot:
+                cost += (b.start-activity.min_start_slot)**2
+
+        # fragmentation (minimise # of blocks)
         if len(block_list) > activity.frequency:
             cost += (len(block_list)-activity.frequency) * PENALTY_WEIGHTS.FRAGMENT
 
         #scale w/ prio
         return cost * activity.priority * 0.5
+
+    def _idle_penalty(self):
+        # cost for not using time
+        empty = sum(day.count(None) for day in self.table)
+        idle_prev = self.idle
+        idle_current = empty * PENALTY_WEIGHTS.IDLE
+        self.idle = idle_current
+        return idle_current - idle_prev 
 
     def update_activities(self, activity_ids):
         delta = 0
@@ -385,9 +424,7 @@ class CostEvaluator:
             delta += (new - old)
 
         ## whole table penalties
-        # cost for not using time
-        empty = sum(day.count(None) for day in table)
-        delta += empty * PENALTY_WEIGHTS.IDLE
+        delta += self._idle_penalty()
 
         self.total_cost += delta
         return delta
@@ -422,8 +459,8 @@ def shift_move(
     new_day = clamp(old_day+day_offset, 0,6)
     new_start = old_start+start_offset
 
-    if new_start < activity.min_start_slot:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None) # maybe make the penalty scale with prio? or use the soft hard hybrid
+    # if new_start < activity.min_start_slot:
+    #     return ChangeResult(LIMIT.HARD, undo=lambda: None) # maybe make the penalty scale with prio? or use the soft hard hybrid
 
     test_block = _Block(
         activity_id=activity.id,
@@ -564,7 +601,7 @@ def resize_block(
         return ChangeResult(LIMIT.SOFT, undo=lambda: None)
 
     next_slot = block.start + block.length
-    if next_slot >= SLOTS_PER_DAY:
+    if next_slot >= _Schedule.SLOTS_PER_DAY:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
     if table[block.day][next_slot] is not None:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
@@ -680,8 +717,11 @@ def random_reschedule(
     atb[activity.id].clear()
 
     old_cost = evaluator.activity_cost[activity.id]
-    
-    scheduler(activity, table, blocks, atb, day_load)
+
+    try:
+        scheduler(activity, table, blocks, atb, day_load)
+    except RuntimeError:
+        delta_cost = LIMIT.HARD
 
     new_cost = evaluator.calculate_cost(activity.id)
     evaluator.activity_cost[activity.id] = new_cost
@@ -704,7 +744,7 @@ def random_reschedule(
         evaluator.activity_cost[activity.id] = old_cost
         evaluator.total_cost -= delta_cost
 
-    return ChangeResult(delta_cost, undo=undo)
+    return ChangeResult(delta_cost, undo=undo,mark_undo=delta_cost==LIMIT.HARD)
 
 class Annealer:
 
@@ -730,11 +770,12 @@ class Annealer:
         self.evaluator = CostEvaluator(self.activities,
                                     self.blocks,
                                     self.atb,
-                                    self.day_load
+                                    self.day_load,
+                                    self.table
                                     )
 
-        self.T = 1e6
-        self.T_MIN = 1e-4
+        self.T = 1e9
+        self.T_MIN = 1e-1
         self.cooling = 0.95
         self.cycles = 1000
 
@@ -746,15 +787,17 @@ class Annealer:
             lambda: swap_blocks(self.table, activities, self.atb,
                             self.blocks, self.day_load, self.evaluator),
         ]
-        _ =[
+        _=[
             lambda: random_reschedule(self.table, activities, self.atb,
                                         self.blocks, self.day_load, self.evaluator,
                                         self.scheduler, max_priority_allowed=5)
         ]
 
     def run(self):
-        current_cost = self.evaluator.total_cost
-        best_cost = current_cost
+        cost_updates = 0
+        accept_counter = 0
+        undo_counter = 0
+        best_cost = self.evaluator.total_cost
         best_table = copy.deepcopy(self.table)
         best_blocks = copy.deepcopy(self.blocks)
 
@@ -763,20 +806,31 @@ class Annealer:
         while T > self.T_MIN:
             for _ in range(self.cycles):
                 change = random.choice(self.change_factories)()
+                if change.mark_undo:
+                    change.undo()
+                    undo_counter += 1
+                    continue
+    
                 delta_cost = change.delta
 
+
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost/T)):
-                    current_cost += delta_cost
-                    #print(f'Accepted d={round(delta_cost,3)!s:6s}  current cost={round(current_cost,3)!s:6s}')
-                    if current_cost < best_cost:
-                        best_cost = current_cost
+                    accept_counter += 1
+                    if self.evaluator.total_cost < best_cost:
+                        best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
                         best_blocks = copy.deepcopy(self.blocks)
-                        #print(f'Updating cost: {round(best_cost,3)!s:6s}')
+                        print(f'Updating cost: {best_cost}')
+                        cost_updates += 1
                 else:
+                    undo_counter += 1
                     change.undo()
             T *= self.cooling
 
+        print('\n Post Anneal Run Stats')
+        print(f'Cost Updates   : {cost_updates}')
+        print(f'Accept Counter : {accept_counter}')
+        print(f'Undo Counter   : {undo_counter}')
         return best_table, best_blocks, best_cost
 
 
@@ -809,11 +863,11 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     _Activity(
         name='Study',
-        frequency=3,
+        frequency=7,
         even_spacing=True,
-        min_weekly_minutes=240,         # 4 h total
+        min_weekly_minutes=720,         # 4 h total
         max_block_minutes=120,           # at most 2 h per session
-        min_start_minutes=20*60,        # cannot start before 20:00
+        min_start_minutes=17*60,        # cannot start before 20:00
         fixed=[],
         priority=4,
     ),
@@ -937,7 +991,7 @@ if __name__ == "__main__":
         name='Spanish',
         frequency=2,
         even_spacing=True,
-        min_weekly_minutes=120,         # 2 h total
+        min_weekly_minutes=240,         # 2 h total
         max_block_minutes=60,           # ≤ 1 h per session
         min_start_minutes=19*60,        # cannot start before 19:00
         fixed=[],
@@ -964,9 +1018,9 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     _Activity(
         name='Meditation',
-        frequency=3,
-        even_spacing=False,
-        min_weekly_minutes=30,           # 30 min total
+        frequency=7,
+        even_spacing=True,
+        min_weekly_minutes=80,           # 30 min total
         max_block_minutes=30,            # each block ≤ 30 min
         min_start_minutes=6*60,          # cannot start before 06:00
         fixed=[],
@@ -978,9 +1032,9 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     _Activity(
         name='Hiking',
-        frequency=1,
+        frequency=2,
         even_spacing=False,
-        min_weekly_minutes=240,          # 4 h total
+        min_weekly_minutes=360,          # 4 h total
         max_block_minutes=240,           # can be a single 4‑hour block
         min_start_minutes=8*60,          # cannot start before 08:00
         fixed=[(5, 8*60, 240)],           # Saturday 08:00‑12:00
@@ -992,7 +1046,7 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     _Activity(
         name='MealPrep',
-        frequency=3,
+        frequency=6,
         even_spacing=False,
         min_weekly_minutes=180,          # 3 h total
         max_block_minutes=60,            # each meal prep ≤ 1 h
@@ -1006,9 +1060,9 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     _Activity(
         name='Homework',
-        frequency=2,
+        frequency=5,
         even_spacing=False,
-        min_weekly_minutes=120,          # 2 h total
+        min_weekly_minutes=260,          # 2 h total
         max_block_minutes=90,            # ≤ 1.5 h per session
         min_start_minutes=19*60,        # cannot start before 19:00
         fixed=[],
@@ -1056,21 +1110,16 @@ if __name__ == "__main__":
         fixed=[],
         priority=1,                      # lowest priority – the algorithm will move it freely
     ),
-]
+    ]
 
+    schedule = _Schedule()
 
     blocks, table, activity_to_blocks, day_load = greedy_initial(activities)
 
 
 
-    evaluator = CostEvaluator(
-        activities={a.id:a for a in activities},
-        blocks=blocks,
-        atb=activity_to_blocks,
-        day_load=day_load
-        )
 
-    initial_cost = evaluator.total_cost
+
     
     annealer = Annealer(
         table=table,
@@ -1081,19 +1130,20 @@ if __name__ == "__main__":
         scheduler=schedule_activity
     )
 
-    best_table, best_blocks, best_cost = annealer.run()
+    initial_cost = annealer.evaluator.total_cost
+    print(initial_cost)
 
     print('\n\nRESULTS =======================================')
-
-    for day in range(SCHEDULE_SIZE):
+    print('\n\nINITIAL =======================================')
+    for day in range(_Schedule.SIZE):
         print(f'----- day {day}-------------------')
         day_blocks = [b for b in blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
         for block in day_blocks:
             activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * SLOT_SIZE
-            end_mins = (block.start + block.length) * SLOT_SIZE
+            start_mins = block.start * _Schedule.SLOT_SIZE
+            end_mins = (block.start + block.length) * _Schedule.SLOT_SIZE
             start_hours = start_mins // 60
             start_mins = start_mins % 60
             end_hours = end_mins // 60
@@ -1104,18 +1154,19 @@ if __name__ == "__main__":
                 f"(len={block.length} slots)"
             )
 
-    print('\n\nOptimised =======================================')
+    print('\n\nOptimised ======================================')
 
+    best_table, best_blocks, best_cost = annealer.run()
 
-    for day in range(SCHEDULE_SIZE):
+    for day in range(_Schedule.SIZE):
         print(f'----- day {day}-------------------')
         day_blocks = [b for b in best_blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
         for block in day_blocks:
             activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * SLOT_SIZE
-            end_mins = (block.start + block.length) * SLOT_SIZE
+            start_mins = block.start * _Schedule.SLOT_SIZE
+            end_mins = (block.start + block.length) * _Schedule.SLOT_SIZE
             start_hours = start_mins // 60
             start_mins = start_mins % 60
             end_hours = end_mins // 60
@@ -1127,5 +1178,5 @@ if __name__ == "__main__":
             )
 
     print('INFO ====================================')
-    print(f'Init Cost:  {initial_cost:.2f}')
-    print(f'Final Cost: {best_cost:.2f}')
+    print(f'Init Cost:  {initial_cost}')
+    print(f'Final Cost: {best_cost}')
