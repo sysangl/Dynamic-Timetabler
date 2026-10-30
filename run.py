@@ -45,6 +45,6 @@ def run_server() -> None:
     atexit.register(server_stop)
 
 if __name__ == "__main__":
-    #run_server()
-    from app.engine import test
-    test()
+    run_server()
+    # from app.engine import test
+    # test()

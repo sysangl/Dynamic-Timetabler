@@ -73,7 +73,9 @@ filterForm.addEventListener('reset', async (e) => {
 function toggleForms(editMode=false) {
     document.getElementById('backdrop').classList.toggle('hidden')
     document.getElementById('item-forms').classList.toggle('hidden')
+    console.log(`${currentItemClass}-form-container`)
     for (const container of document.getElementById('item-forms').children)  {
+        console.log(container.id)
         if (container.id != `${currentItemClass}-form-container`){
             container.classList.add('hidden')
         } else {

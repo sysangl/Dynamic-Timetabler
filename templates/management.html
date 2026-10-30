@@ -13,6 +13,7 @@
         <select id="item-select" class="field-input" >
             <option onclick="changeTable('all')" value="all" selected>All</option>
             <option onclick="changeTable('blocks')" value="blocks">Blocks</option>
+            <option onclick="changeTable('activities')" value="activities">Activities</option>
             <option onclick="changeTable('tasks')" value="tasks" disabled>Tasks</option>
             <option onclick="changeTable('routines')" value="routines" disabled>Routines</option>
         </select>
@@ -115,6 +116,62 @@
         </div>
     </form>
 </div>
+
+
+
+<div id="activities-form-container" class="form-container">
+    <form id="activities-form" class="item-form form-body" method="post" action="{{ url_for('timetable.create_item', item='activity') }}">
+        <fieldset class="card-section">
+            <legend class="section-title">General information</legend>
+
+            <div class="field-group">
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" maxlength="30" required class="field-input" placeholder="Short title">
+            </div>
+
+            <div class="field-group">
+                <label for="description">Description</label>
+                <input id="description" name="description" type="text" maxlength="300" class="field-input" placeholder="Optional longer description">
+            </div>
+        </fieldset>
+
+        <fieldset class="card-section">
+            <legend class="section-title">Parameters</legend>
+
+            <div class="field-group">
+                <label for="priority">Priority</label>
+                <input id="priority" name="priority" type="number" required class="field-input" value="0">
+            </div>
+
+            <div class="field-group">
+                <label for="frequency">Frequency</label>
+                <input id="frequency" name="frequency" type="number" required class="field-input" value="1">
+            </div>
+
+            <div class="field-group">
+                <label for="even_frequency_spacing">Even spacing</label>
+                <input id="even_frequency_spacing" name="even_frequency_spacing" type="checkbox" class="field-input">
+            </div>
+
+            <div class="field-group">
+                <label for="max_length">Max length</label>
+                <input id="max_length" name="max_length" type="number" class="field-input">
+            </div>
+
+            <div class="field-group">
+                <label for="min_time">Min time</label>
+                <input id="min_time" name="min_time" type="number" class="field-input">
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button id="form-cancel-button" class="cancel-button form-btn" type="reset">Clear</button>
+            <button id="form-submit-button" class="submit-button form-btn" type="submit">Create</button>
+        </div>
+    </form>
+
+</div>
+
 
 </div>
 
