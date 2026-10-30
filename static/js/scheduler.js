@@ -274,7 +274,7 @@ function sortTable(column, item='block') {
 }
 
 async function generateTimetable() {
-    var url = '/api/engine/generate/0'
+    var url = '/api/engine/generate/default'
     const response = await fetch(url, {
         method : 'POST'
     });

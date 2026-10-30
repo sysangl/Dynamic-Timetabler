@@ -27,6 +27,8 @@ def generate_activity_group(group):
         Activity.group_name == group
     ).all()
 
+    log.info([a.serialise() for a in activities])
+
     blocks = initial_table(activities, current_user)
     
 
@@ -37,11 +39,12 @@ def generate_activity_group(group):
 
         log.info(f'Successfully added {len(blocks)} blocks from a generated timetable')
         
-        result = []
+        blocks = Block.query.filter(
+            Block.owner == current_user,
+            Block.group_name  == group
+        ).all()
 
-        for a in activities:
-            for b in a.blocks:
-                result.append(b.serialise())
+        result = [b.serialise() for b in blocks]
         
         log.info(result)
 

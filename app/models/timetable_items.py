@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 import pytz
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger
@@ -39,6 +39,8 @@ class Task(db.Model):
     A ToDo with more information and can be set for a certain date and time
     """
     id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_name : Mapped[str] = mapped_column(nullable=False, default='default')
+
     title : Mapped[str] = mapped_column(nullable=False)
     completed : Mapped[bool] = mapped_column(nullable=False, default=False)
     description : Mapped[str] = mapped_column(default="")
@@ -70,6 +72,8 @@ class Block(db.Model):
     Occupies a span of time.
     """
     id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_name : Mapped[str] = mapped_column(nullable=False, default='default')
+
     title : Mapped[str] = mapped_column(nullable=False)
     completed : Mapped[bool] = mapped_column(nullable=False, default=False)
     description : Mapped[str] = mapped_column(default="")
@@ -94,11 +98,12 @@ class Block(db.Model):
     end_time : Mapped[str] = mapped_column(default='')
 
     activity_id : Mapped[uuid.UUID] = mapped_column(
-        Integer,
+        Uuid,
         ForeignKey("activities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+
 
     activity : Mapped[Activity] = relationship(
         "Activity",
@@ -159,8 +164,8 @@ class Activity(db.Model):
     Base Activity that drives auto timetable generation
     """
     __tablename__ = "activities"
-    id : Mapped[uuid.UUID] = mapped_column(primary_key = True, default=uuid.uuid4)
-    group_name : Mapped[str] = mapped_column(nullable=False, default='defaults')
+    id : Mapped[uuid.UUID] = mapped_column(Uuid, primary_key = True, default=uuid.uuid4)
+    group_name : Mapped[str] = mapped_column(nullable=False, default='default')
 
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
     description : Mapped[str] = mapped_column(nullable=False, default="")
@@ -263,7 +268,7 @@ class Activity(db.Model):
 
 class Routine(db.Model):
     __tablename__ = "routines"
-    id : Mapped[uuid.UUID] = mapped_column(primary_key = True, default=uuid.uuid4)
+    id : Mapped[uuid.UUID] = mapped_column(Uuid, primary_key = True, default=uuid.uuid4)
     name : Mapped[str] = mapped_column(nullable=False, default="New Routine")
 
     start_date : Mapped[datetime] = mapped_column(nullable=False)
