@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from app.models import Block, User, Activity
+from app.models import Activity, Block, User
 
 type ATB = dict[int, set[int]]
 type Table = list[list[int | None]]
@@ -186,5 +186,18 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
             db_blocks.append(dbb)
     return db_blocks
 
-def bd_activities_to_engine_activities(actvities: list[Activity])->list[_Activity]:
-    return []
+def db_activities_to_engine_activities(activities: list[Activity])->list[_Activity]:
+    engine_activities = []
+    for a in activities:
+        ea = _Activity(
+            name=a.name,
+            frequency=a.frequency,
+            even_spacing=a.even_frequency_spacing,
+            min_weekly_minutes=a.min_time,
+            max_block_minutes=a.max_length,
+            fixed=a.fixed,
+            preferred_days=a.preferred_days,
+            priority=a.priority
+        )
+        engine_activities.append(ea)
+    return engine_activities

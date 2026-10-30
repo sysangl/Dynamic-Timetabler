@@ -152,19 +152,18 @@ class Activity(db.Model):
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
     description : Mapped[str] = mapped_column(nullable=False, default="")
     priority : Mapped[int] = mapped_column(nullable = False,default=0)
-    repeat_mode : Mapped[int] = mapped_column(nullable = False,default=0)
-    repeat_interval : Mapped[list[int]]= mapped_column(JSON, default=lambda: [0,0,0,0,0]) 
-    frequency : Mapped[list[int]] = mapped_column(JSON, default=lambda: [0,0,0])
+    frequency : Mapped[int] = mapped_column(default=0)
     even_frequency_spacing : Mapped[bool] = mapped_column(default=True)
 
-    min_length : Mapped[int | None] = mapped_column()
-    max_length : Mapped[int | None] = mapped_column()
-    min_time : Mapped[int | None] = mapped_column()
-    max_time : Mapped[int | None] = mapped_column()
+    # min_length : Mapped[int | None] = mapped_column()
+    max_length : Mapped[int] = mapped_column(default=0)
+    min_time : Mapped[int] = mapped_column(default=0)
+    # max_time : Mapped[int | None] = mapped_column()
 
     # is the start/end time fixed?
-    fixed_start : Mapped[bool] = mapped_column()
-    fixed_end : Mapped[bool] = mapped_column()
+    # fixed_start : Mapped[bool] = mapped_column()
+    # fixed_end : Mapped[bool] = mapped_column()
+    fixed : Mapped[list[tuple[int, int, int]]] = mapped_column(JSON, default=list())  # noqa: C408
 
     time_limit_reset : Mapped[list[int]] = mapped_column(JSON, default=lambda: [0,0,0,0,0])
 
@@ -174,43 +173,39 @@ class Activity(db.Model):
                 name:str,
                 description:str="",
                 priority:int=0,
-                repeat_mode:int=0,
-                repeat_interval:list[int]|None=None,
-                frequency:list[int]|None=None,
+                frequency:int=0,
                 even_frequency_spacing:bool=True,
                 min_length:int=45,
-                max_length:int=-1,
-                min_time:int=-1,
+                max_length:int=0,
+                min_time:int=0,
                 max_time:int=-1,
+                preferred_days:list[int]=list(),  # noqa: B006
                 time_limit_reset:list[int]|None=None,
                 **extra
                 ) -> None:
         if time_limit_reset is None:
             time_limit_reset = [0, 0, 0, 0, 0]
         if frequency is None:
-            frequency = [0, 0, 0, 0, 0]
-        if repeat_interval is None:
-            repeat_interval = [0, 0, 0, 0, 0]
+            frequency = []
         try:
             super().__init__()
             self.name = name
             self.description = description
             self.priority = priority
-            self.repeat_mode = repeat_mode
-            self.repeat_interval = repeat_interval
             self.frequency = frequency
             self.even_frequency_spacing = even_frequency_spacing
-            self.min_length = min_length
+            # self.min_length = min_length
             self.max_length = max_length
             self.min_time = min_time
-            self.max_time = max_time
-            self.time_limit_reset = time_limit_reset
+            # self.max_time = max_time
+            # self.time_limit_reset = time_limit_reset
             self.extra = extra
+            self.preferred_days: list[int] = preferred_days
+
+
         except Exception:
             db_logger.exception("Failed to create Activity instance")
             raise
-
-
 
     def serialise(self)->dict:
         return {
@@ -218,14 +213,12 @@ class Activity(db.Model):
             'name' : self.name,
             'description' : self.description,
             'priority' : self.priority,
-            'repeat_mode' : self.repeat_mode,
-            'repeat_interval' : self.repeat_interval,
             'frequency' : self.frequency,
             'even_frequency_spacing' : self.even_frequency_spacing,
-            'min_length' : self.min_length,
+            # 'min_length' : self.min_length,
             'max_length' : self.max_length,
             'min_time' : self.min_time,
-            'max_time' : self.max_time,
+            # 'max_time' : self.max_time,
             'time_limit_reset' : self.time_limit_reset,
             'time_spent' : self.time_spent
         }
