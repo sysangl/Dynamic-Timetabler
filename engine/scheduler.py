@@ -85,6 +85,8 @@ def greedy_schedule(activity:_Activity, table:Table, blocks:dict[int, _Block], a
                     candidate_days.append(day)
             if not candidate_days:
                 candidate_days = list(range(_Schedule.SIZE))
+        elif len(activity.preferred_days) > 0:
+            candidate_days = activity.preferred_days
 
         else:
             activities_per_day = [

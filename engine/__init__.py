@@ -241,7 +241,8 @@ if __name__ == "__main__":
         min_weekly_minutes=360,          # 4 h total
         max_block_minutes=240,           # can be a single 4‑hour block
         min_start_minutes=8*60,          # cannot start before 08:00
-        fixed=[(5, 8*60, 240)],           # Saturday 08:00‑12:00
+        fixed=[],           # Saturday 08:00‑12:00
+        preferred_days=[5,6],
         priority=3,
     ),
 

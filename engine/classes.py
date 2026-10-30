@@ -33,6 +33,7 @@ class PENALTY_WEIGHTS:
     EARLY_BOUND = 200.0
     LATE_BOUND = 600.0
     HIGH_COST_BOUND = 300.0
+    PREFERRED_DAYS = 50.0
 
 class _Schedule:
     def __init__(self) -> None:
@@ -72,9 +73,12 @@ class _Activity:
                 max_block_minutes: int = 60,
                 min_start_minutes: int = 0,
                 fixed:list[tuple[int, int, int]]|None = None,
+                preferred_days:list[int]|None = None,
                 priority:int = 1,
                 ) -> None:
         
+        if preferred_days is None:
+            preferred_days = []
         self.fixed:list[tuple[int, int, int]] = []
         if fixed is None:
             self.fixed = []
@@ -93,6 +97,8 @@ class _Activity:
         self.max_block_minutes: int = max_block_minutes
         # minimum time this block can be placed at, e.g. only do 'Study' after 4pm
         self.min_start_minutes: int = min_start_minutes
+        # preferred days
+        self.preferred_days: list[int] = preferred_days
         # activity priority, affects penalty calculations
         self.priority = priority
     

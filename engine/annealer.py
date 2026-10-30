@@ -80,11 +80,13 @@ class CostEvaluator:
             late_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.LATE_SLOTS < slot)
             cost += (early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND)
 
-            for day, bounds in _Schedule.HIGH_COST_BOUNDS.items():
-                if b.day == day:
-                    for bound in bounds:
-                        hcb = sum(1 for slot in range(b.start, b.start+b.length) if bound[0] <= slot <= bound[1])
-                        cost += hcb**2 * PENALTY_WEIGHTS.HIGH_COST_BOUND
+            bounds = _Schedule.HIGH_COST_BOUNDS.get(b.day, [])
+            for bound in bounds:
+                hcb = sum(1 for slot in range(b.start, b.start+b.length) if bound[0] <= slot <= bound[1])
+                cost += hcb**2 * PENALTY_WEIGHTS.HIGH_COST_BOUND
+
+            if b.day not in activity.preferred_days:
+                cost += PENALTY_WEIGHTS.PREFERRED_DAYS
 
             # cost for minimum start
             if b.start < activity.min_start_slot:
