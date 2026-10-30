@@ -67,6 +67,19 @@ function toggleForms(editMode=false) {
     }
 }
 
+async function fetchActivityBlocks(group='default') {
+    var url = `/api/timetable/activities/${group}/blocks`
+    const response = await fetch(url, {
+        method : 'GET'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+    blocks = await response.json()
+    return blocks
+}
+
 /**
  * Gets the timetable items, with filters applied (if any).
  * @returns {Promise<any>}
@@ -218,7 +231,31 @@ async function generateBlockTable(timetableItems = null) {
 async function setupScheduler () {
     let settings = await fetchSettings()
     generateActivityTable();
+    var url = '/api/timetable/activities/default/blocks'
+    const response = await fetch(url, {
+        method : 'GET'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+    blocks = await response.json()
+    generateBlockTable(blocks);
 }
+
+async function deleteActivityBlocks() {
+    var url = '/api/timetable/activities/default/blocks'
+    const response = await fetch(url, {
+        method : 'DELETE'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+
+    generateBlockTable(fetchActivityBlocks());
+}
+
 
 /**
  * Uses bubble-sort to sort the table by the selected column

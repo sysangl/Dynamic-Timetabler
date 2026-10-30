@@ -34,6 +34,7 @@
         <span class="title">Blocks&nbsp;</span>
         <span id="counter">| <span id="block-counter">0</span> Blocks</span>
         <div></div>
+        <button id="delete-all-blocks-btn" onclick="deleteActivityBlocks()">CLEAR ALL</button>
     </header>
     <table id="block-table">
         <thead>
@@ -83,7 +84,7 @@
 
             <div class="field-group">
                 <label for="priority">Priority</label>
-                <input id="priority" name="priority" type="number" required class="field-input" value="0">
+                <input id="priority" name="priority" type="number" required class="field-input" placeholder="0-10">
             </div>
 
             <div class="field-group">

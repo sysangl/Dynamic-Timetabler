@@ -55,6 +55,14 @@
     background-color: var(--bg-button-other-hover);
 }
 
+#delete-all-blocks-btn {
+    background-color: var(--bg-button-cancel) !important;
+}
+
+#delete-all-blocks-btn:hover {
+    background-color: var(--bg-button-cancel-hover) !important;
+}
+
 .item-container #counter {
     font-size: 1.0rem;
     color: var(--text-muted);

@@ -219,3 +219,32 @@ def delete_item(item, id):
         db.session.rollback()
         log.exception(f'Database error while trying to delete {item}:"{item_to_delete.title}"')
         return _json_error(f'Database error while trying to delete {item}:"{item_to_delete.title}', 500)
+
+
+@bp.route('/activities/<string:group>/blocks',methods=['GET'])
+@login_required
+def get_blocks_from_activity_group(group: str):
+    blocks = Block.query.filter(
+        Block.owner == current_user,
+        Block.group_name == group
+        ).all()
+    return _json_success({'blocks':[b.serialise() for b in blocks]})
+
+@bp.route('/activities/<string:group>/blocks',methods=['DELETE'])
+@login_required
+def delete_activity_blocks(group: str):
+    blocks:list[Block] = Block.query.filter(
+        Block.owner == current_user,
+        Block.group_name == group
+        ).all()
+    for b in blocks:
+        b.activity.blocks.remove(b)
+        db.session.delete(b)
+    try:
+        db.session.commit()
+        log.info(f'Successfully deleted all blocks in activity group "{group}"')
+        return _json_success({'msg':'success'})
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception(f'Database error while trying to delete "{group}" blocks')
+        return _json_error(f'Database error while trying to delete "{group}" blocks', 500)
