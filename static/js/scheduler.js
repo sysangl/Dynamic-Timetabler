@@ -148,7 +148,7 @@ async function generateActivityTable(timetableItems = null) {
  * @param {JSON} timetableItems 
  */
 async function generateBlockTable(timetableItems = null) {
-    selectedItem = 'block'
+    selectedItem = 'blocks'
     timetableItems = timetableItems || await fetchTimetableItems()
     const itemTable = document.getElementById('block-table-body')
     itemTable.innerHTML = "";
