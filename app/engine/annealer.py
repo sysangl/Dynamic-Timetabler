@@ -5,7 +5,7 @@ import random
 import sys
 from collections.abc import Callable
 
-from classes import (
+from app.engine.classes import (
     ATB,
     LIMIT,
     PENALTY_WEIGHTS,
@@ -15,7 +15,8 @@ from classes import (
     _Block,
     _Schedule,
 )
-from scheduler import can_place, clear_block, place_block
+
+from .scheduler import can_place, clear_block, place_block
 
 
 def clamp(value, min_value, max_value):

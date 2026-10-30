@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from app.models import Activity, Block, User
+from ..models import Activity, Block, User
 
 type ATB = dict[int, set[int]]
 type Table = list[list[int | None]]

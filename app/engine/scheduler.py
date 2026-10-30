@@ -1,6 +1,6 @@
 import random
 
-from classes import ATB, Table, _Activity, _Block, _Schedule
+from .classes import ATB, Table, _Activity, _Block, _Schedule
 
 
 def clamp(value, min_value, max_value):
