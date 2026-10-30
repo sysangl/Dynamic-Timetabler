@@ -1,7 +1,10 @@
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from typing import Any
+
+from app.models import Block, User, Activity
 
 type ATB = dict[int, set[int]]
 type Table = list[list[int | None]]
@@ -38,7 +41,8 @@ class PENALTY_WEIGHTS:
 class _Schedule:
     def __init__(self) -> None:
         self.table: Table = []
-
+        self.start_date : date = datetime.now().date()
+        self.owner : User
 
 
     SIZE = 7
@@ -164,8 +168,23 @@ class _Block:
     def __str__(self) -> str:
         return f"<Block {self.id}: _Activity {self.activity_id}>"
 
-    # def _convert_to_db_block(self)->Block|None:
-    #     return None
-    #     b = Block(
-    #     )
-    #     return b
+def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, activities:list[_Activity])->list[Block]:
+    db_blocks = []
+    for a in activities:
+        for bid in atb[a.id]:
+            b = blocks[bid]
+            start_datetime = datetime(schedule.start_date.year, schedule.start_date.month, schedule.start_date.day)
+            length_hours = (b.length*_Schedule.SLOT_SIZE)//60
+            length_mins = (b.length*_Schedule.SLOT_SIZE)%60
+            end_datetime = start_datetime + timedelta(hours=length_hours, minutes=length_mins)
+            dbb = Block(
+                title=a.name,
+                owner=schedule.owner,
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+            )
+            db_blocks.append(dbb)
+    return db_blocks
+
+def bd_activities_to_engine_activities(actvities: list[Activity])->list[_Activity]:
+    return []
