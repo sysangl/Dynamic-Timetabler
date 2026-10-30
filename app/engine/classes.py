@@ -173,7 +173,9 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
     for a in activities:
         for bid in atb[a.id]:
             b = blocks[bid]
-            start_datetime = datetime(schedule.start_date.year, schedule.start_date.month, schedule.start_date.day)
+            start_hours = (b.start*_Schedule.SLOT_SIZE)//60
+            start_time = (b.start*_Schedule.SLOT_SIZE)%60
+            start_datetime = datetime(schedule.start_date.year, schedule.start_date.month, schedule.start_date.day, start_hours, start_time)
             length_hours = (b.length*_Schedule.SLOT_SIZE)//60
             length_mins = (b.length*_Schedule.SLOT_SIZE)%60
             end_datetime = start_datetime + timedelta(hours=length_hours, minutes=length_mins)
@@ -182,6 +184,8 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
                 owner=schedule.owner,
                 start_datetime=start_datetime,
                 end_datetime=end_datetime,
+                # start_date=start_datetime.date().isoformat(),
+                # start_time=start_datetime.time().isoformat()[0:4]
             )
             db_blocks.append(dbb)
     return db_blocks

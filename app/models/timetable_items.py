@@ -169,8 +169,21 @@ class Activity(db.Model):
 
     time_spent : Mapped[int] = mapped_column(default=0)
 
+    owner_id : Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    owner : Mapped[User] = relationship(
+        "User",
+        back_populates="activities"
+    )
+
+
     def __init__(self,
                 name:str,
+                owner:User,
                 description:str="",
                 priority:int=0,
                 frequency:int=0,
@@ -190,6 +203,7 @@ class Activity(db.Model):
         try:
             super().__init__()
             self.name = name
+            self.owner = owner
             self.description = description
             self.priority = priority
             self.frequency = frequency

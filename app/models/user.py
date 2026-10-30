@@ -87,6 +87,13 @@ class User(db.Model):
         cascade="all, delete-orphan",
         lazy="dynamic",
     )
+
+    activities = relationship(
+        "Activity",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
     active: Mapped[bool] = mapped_column(default=True)
 
 

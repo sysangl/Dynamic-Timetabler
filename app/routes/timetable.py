@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Any
 
 from flask import Blueprint, request
 from flask_login import current_user, login_required
@@ -10,13 +11,23 @@ from helpers.datetime import combine_date_time, parse_iso_date
 from helpers.server import _json_error, _json_success
 
 from ..extensions import db
-from ..models import Block
+from ..models import Activity, Block
 
 bp = Blueprint('timetable', __name__)
 
 log = logging.getLogger('app')
 
 
+def validate_item_type(item)->type[Block]|type[Activity]|tuple[dict[str,Any], int]:
+    match item:
+        case 'block':
+            item_class = Block
+        case 'activity':
+            item_class =  Activity
+        case _:
+            log.info(f'"{item}" is not a valid timetable item')
+            return _json_error(f'"{item}" is not a valid timetable item', 404)
+    return item_class
 
 @bp.route('/', methods=['GET'])
 @login_required
@@ -92,14 +103,13 @@ def get_items_in_range():
 def get_item(item: str, id: int):
     item_class = None
     match item:
-        #case 'todos':
-        #    item_class = ToDo
-        #case 'tasks':
-        #    item_class = Task
-        case 'blocks':
+        case 'block':
             item_class = Block
+        case 'activity':
+            item_class =  Activity
         case _:
-            return {'error': f'"{item}" is not a valid timetable item'}, 404
+            log.info(f'"{item}" is not a valid timetable item')
+            return _json_error(f'"{item}" is not a valid timetable item', 404)
     tti = item_class.query.filter_by(id=id).first()
     if not tti:
         return _json_error(f'{item} with id "{id}" does not exist', 404)
@@ -112,19 +122,19 @@ def create_item(item: str):
     data = request.get_json()
     item_class = None
     match item:
-        #case 'todos':
-        #    item_class = ToDo
-        #case 'tasks':
-        #    item_class = Task
         case 'block':
             item_class = Block
+        case 'activity':
+            item_class =  Activity
         case _:
             log.info(f'"{item}" is not a valid timetable item')
             return _json_error(f'"{item}" is not a valid timetable item', 404)
 
-    tz = get_config()["general"]["timezone"]
-    data['start_datetime'] = combine_date_time(data.get('start_date'),data.get('start_time'), tz=tz) # type: ignore
-    data['end_datetime'] = combine_date_time(data.get('end_date'),data.get('end_time'), tz=tz) #type: ignore
+
+    if item_class in {Block}:
+        tz = get_config()["general"]["timezone"]
+        data['start_datetime'] = combine_date_time(data.get('start_date'),data.get('start_time'), tz=tz) # type: ignore
+        data['end_datetime'] = combine_date_time(data.get('end_date'),data.get('end_time'), tz=tz) #type: ignore
 
     created_item = item_class(
         **data,
@@ -151,16 +161,13 @@ def update_item(item,id):
 
     item_class = None
     match item:
-        #case 'todos':
-        #    item_class = ToDo
-        #case 'tasks':
-        #    item_class = Task
-        case 'blocks':
+        case 'block':
             item_class = Block
+        case 'activity':
+            item_class =  Activity
         case _:
             log.info(f'"{item}" is not a valid timetable item')
-            log.info(f'"{item}" is not a valid timetable item')
-            return {'error': f'"{item}" is not a valid timetable item'}, 404
+            return _json_error(f'"{item}" is not a valid timetable item', 404)
 
     item = item_class.query.filter_by(id=id).first()
     if not item:
@@ -185,12 +192,10 @@ def update_item(item,id):
 def delete_item(item, id):
     item_class = None
     match item:
-        #case 'todos':
-        #    item_class = ToDo
-        #case 'tasks':
-        #    item_class = Task
         case 'block':
             item_class = Block
+        case 'activity':
+            item_class =  Activity
         case _:
             log.info(f'"{item}" is not a valid timetable item')
             return _json_error(f'"{item}" is not a valid timetable item', 404)
