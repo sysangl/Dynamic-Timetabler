@@ -148,6 +148,7 @@ class Activity(db.Model):
     """
     __tablename__ = "activities"
     id : Mapped[uuid.UUID] = mapped_column(primary_key = True, default=uuid.uuid4)
+    group_id : Mapped[int] = mapped_column(nullable=False, default=0)
 
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
     description : Mapped[str] = mapped_column(nullable=False, default="")
@@ -168,6 +169,8 @@ class Activity(db.Model):
     time_limit_reset : Mapped[list[int]] = mapped_column(JSON, default=lambda: [0,0,0,0,0])
 
     time_spent : Mapped[int] = mapped_column(default=0)
+
+    preferred_days : Mapped[list[int]] = mapped_column(JSON, default=list()) # type: ignore
 
     owner_id : Mapped[int] = mapped_column(
         Integer,
@@ -224,6 +227,7 @@ class Activity(db.Model):
     def serialise(self)->dict:
         return {
             'id' : self.id,
+            'group_id' : self.group_id,
             'name' : self.name,
             'description' : self.description,
             'priority' : self.priority,

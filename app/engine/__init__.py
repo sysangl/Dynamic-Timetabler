@@ -39,6 +39,21 @@ def reset_ids(table: Table, atb:ATB, blocks:dict[int, _Block], start_from:int=1)
 
     return table, blocks
 
+
+def initial_table(engine_activities, owner):
+    from .classes import db_activities_to_engine_activities, engine_to_db_blocks
+    from .scheduler import greedy_initial
+
+    activities = db_activities_to_engine_activities(engine_activities)
+
+    blocks, _, atb, _ = greedy_initial(activities)
+
+    schedule = _Schedule()
+    schedule.owner = owner
+
+    return engine_to_db_blocks(schedule,blocks,atb,activities)
+
+
 def test():
     # ai -generated activities
     activities = [

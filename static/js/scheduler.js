@@ -1,7 +1,4 @@
 itemFormContainer = document.getElementById('item-forms');
-filters = {dateRangeFrom:null, dateRangeTo:null};
-currentItemClass = document.getElementById('item-select').value.toLowerCase();
-filterForm =document.getElementById('filter-form');
 itemForms = itemFormContainer.getElementsByClassName('item-form');
 editFormOpen = false
 function plural_to_single(item) {
@@ -52,31 +49,6 @@ for (const form of itemForms) {
 }
 
 /**
- * Prevent reloading and resetting of the filter form
- */
-filterForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(filterForm);
-    const drf = formData.get('filter_date_from');
-    const drt = formData.get('filter_date_to');
-
-    filters.dateRangeFrom = drf;
-    filters.dateRangeTo = drt;
-
-    const ti = await fetchTimetableItems();
-    generateItemTable(currentItemClass, timetableItems=ti);
-});
-
-filterForm.addEventListener('reset', async (e) => {
-    filters.dateRangeFrom = null;
-    filters.dateRangeTo = null;
-
-    const ti = await fetchTimetableItems();
-    generateItemTable(currentItemClass, timetableItems=ti);
-});
-
-/**
  * Toggle the item form containers.
  * If editMode is set to true, the 'Create' button is changed to 'Update'
  * @param {Boolean} editMode 
@@ -84,16 +56,15 @@ filterForm.addEventListener('reset', async (e) => {
 function toggleForms(editMode=false) {
     document.getElementById('backdrop').classList.toggle('hidden')
     document.getElementById('item-forms').classList.toggle('hidden')
-    console.log(`${currentItemClass}-form-container`)
+    console.log(`activities-form-container`)
     for (const container of document.getElementById('item-forms').children)  {
         console.log(container.id)
-        if (container.id != `${currentItemClass}-form-container`){
+        if (container.id != `activities-form-container`){
             container.classList.add('hidden')
         } else {
             container.classList.remove('hidden')
         }
     }
-    setupItemForm(editMode);
 }
 
 /**
@@ -101,19 +72,8 @@ function toggleForms(editMode=false) {
  * @returns {Promise<any>}
  */
 async function fetchTimetableItems() {
-    dateRangeFrom = filters.dateRangeFrom;
-    dateRangeTo = filters.dateRangeTo;
-    var url = '/api/timetable'
-    if (dateRangeFrom || dateRangeTo) {
-        url += '/range/?'
-        if (dateRangeFrom) {
-            url+=`from=${dateRangeFrom}&`
-        } 
-        if (dateRangeTo) {
-            url+=`until=${dateRangeTo}`
-        }
-    }
 
+    var url = '/api/timetable'
     const response = await fetch(url, {
         method : 'GET'
     });
@@ -126,22 +86,17 @@ async function fetchTimetableItems() {
 
 /**
  * Generates and populates the item table
- * selectedItem is the item class to generate, defaults to the selected item in the dropdown
  * timetableItems is what items to use, defaults to grabbing the item from the server
- * @param {string} selectedItem 
  * @param {JSON} timetableItems 
  */
-async function generateItemTable(selectedItem=null, timetableItems = null) {
-    selectedItem = selectedItem || currentItemClass
-    timetableItems = timetableItems || await fetchTimetableItems()
+async function generateItemTable(timetableItems = null) {
+    timetableItems = await fetchTimetableItems()
     const itemTable = document.getElementById('item-table-body')
     itemTable.innerHTML = "";
-    const tableTitle = document.getElementById('item-table-title')
-    tableTitle.textContent = toUpper(selectedItem)
     let itemCount = 0
 
     for (const [itemType, items] of Object.entries(timetableItems)) {
-        if ((selectedItem != itemType) && (selectedItem != 'all')) {
+        if ('activities' != itemType) {
             continue
         }
         if (itemType == 'status') continue;
@@ -161,37 +116,21 @@ async function generateItemTable(selectedItem=null, timetableItems = null) {
                 row.classList.toggle('selected')
             };
             row.id = `${itemType}-${item.id}`
-            const itemTypeText = document.createElement('td')
-            itemTypeText.textContent = plural_to_single(itemType).toLocaleUpperCase()
-            const itemTitleText = document.createElement('td')
-            const itemColour = document.createElement('span')
-            itemColour.classList.add('fa-solid', 'fa-circle')
-            itemColour.style.color = item.colour
-            itemColour.style.marginRight = '5px';
-            itemTitleText.append(itemColour)
+            const nameText = document.createElement('td')
+            nameText.textContent = item.name
+            const priorityText = document.createElement('td')
+            priorityText.textContent = item.title
+            
+            const frequencyText = document.createElement('td')
+            frequencyText.textContent = item.frequency
 
-            itemTitleText.innerHTML += item.title
-            const itemStart = document.createElement('td')
-            const startDateTime = new Date(item.start_datetime)
-            const sDate = document.createElement('p')
-            sDate.textContent = startDateTime.toLocaleDateString()
-            const sTime = document.createElement('p')
-            sTime.textContent = startDateTime.toLocaleTimeString().replace(':00 ',' ')
-            itemStart.append(sDate,sTime)
-
-            const itemEnd = document.createElement('td')
-            const endDateTime = new Date(item.end_datetime)
-            const eDate = document.createElement('p')
-            eDate.textContent = endDateTime.toLocaleDateString()
-            const eTime = document.createElement('p')
-            eTime.textContent = endDateTime.toLocaleTimeString().replace(':00 ',' ')
-            itemEnd.append(eDate,eTime)
-
-            const itemStatus = document.createElement('td')
-            itemStatus.textContent = 'Uncompleted'
+            const minTimeText = document.createElement('td')
+            minTimeText.textContent = item.min_time
+            const maxLengthText = document.createElement('td')
+            maxLengthText.textContent = item.max_length
             
             row.ondblclick = ()=>{editItem(row.id)}
-            row.append(itemTypeText, itemTitleText, itemStart, itemEnd, itemStatus)
+            row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)
             itemTable.append(row)
             itemCount += 1
         }
@@ -268,89 +207,11 @@ async function populateItemForm(itemType,id) {
     })
 }
 
-/**
- * Changes the table to display the selected class of items
- * @param {string} selectedItem 
- */
-function changeTable(selectedItem) {
-    if (selectedItem == 'all') {
-        document.getElementById('create-new-btn').disabled = true
-    } else {
-        document.getElementById('create-new-btn').disabled = false
-    }
-    currentItemClass = selectedItem
-    generateItemTable(selectedItem = selectedItem)
-}
 
 
 async function setupManagement () {
     let settings = await fetchSettings()
-    const now = new Date();
-    const future = new Date(now.getTime() + settings.default_block_length * 60 * 1000);
-
-    const sDate = now.toISOString().split('T')[0];
-    const eDate = future.toISOString().split('T')[0];
-
-    const sHours   = String(now.getHours()).padStart(2, '0');
-    const sMinutes = String(now.getMinutes()).padStart(2, '0');
-    const sTime = `${sHours}:${sMinutes}`;  
-
-    const eHours   = String(future.getHours()).padStart(2, '0');
-    const eMinutes = String(future.getMinutes()).padStart(2, '0');
-    const eTime = `${eHours}:${eMinutes}`;  
-
-    document.getElementById('sdate').value = sDate;
-    document.getElementById('edate').value = eDate;
-
-    document.getElementById('stime').value = sTime;
-    document.getElementById('etime').value = eTime;
-
-    document.getElementById('filter-date-from').value = sDate;
-    document.getElementById('filter-date-to').value = sDate;
-
     generateItemTable();
-}
-
-/**
- * Sets up the current selected item class's form
- * @param {Boolean} editMode 
- */
-async function setupItemForm(editMode) {
-    let settings = await fetchSettings()
-    const now = new Date();
-    const future = new Date(now.getTime() + settings.default_block_length * 60 * 1000);
-
-    const sDate = now.toISOString().split('T')[0];
-    const eDate = future.toISOString().split('T')[0];
-
-    const sHours   = String(now.getHours()).padStart(2, '0');
-    const sMinutes = String(now.getMinutes()).padStart(2, '0');
-    const sTime = `${sHours}:${sMinutes}`;  
-
-    const eHours   = String(future.getHours()).padStart(2, '0');
-    const eMinutes = String(future.getMinutes()).padStart(2, '0');
-    const eTime = `${eHours}:${eMinutes}`;  
-    if (editMode) {
-        document.getElementById(`${currentItemClass}-form`).getElementsByClassName('submit-button')[0].textContent = 'Update'
-    } else {
-        document.getElementById(`${currentItemClass}-form`).getElementsByClassName('submit-button')[0].textContent = 'Create'
-    }
-    switch (currentItemClass.toLowerCase()) {
-        case 'blocks':
-            $(`#${currentItemClass.toLowerCase()}-form #title`)[0].value = '';
-            $(`#${currentItemClass.toLowerCase()}-form #description`)[0].value = '';
-            $(`#${currentItemClass.toLowerCase()}-form #sdate`)[0].value = sDate;
-            $(`#${currentItemClass.toLowerCase()}-form #edate`)[0].value = eDate;
-            $(`#${currentItemClass.toLowerCase()}-form #stime`)[0].value = sTime;
-            $(`#${currentItemClass.toLowerCase()}-form #etime`)[0].value = eTime;
-            $(`#${currentItemClass.toLowerCase()}-form #colour`)[0].value = settings.default_block_colour;
-            break;
-    
-        default:
-            break;
-    }
-
-
 }
 
 /**
@@ -404,6 +265,18 @@ function sortTable(column) {
         }
         document.getElementsByClassName('table-sort-arrows')[column].classList.add(`fa-sort-${sortDirection}`)   
     }
+}
+
+async function generateTimetable() {
+    var url = '/api/engine/generate/0'
+    const response = await fetch(url, {
+        method : 'POST'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+    return await response.json()
 }
 
 setupManagement();

@@ -14,7 +14,8 @@ log = logging.getLogger('app')
 ALLOWED_PAGES = [
     'timetable',
     'management',
-    'settings'
+    'settings',
+    'scheduler'
 ]
 
 # helper func
@@ -46,6 +47,11 @@ def dashboard():
 @login_required
 def serve_timetable():
     return _render('timetable', display_name=current_user.display_name, view=current_user.settings.timetable_view)
+
+@bp.route("/scheduler")
+@login_required
+def serve_scheduler():
+    return _render('scheduler', display_name=current_user.display_name)
 
 @bp.route("/timetable/<string:date>")
 @login_required
