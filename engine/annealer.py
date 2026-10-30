@@ -69,15 +69,24 @@ class CostEvaluator:
             if count > target:
                 cost += (count-target)**2 * PENALTY_WEIGHTS.OVERLOAD
 
-        #cost for block size
+        
         for b in block_list:
+            #cost for block size
             if b.length > activity.max_block_slots:
                 cost+= LIMIT.HARD_SOFT * 2
 
+            # cost for bounds
             early_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.EARLY_SLOTS > slot)
             late_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.LATE_SLOTS < slot)
-            cost += (early_oob*2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob*2 * PENALTY_WEIGHTS.LATE_BOUND)
+            cost += (early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND)
 
+            for day, bounds in _Schedule.HIGH_COST_BOUNDS.items():
+                if b.day == day:
+                    for bound in bounds:
+                        hcb = sum(1 for slot in range(b.start, b.start+b.length) if bound[0] <= slot <= bound[1])
+                        cost += hcb**2 * PENALTY_WEIGHTS.HIGH_COST_BOUND
+
+            # cost for minimum start
             if b.start < activity.min_start_slot:
                 cost += (b.start-activity.min_start_slot)**2
 

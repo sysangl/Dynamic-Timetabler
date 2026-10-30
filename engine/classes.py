@@ -32,10 +32,13 @@ class PENALTY_WEIGHTS:
     FRAGMENT = 8.0
     EARLY_BOUND = 200.0
     LATE_BOUND = 600.0
+    HIGH_COST_BOUND = 300.0
 
 class _Schedule:
     def __init__(self) -> None:
         self.table: Table = []
+
+
 
     SIZE = 7
     MINS_IN_DAY = 24 * 60
@@ -46,6 +49,10 @@ class _Schedule:
 
     LATE=22*60
     LATE_SLOTS = LATE//SLOT_SIZE
+
+    HIGH_COST_BOUNDS:dict[int,list[tuple[int, int]]] = {  # noqa: RUF012
+        6:[(9*60//SLOT_SIZE,12*60//SLOT_SIZE)]
+    }
 
     def __call__(self, *args: Any, **kwds: Any) -> Table:
         return self.table
