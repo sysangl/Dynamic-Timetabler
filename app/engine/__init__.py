@@ -58,6 +58,7 @@ def initial_table(db_activities, owner):
         dbb.activity = dba_map[dbb.activity_id]
         dbb.group_name = dba_map[dbb.activity_id].group_name
         dbb.activity.blocks.add(dbb)
+        dbb.colour = dba_map[dbb.activity_id].colour
 
     return dbb_list
 

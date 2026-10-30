@@ -206,7 +206,7 @@ class Activity(db.Model):
         cascade="all, delete-orphan",
         lazy="dynamic",
     )
-
+    colour : Mapped[str] = mapped_column(nullable=False, default="#75547e")
     def __init__(self,
                 name:str,
                 owner:User,
@@ -221,6 +221,7 @@ class Activity(db.Model):
                 preferred_days:list[int]=list(),  # noqa: B006
                 time_limit_reset:list[int]|None=None,
                 group_name: str = 'default',
+                colour:str = '#75547e',
                 **extra
                 ) -> None:
         if time_limit_reset is None:
@@ -243,6 +244,7 @@ class Activity(db.Model):
             # self.time_limit_reset = time_limit_reset
             self.extra = extra
             self.preferred_days: list[int] = preferred_days
+            self.colour=colour
 
 
         except Exception:
@@ -263,7 +265,8 @@ class Activity(db.Model):
             'min_time' : self.min_time,
             # 'max_time' : self.max_time,
             'time_limit_reset' : self.time_limit_reset,
-            'time_spent' : self.time_spent
+            'time_spent' : self.time_spent,
+            'colour': self.colour
         }
 
 class Routine(db.Model):

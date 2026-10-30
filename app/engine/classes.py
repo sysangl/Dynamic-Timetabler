@@ -186,7 +186,7 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
                 title=a.name,
                 owner=schedule.owner,
                 start_datetime=start_datetime,
-                end_datetime=end_datetime,
+                end_datetime=end_datetime
                 # start_date=start_datetime.date().isoformat(),
                 # start_time=start_datetime.time().isoformat()[0:4]
             )
