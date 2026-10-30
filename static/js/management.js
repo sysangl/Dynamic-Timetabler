@@ -4,6 +4,17 @@ currentItemClass = document.getElementById('item-select').value.toLowerCase();
 filterForm =document.getElementById('filter-form');
 itemForms = itemFormContainer.getElementsByClassName('item-form');
 editFormOpen = false
+function plural_to_single(item) {
+    words = {
+        'activities':'activity'
+    }
+
+    if (!words[item]){
+        return item.slice(0,-1)
+    }
+    return words[item]
+}
+
 /**
  * Stop the default behaviour of forms of reloading the page
  */
@@ -151,7 +162,7 @@ async function generateItemTable(selectedItem=null, timetableItems = null) {
             };
             row.id = `${itemType}-${item.id}`
             const itemTypeText = document.createElement('td')
-            itemTypeText.textContent = itemType.slice(0,-1).toLocaleUpperCase()
+            itemTypeText.textContent = plural_to_single(itemType).toLocaleUpperCase()
             const itemTitleText = document.createElement('td')
             const itemColour = document.createElement('span')
             itemColour.classList.add('fa-solid', 'fa-circle')

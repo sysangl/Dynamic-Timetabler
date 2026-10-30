@@ -40,11 +40,15 @@ def get_items():
         blocks = Block.query.filter(
                 Block.owner_id == current_user.id,
             ).all()
+        activities = Activity.query.filter(
+                Activity.owner_id == current_user.id
+        ).all()
 
         payload = {
             #"todos": [todo.serialise() for todo in todos],
             #"tasks": [task.serialise() for task in tasks],
-            "blocks": [block.serialise() for block in blocks]
+            "blocks": [block.serialise() for block in blocks],
+            "activities": [activity.serialise() for activity in activities]
         }
 
         return _json_success(payload)
