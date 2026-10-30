@@ -46,8 +46,8 @@ def create_app(config: Mapping[str, Any] | None = None):
     login_manager.init_app(app)
     Migrate(app,db)
 
-    with app.app_context():
-        db.create_all()
+    from .models import create_db
+    create_db(app)
 
     from .routes import register_routes
     register_routes(app)

@@ -9,6 +9,11 @@ from .base import BaseModel
 from .timetable_items import Activity, Block
 from .user import Settings, User
 
+
+def create_db(app):
+    with app.app_context():
+        db.create_all()
+
 __all__ = [
     'Activity',
     'BaseModel',
