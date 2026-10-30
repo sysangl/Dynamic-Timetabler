@@ -3,32 +3,56 @@
 <!-- shared forms css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}"></link>
 
-<div id="item-container">
+<div id="activity-container" class="item-container">
     <header>
         <span class="title">Activities&nbsp;</span>
-        <span id="item-table-title" class="title"></span>
-        <span id="counter">| <span id="item-counter">0</span> Activities</span>
+        <span id="counter">| <span id="activity-counter">0</span> Activities</span>
         <div></div>
         <button id="generate-timetable-btn" onclick="generateTimetable()">GENERATE</button>
         <button id="create-new-btn" onclick="toggleForms()">New Activity</button>
     </header>
-    <table id="item-table">
+    <table id="activity-table">
         <thead>
             <tr>
-                <th onclick="sortTable(0)">Name <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(1)">Priority <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(2)">Frequency <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(3)">Min Time <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(4)">Max Length<span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(0, 'activity')">Name <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(1, 'activity')">Priority <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(2, 'activity')">Frequency <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(3, 'activity')">Min Time <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(4, 'activity')">Max Length<span class="table-sort-arrows fa-solid fa-sort"></span></th>
             </tr>
         </thead>
         
-        <tbody id="item-table-body">
+        <tbody id="activity-table-body" class="item-table-body">
         </tbody>
 
     </table>
-
 </div>
+
+
+<div id="block-container" class="item-container">
+    <header>
+        <span class="title">Blocks&nbsp;</span>
+        <span id="counter">| <span id="block-counter">0</span> Blocks</span>
+        <div></div>
+    </header>
+    <table id="block-table">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0, 'block')">Type <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(1, 'block')">Title <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(2, 'block')">Start <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(3, 'block')">End <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(4, 'block')">Status <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+            </tr>
+        </thead>
+        
+        <tbody id="block-table-body" class="item-table-body">
+        </tbody>
+
+    </table>
+</div>
+
+
 
 
 <div id="item-forms" class="hidden">
@@ -46,6 +70,11 @@
             <div class="field-group">
                 <label for="description">Description</label>
                 <input id="description" name="description" type="text" maxlength="300" class="field-input" placeholder="Optional longer description">
+            </div>
+
+            <div class="field-group">
+                <label for="description">Activity group</label>
+                <input id="activity_group" name="activity_group" type="text" maxlength="20" class="field-input" placeholder="Activity group name">
             </div>
         </fieldset>
 

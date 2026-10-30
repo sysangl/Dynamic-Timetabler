@@ -39,10 +39,10 @@ class PENALTY_WEIGHTS:
     PREFERRED_DAYS = 50.0
 
 class _Schedule:
-    def __init__(self) -> None:
+    def __init__(self, owner: User) -> None:
         self.table: Table = []
         self.start_date : date = datetime.now().date()
-        self.owner : User
+        self.owner : User = owner
 
 
     SIZE = 7
@@ -71,6 +71,7 @@ class _Activity:
 
     def __init__(self,
                 name:str,
+                db_id,
                 frequency:int=1,
                 even_spacing:bool = False,
                 min_weekly_minutes: int = 0,
@@ -105,6 +106,8 @@ class _Activity:
         self.preferred_days: list[int] = preferred_days
         # activity priority, affects penalty calculations
         self.priority = priority
+
+        self.db_id = db_id
     
     @property
     def min_weekly_slots(self)->int:
@@ -169,7 +172,7 @@ class _Block:
         return f"<Block {self.id}: _Activity {self.activity_id}>"
 
 def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, activities:list[_Activity])->list[Block]:
-    db_blocks = []
+    db_blocks:list[Block] = []
     for a in activities:
         for bid in atb[a.id]:
             b = blocks[bid]
@@ -187,6 +190,7 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
                 # start_date=start_datetime.date().isoformat(),
                 # start_time=start_datetime.time().isoformat()[0:4]
             )
+            dbb.activity_id = a.db_id
             db_blocks.append(dbb)
     return db_blocks
 
@@ -201,7 +205,8 @@ def db_activities_to_engine_activities(activities: list[Activity])->list[_Activi
             max_block_minutes=a.max_length,
             fixed=a.fixed,
             preferred_days=a.preferred_days,
-            priority=a.priority
+            priority=a.priority,
+            db_id=a.id
         )
         engine_activities.append(ea)
     return engine_activities

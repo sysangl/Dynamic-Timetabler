@@ -48,7 +48,7 @@ def initial_table(engine_activities, owner):
 
     blocks, _, atb, _ = greedy_initial(activities)
 
-    schedule = _Schedule()
+    schedule = _Schedule(owner)
     schedule.owner = owner
 
     return engine_to_db_blocks(schedule,blocks,atb,activities)
@@ -74,7 +74,7 @@ def test():
             (3, 9*60, 480),   # Thursday
             (4, 9*60, 480),   # Friday
         ],
-        priority=5,
+        priority=5
     ),
 
     # ------------------------------------------------------------------
@@ -331,8 +331,6 @@ def test():
         priority=1,                      # lowest priority – the algorithm will move it freely
     ),
     ]
-
-    schedule = _Schedule()
 
     from app.engine.scheduler import greedy_initial, greedy_schedule
 

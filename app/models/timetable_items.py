@@ -93,6 +93,18 @@ class Block(db.Model):
     end_date : Mapped[str] = mapped_column(default='')
     end_time : Mapped[str] = mapped_column(default='')
 
+    activity_id : Mapped[uuid.UUID] = mapped_column(
+        Integer,
+        ForeignKey("activities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    activity : Mapped[Activity] = relationship(
+        "Activity",
+        back_populates="blocks"
+    )
+
     def __init__(self, 
                 title:str, 
                 start_datetime: datetime,
@@ -148,7 +160,7 @@ class Activity(db.Model):
     """
     __tablename__ = "activities"
     id : Mapped[uuid.UUID] = mapped_column(primary_key = True, default=uuid.uuid4)
-    group_id : Mapped[int] = mapped_column(nullable=False, default=0)
+    group_name : Mapped[str] = mapped_column(nullable=False, default='defaults')
 
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
     description : Mapped[str] = mapped_column(nullable=False, default="")
@@ -183,6 +195,12 @@ class Activity(db.Model):
         back_populates="activities"
     )
 
+    blocks = relationship(
+        "Block",
+        back_populates="activity",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
 
     def __init__(self,
                 name:str,
@@ -197,6 +215,7 @@ class Activity(db.Model):
                 max_time:int=-1,
                 preferred_days:list[int]=list(),  # noqa: B006
                 time_limit_reset:list[int]|None=None,
+                group_name: str = 'default',
                 **extra
                 ) -> None:
         if time_limit_reset is None:
@@ -207,6 +226,7 @@ class Activity(db.Model):
             super().__init__()
             self.name = name
             self.owner = owner
+            self.group_name = group_name
             self.description = description
             self.priority = priority
             self.frequency = frequency
@@ -227,7 +247,7 @@ class Activity(db.Model):
     def serialise(self)->dict:
         return {
             'id' : self.id,
-            'group_id' : self.group_id,
+            'group_name' : self.group_name,
             'name' : self.name,
             'description' : self.description,
             'priority' : self.priority,
