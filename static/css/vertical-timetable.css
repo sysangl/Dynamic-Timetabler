@@ -151,12 +151,26 @@
 .block-title {
     display: inline-block;
     color: var(--text-primary);
-    font-size: 1.2rem;
+    font-size: 1.0rem;
 }
 
 .block-time {
     color: #c8c7c7;
-    font-size: 0.8rem;
+    font-size: 0.6rem;
+}
+
+@container (max-height: 2rem) {
+    .block-info {
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+    }
+    .block-info .block-time {
+        display: none;
+    }
+    .block-info .block-title {
+        font-size: 0.5rem;
+    }
 }
 
 #popup-menu {

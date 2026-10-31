@@ -144,11 +144,31 @@
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    container-type: size;
 }
 
 .timetable-block:hover {
     filter: brightness(1.1);
 }
+
+.block-info {
+    line-height: 0.8rem;
+}
+
+@container (max-height: 2rem) {
+    .block-info {
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+    }
+    .block-info .block-time {
+        display: none;
+    }
+    .block-info .block-title {
+        font-size: 0.3rem;
+    }
+}
+
 
 .block-title {
     display: inline-block;
