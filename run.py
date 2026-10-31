@@ -1,3 +1,9 @@
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('mode')
+args = parser.parse_args()
+
 def run_server() -> None:
     import atexit
     import logging
@@ -45,6 +51,9 @@ def run_server() -> None:
     atexit.register(server_stop)
 
 if __name__ == "__main__":
-    run_server()
-    # from app.engine.testing import test
-    # test()
+    match args.mode:
+        case 'testing':
+            from app.engine.testing import test
+            test()
+        case _:
+            run_server()
