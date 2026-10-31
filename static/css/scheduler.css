@@ -119,6 +119,10 @@
     justify-self: center;
     flex-direction: column;
     overflow-y: scroll;
+    height: 80%;
+    top: 50%;
+    transform: translate(0, -50%);
+    padding-top: 5rem;
 }
 
 .item-table-body {

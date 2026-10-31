@@ -50,6 +50,7 @@
     justify-self: end;
     font-size: 0.96rem;
     color: var(--text-primary);
+    text-align: end;
 }
 
 .field-group label.radio {
