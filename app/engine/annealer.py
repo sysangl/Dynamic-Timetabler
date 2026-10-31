@@ -405,6 +405,8 @@ def merge_blocks(
     candidates: list[tuple[_Activity, _Block, _Block]] = []
 
     for a in activities:
+        if len(atb[a.id]) <= a.frequency:
+            continue
         blocks_in_day:dict[int, list[_Block]] = {}
         for bid in atb[a.id]:
             b = blocks[bid]
@@ -422,6 +424,7 @@ def merge_blocks(
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     activity, b1, b2 = random.choice(candidates)
+
 
     old_b1 = _Block(
                     id=b1.id,
