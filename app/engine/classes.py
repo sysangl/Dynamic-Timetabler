@@ -39,7 +39,8 @@ class PENALTY_WEIGHTS:
     EARLY_BOUND = 200.0
     LATE_BOUND = 600.0
     HIGH_COST_BOUND = 300.0
-    PREFERRED_DAYS = 50.0
+    PREFERRED_DAYS = 30.0
+    MIN_LENGTH = 20.0
 
 class _Schedule:
     def __init__(self, owner: User) -> None:
@@ -78,6 +79,7 @@ class _Activity:
                 frequency:int=1,
                 even_spacing:bool = False,
                 min_weekly_minutes: int = 0,
+                min_block_minutes: int = 60,
                 max_block_minutes: int = 60,
                 min_start_minutes: int = 0,
                 fixed:list[tuple[int, int, int]]|None = None,
@@ -101,6 +103,7 @@ class _Activity:
         self.even_spacing:bool = even_spacing
         # minimum amount of time that must be allocated
         self.min_weekly_minutes: int = min_weekly_minutes
+        self.min_block_minutes: int = min_block_minutes
         # maximum length of time a single block can be
         self.max_block_minutes: int = max_block_minutes
         # minimum time this block can be placed at, e.g. only do 'Study' after 4pm
@@ -115,6 +118,10 @@ class _Activity:
     @property
     def min_weekly_slots(self)->int:
         return math.ceil(self.min_weekly_minutes / _Schedule.SLOT_SIZE)
+
+    @property
+    def min_block_slots(self)->int:
+        return math.floor(self.min_block_minutes//_Schedule.SLOT_SIZE)
     
     @property
     def max_block_slots(self)->int:
@@ -181,7 +188,7 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
         for bid in atb[a.id]:
             b = blocks[bid]
             tz = get_config()["general"]["timezone"]
-            start_hours = (b.start*_Schedule.SLOT_SIZE)//60
+            start_hours = math.floor(b.start*_Schedule.SLOT_SIZE/60)
             start_time = (b.start*_Schedule.SLOT_SIZE)%60
             start_datetime = datetime(schedule.start_date.year, schedule.start_date.month, schedule.start_date.day, start_hours, start_time, tzinfo=zoneinfo.ZoneInfo(tz)) + timedelta(days=b.day)
             length_hours = (b.length*_Schedule.SLOT_SIZE)//60

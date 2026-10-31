@@ -145,15 +145,14 @@
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     container-type: size;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.600);
 }
 
 .timetable-block:hover {
     filter: brightness(1.1);
 }
 
-.block-info {
-    line-height: 0.8rem;
-}
 
 @container (max-height: 2rem) {
     .block-info {

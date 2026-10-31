@@ -70,11 +70,15 @@ class CostEvaluator:
             if count > target:
                 cost += (count-target)**2 * PENALTY_WEIGHTS.OVERLOAD
 
+        preferred_day_count=0
         
         for b in block_list:
             #cost for block size
             if b.length > activity.max_block_slots:
                 cost+= LIMIT.HARD_SOFT * 2
+
+            if b.length < activity.min_block_slots:
+                cost += (activity.min_block_slots - b.length)**2 * PENALTY_WEIGHTS.MIN_LENGTH
 
             # cost for bounds
             early_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.EARLY_SLOTS > slot)
@@ -87,11 +91,13 @@ class CostEvaluator:
                 cost += hcb**2 * PENALTY_WEIGHTS.HIGH_COST_BOUND
 
             if b.day not in activity.preferred_days:
-                cost += PENALTY_WEIGHTS.PREFERRED_DAYS
+                preferred_day_count+=1
 
             # cost for minimum start
             if b.start < activity.min_start_slot:
                 cost += (b.start-activity.min_start_slot)**2
+
+        cost += preferred_day_count ** 2 * PENALTY_WEIGHTS.PREFERRED_DAYS
 
         # fragmentation (minimise # of blocks)
         if len(block_list) > activity.frequency:
