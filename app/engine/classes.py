@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Any
 
+from helpers.config import get_config
+
 from ..models import Activity, Block, User
 
 type ATB = dict[int, set[int]]
@@ -42,7 +44,7 @@ class PENALTY_WEIGHTS:
 class _Schedule:
     def __init__(self, owner: User) -> None:
         self.table: Table = []
-        self.start_date : date = datetime.now().date()
+        self.start_date : date = datetime.now(tz=zoneinfo.ZoneInfo(get_config()["general"]["timezone"])).date()
         self.owner : User = owner
 
 
