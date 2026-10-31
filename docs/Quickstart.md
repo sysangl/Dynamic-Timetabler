@@ -44,6 +44,36 @@ Opening the link above will bring up a login screen.
 5. Once the page refreshes (you should be able to see your new block in the table), open the sidebar and go back to the timetable.
 6. Your newly created block should now show up in the **Timetable tab**!
 
+## Creating new activities
+1. Open the sidebar and click on the **Scheduler tab**
+2. Click on the **New Activity** button.
+3. Enter te activity details
+4. Click Create.
+
+## Generating timetables
+There are two modes for timetable generation. GREEDY and ANNEALED
+#### Greedy
+1. Create your activities
+2. Make sure the bottom table is clear by pressed **CLEAR ALL**
+3. Click **GENERATE** once.
+4. The blocks should show up in the bottom table.
+5. Check the timetable view, the generated blocks should show up.
+
+#### Annealed
+1. Create your activities
+2. Make sure the bottom table is clear by pressed **CLEAR ALL**
+3. Click **ANNEAL** once.
+4. A screen should show with a warning.
+5. Wait for around a minute, depending on the processing speed of your machine.
+6. Once the screen disappears, annealing is done.
+7. The blocks should show up in the bottom table.
+8. Check the timetable view, the generated blocks should show up.
+
+#### Upon failure
+If the annealing screen shows 'SOMETHING WENT WRONG, PLEASE CHECK THE CONSOLE FOR DETAILS'
+You might want to restart the server (CTRL-C or close the Canopy console and relaunch), and retry.
+*(I don't actually know why it fails)*
+
 
 ## Changing timetable view
 1. Open the sidebar and click on the **Settings tab**
