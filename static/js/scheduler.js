@@ -21,7 +21,13 @@ for (const form of itemForms) {
 
         const formData = new FormData(form)
         var object = {};
-        formData.forEach((value, key) => object[key] = value);
+        formData.forEach((value, key) => {
+            if (key=='even_frequency_spacing') {
+                object[key] = document.getElementById(key).checked
+            } else {
+                object[key] = value}
+            }
+        );
         fetch(form.action, {
             method: 'POST',
             headers: {
@@ -65,6 +71,7 @@ function toggleForms(editMode=false) {
             container.classList.remove('hidden')
         }
     }
+    document.getElementById('form-error-messages').textContent=''
 }
 
 async function fetchActivityBlocks(group='default') {
