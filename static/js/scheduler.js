@@ -62,9 +62,7 @@ for (const form of itemForms) {
 function toggleForms(editMode=false) {
     document.getElementById('backdrop').classList.toggle('hidden')
     document.getElementById('item-forms').classList.toggle('hidden')
-    console.log(`activities-form-container`)
     for (const container of document.getElementById('item-forms').children)  {
-        console.log(container.id)
         if (container.id != `activities-form-container`){
             container.classList.add('hidden')
         } else {
@@ -316,7 +314,6 @@ async function generateTimetable() {
 
     blocks = await response.json()
 
-    console.log(blocks)
     generateBlockTable(blocks)
 
     return blocks
@@ -338,7 +335,6 @@ async function annealTimetable() {
 
     blocks = await response.json()
     backdrop.classList.add('hidden')
-    console.log(blocks)
     generateBlockTable(blocks)
 
     return blocks

@@ -118,6 +118,7 @@
     align-self: center;
     justify-self: center;
     flex-direction: column;
+    overflow-y: scroll;
 }
 
 .item-table-body {

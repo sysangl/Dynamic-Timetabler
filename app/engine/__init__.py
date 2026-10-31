@@ -40,10 +40,10 @@ def reset_ids(table: Table, atb:ATB, blocks:dict[int, _Block], start_from:int=1)
 
 
 def initial_table(db_activities, owner):
-    from .classes import db_activities_to_engine_activities, engine_to_db_blocks
+    from .classes import db_to_engine_activities, engine_to_db_blocks
     from .scheduler import greedy_initial
 
-    activities = db_activities_to_engine_activities(db_activities)
+    activities = db_to_engine_activities(db_activities)
 
     dba_map = {a.id:a for a in db_activities}
 
@@ -62,10 +62,10 @@ def initial_table(db_activities, owner):
     return dbb_list
 
 def anneal_table(db_activities, owner):
-    from .classes import db_activities_to_engine_activities, engine_to_db_blocks
+    from .classes import db_to_engine_activities, engine_to_db_blocks
     from .scheduler import greedy_initial, greedy_schedule
 
-    activities = db_activities_to_engine_activities(db_activities)
+    activities = db_to_engine_activities(db_activities)
 
     dba_map = {a.id:a for a in db_activities}
 

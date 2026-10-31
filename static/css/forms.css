@@ -84,6 +84,11 @@
     background: #2f2f2f;
 }
 
+.field-input:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
 .field-input[type="number"]::-webkit-outer-spin-button,
 .field-input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, time
 
 import pytz
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Uuid
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger
 from .user import User
+
 
 class Activity(db.Model):
     """
@@ -27,6 +28,7 @@ class Activity(db.Model):
     # min_length : Mapped[int | None] = mapped_column()
     max_length : Mapped[int] = mapped_column(default=0)
     min_time : Mapped[int] = mapped_column(default=0)
+    min_start_time: Mapped[int] = mapped_column(default=0)
     # max_time : Mapped[int | None] = mapped_column()
 
     # is the start/end time fixed?
@@ -68,6 +70,7 @@ class Activity(db.Model):
                 min_length:int=45,
                 max_length:int=0,
                 min_time:int=0,
+                min_start_time:time=time(0,0,0),
                 max_time:int=-1,
                 preferred_days:list[int]=list(),  # noqa: B006
                 time_limit_reset:list[int]|None=None,
@@ -91,6 +94,7 @@ class Activity(db.Model):
             # self.min_length = min_length
             self.max_length = max_length
             self.min_time = min_time
+            self.min_start_time = (min_start_time.hour * 60 + min_start_time.minute)
             # self.max_time = max_time
             # self.time_limit_reset = time_limit_reset
             self.extra = extra
@@ -114,6 +118,7 @@ class Activity(db.Model):
             # 'min_length' : self.min_length,
             'max_length' : self.max_length,
             'min_time' : self.min_time,
+            'min_start_time': self.min_start_time, 
             # 'max_time' : self.max_time,
             'time_limit_reset' : self.time_limit_reset,
             'time_spent' : self.time_spent,

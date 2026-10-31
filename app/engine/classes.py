@@ -28,7 +28,7 @@ class LIMIT:
 class PENALTY_WEIGHTS:
     MIN_TIME = 20.0
     FREQ = 2.0
-    EVEN_SPACING = 5.0
+    EVEN_SPACING = 10.0
     OVERLOAD = 3.0
     PRIORITY = 3.0
     IDLE = 3.0
@@ -197,7 +197,7 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
             db_blocks.append(dbb)
     return db_blocks
 
-def db_activities_to_engine_activities(activities: list[Activity])->list[_Activity]:
+def db_to_engine_activities(activities: list[Activity])->list[_Activity]:
     engine_activities = []
     for a in activities:
         ea = _Activity(
@@ -206,6 +206,7 @@ def db_activities_to_engine_activities(activities: list[Activity])->list[_Activi
             even_spacing=a.even_frequency_spacing,
             min_weekly_minutes=a.min_time,
             max_block_minutes=a.max_length,
+            min_start_minutes=a.min_start_time,
             fixed=a.fixed,
             preferred_days=a.preferred_days,
             priority=a.priority,

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any
 
 from flask import Blueprint, request
@@ -135,10 +135,13 @@ def create_item(item: str):
             return _json_error(f'"{item}" is not a valid timetable item', 404)
 
 
+    tz = get_config()["general"]["timezone"]
     if item_class in {Block}:
-        tz = get_config()["general"]["timezone"]
         data['start_datetime'] = combine_date_time(data.get('start_date'),data.get('start_time'), tz=tz) # type: ignore
         data['end_datetime'] = combine_date_time(data.get('end_date'),data.get('end_time'), tz=tz) #type: ignore
+    if item_class in {Activity}:
+        data['min_start_time'] = time.fromisoformat(data.get('min_start_time'))
+
 
     created_item = item_class(
         **data,
