@@ -214,6 +214,7 @@ def db_to_engine_activities(activities: list[Activity])->list[_Activity]:
             frequency=a.frequency,
             even_spacing=a.even_frequency_spacing,
             min_weekly_minutes=a.min_time,
+            min_block_minutes=a.min_length,
             max_block_minutes=a.max_length,
             min_start_minutes=a.min_start_time,
             fixed=a.fixed,

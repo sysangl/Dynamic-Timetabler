@@ -25,7 +25,7 @@ class Activity(db.Model):
     frequency : Mapped[int] = mapped_column(default=0)
     even_frequency_spacing : Mapped[bool] = mapped_column(default=True)
 
-    # min_length : Mapped[int | None] = mapped_column()
+    min_length : Mapped[int] = mapped_column(default=0)
     max_length : Mapped[int] = mapped_column(default=0)
     min_time : Mapped[int] = mapped_column(default=0)
     min_start_time: Mapped[int] = mapped_column(default=0)
@@ -91,7 +91,7 @@ class Activity(db.Model):
             self.priority = priority
             self.frequency = frequency
             self.even_frequency_spacing = even_frequency_spacing
-            # self.min_length = min_length
+            self.min_length = min_length
             self.max_length = max_length
             self.min_time = min_time
             self.min_start_time = (min_start_time.hour * 60 + min_start_time.minute)
@@ -115,7 +115,7 @@ class Activity(db.Model):
             'priority' : self.priority,
             'frequency' : self.frequency,
             'even_frequency_spacing' : self.even_frequency_spacing,
-            # 'min_length' : self.min_length,
+            'min_length' : self.min_length,
             'max_length' : self.max_length,
             'min_time' : self.min_time,
             'min_start_time': self.min_start_time, 
