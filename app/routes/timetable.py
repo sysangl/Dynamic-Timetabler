@@ -141,6 +141,7 @@ def create_item(item: str):
         data['end_datetime'] = combine_date_time(data.get('end_date'),data.get('end_time'), tz=tz) #type: ignore
     if item_class in {Activity}:
         data['min_start_time'] = time.fromisoformat(data.get('min_start_time'))
+        data['preferred_days'] = str(data.get('preferred_days')).split()
 
 
     created_item = item_class(
