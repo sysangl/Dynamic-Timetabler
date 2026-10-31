@@ -173,12 +173,14 @@ class _Block:
 
 def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, activities:list[_Activity])->list[Block]:
     db_blocks:list[Block] = []
+    from helpers.config import get_config
     for a in activities:
         for bid in atb[a.id]:
             b = blocks[bid]
+            tz = get_config()["general"]["timezone"]
             start_hours = (b.start*_Schedule.SLOT_SIZE)//60
             start_time = (b.start*_Schedule.SLOT_SIZE)%60
-            start_datetime = datetime(schedule.start_date.year, schedule.start_date.month, schedule.start_date.day, start_hours, start_time) + timedelta(days=b.day)
+            start_datetime = datetime(schedule.start_date.year, schedule.start_date.month, schedule.start_date.day, start_hours, start_time, tzinfo=tz) + timedelta(days=b.day)
             length_hours = (b.length*_Schedule.SLOT_SIZE)//60
             length_mins = (b.length*_Schedule.SLOT_SIZE)%60
             end_datetime = start_datetime + timedelta(hours=length_hours, minutes=length_mins)
