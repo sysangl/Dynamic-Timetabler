@@ -78,7 +78,7 @@ class CostEvaluator:
                 cost+= LIMIT.HARD_SOFT * 2
 
             if b.length < activity.min_block_slots:
-                cost += (activity.min_block_slots - b.length)**2 * PENALTY_WEIGHTS.MIN_LENGTH
+                cost += (activity.min_block_slots - b.length) * PENALTY_WEIGHTS.MIN_LENGTH
 
             # cost for bounds
             early_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.EARLY_SLOTS > slot)
