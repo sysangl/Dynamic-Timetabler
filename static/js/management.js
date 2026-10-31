@@ -215,7 +215,7 @@ async function generateItemTable(selectedItem=null, timetableItems = null) {
  */
 async function editItem(item) {
     const itemInfo = item.split('-')
-    const itemType = itemInfo[0]
+    const itemType = plural_to_single(itemInfo[0])
     const itemId = itemInfo[1]
 
     const form = document.getElementById(`${itemType}-form`);

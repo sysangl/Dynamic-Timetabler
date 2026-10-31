@@ -98,10 +98,9 @@ class Block(db.Model):
     end_date : Mapped[str] = mapped_column(default='')
     end_time : Mapped[str] = mapped_column(default='')
 
-    activity_id : Mapped[uuid.UUID] = mapped_column(
+    activity_id : Mapped[uuid.UUID|None] = mapped_column(
         Uuid,
         ForeignKey("activities.id", ondelete="CASCADE"),
-        nullable=False,
         index=True,
     )
 
