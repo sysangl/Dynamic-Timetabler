@@ -144,7 +144,7 @@ async function generateItemTable(selectedItem=null, timetableItems = null) {
         if ((selectedItem != itemType) && (selectedItem != 'all')) {
             continue
         }
-        if (itemType == 'status') continue;
+        if (itemType =='status') continue;
         for (const item of items) {
             const row = document.createElement('tr');
             row.onclick = (e) => {
@@ -174,22 +174,30 @@ async function generateItemTable(selectedItem=null, timetableItems = null) {
             const itemStart = document.createElement('td')
             const startDateTime = new Date(item.start_datetime)
             const sDate = document.createElement('p')
-            sDate.textContent = startDateTime.toLocaleDateString()
+            sDate.textContent = startDateTime.toLocaleDateString().replace('Invalid Date','-')
             const sTime = document.createElement('p')
-            sTime.textContent = startDateTime.toLocaleTimeString().replace(':00 ',' ')
+            sTime.textContent = startDateTime.toLocaleTimeString().replace(':00 ',' ').replace('Invalid Date','')
             itemStart.append(sDate,sTime)
+
 
             const itemEnd = document.createElement('td')
             const endDateTime = new Date(item.end_datetime)
             const eDate = document.createElement('p')
-            eDate.textContent = endDateTime.toLocaleDateString()
+            eDate.textContent = endDateTime.toLocaleDateString().replace('Invalid Date','-')
             const eTime = document.createElement('p')
-            eTime.textContent = endDateTime.toLocaleTimeString().replace(':00 ',' ')
+            eTime.textContent = endDateTime.toLocaleTimeString().replace(':00 ',' ').replace('Invalid Date','')
             itemEnd.append(eDate,eTime)
 
             const itemStatus = document.createElement('td')
-            itemStatus.textContent = 'Uncompleted'
-            
+            if (itemType == 'activities') {
+                itemStatus.textContent = `${item.block_count} Blocks`
+                if (item.block_count==0) {
+                    itemStatus.textContent = `Not Generated`;
+                }
+            } else {
+                itemStatus.textContent = 'Uncompleted'
+            }
+
             row.ondblclick = ()=>{editItem(row.id)}
             row.append(itemTypeText, itemTitleText, itemStart, itemEnd, itemStatus)
             itemTable.append(row)

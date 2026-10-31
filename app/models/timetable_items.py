@@ -255,7 +255,7 @@ class Activity(db.Model):
         return {
             'id' : self.id,
             'group_name' : self.group_name,
-            'name' : self.name,
+            'title' : self.name,
             'description' : self.description,
             'priority' : self.priority,
             'frequency' : self.frequency,
@@ -266,7 +266,8 @@ class Activity(db.Model):
             # 'max_time' : self.max_time,
             'time_limit_reset' : self.time_limit_reset,
             'time_spent' : self.time_spent,
-            'colour': self.colour
+            'colour': self.colour,
+            'block_count' : len(self.blocks.all())
         }
 
 class Routine(db.Model):
