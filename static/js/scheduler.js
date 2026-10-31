@@ -122,24 +122,11 @@ async function generateActivityTable(timetableItems = null) {
         if (itemType == 'status') continue;
         for (const item of items) {
             const row = document.createElement('tr');
-            row.onclick = (e) => {
-                if (!getPressedKeys().includes('Control')) {
-                    const selectedElements = document.getElementsByClassName('selected');
-                    for (let index = 0; index < selectedElements.length; index++) {
-                        const element = selectedElements[index];
-                        if (element != row) {
-                            element.classList.remove('selected')
-                        }
-                    }
-                    
-                }
-                row.classList.toggle('selected')
-            };
             row.id = `${itemType}-${item.id}`
             const nameText = document.createElement('td')
-            nameText.textContent = item.name
+            nameText.textContent = item.title
             const priorityText = document.createElement('td')
-            priorityText.textContent = item.title
+            priorityText.textContent = item.priority
             
             const frequencyText = document.createElement('td')
             frequencyText.textContent = item.frequency
@@ -334,6 +321,29 @@ async function generateTimetable() {
 
     return blocks
 }
+
+async function annealTimetable() {
+    const backdrop = document.getElementById('loading-backdrop')
+
+    backdrop.classList.remove('hidden')
+    var url = '/api/engine/anneal/default'
+    const response = await fetch(url, {
+        method : 'POST'
+    });
+
+    if (!response.ok) {
+        backdrop.innerHTML += "SOMETHING WENT WRONG, PLEASE CHECK CANOPY CONSOLE"
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+
+    blocks = await response.json()
+    backdrop.classList.add('hidden')
+    console.log(blocks)
+    generateBlockTable(blocks)
+
+    return blocks
+}
+
 
 setupScheduler();
 // close forms when Esc is pressed

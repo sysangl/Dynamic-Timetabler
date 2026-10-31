@@ -46,6 +46,7 @@
     padding: 5px 10px;
     justify-self: right;
     border-radius: 2.5px;
+    margin-left: 5px;
     align-self: right;
     background-color: var(--bg-button-other);
     color: var(--text-primary);
@@ -174,5 +175,22 @@
 }
 
 #backdrop.hidden {
+    display: none;
+}
+
+#loading-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    padding: 2rem;
+    backdrop-filter: brightness(0.3) blur(8px);
+    font-size: 2rem; 
+    color: red;
+}
+
+#loading-backdrop.hidden {
     display: none;
 }

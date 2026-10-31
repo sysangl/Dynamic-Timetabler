@@ -9,6 +9,7 @@
         <span id="counter">| <span id="activity-counter">0</span> Activities</span>
         <div></div>
         <button id="generate-timetable-btn" onclick="generateTimetable()">GENERATE</button>
+        <button id="anneal-timetable-btn" onclick="annealTimetable()">ANNEAL</button>
         <button id="create-new-btn" onclick="toggleForms()">New Activity</button>
     </header>
     <table id="activity-table">
@@ -75,7 +76,7 @@
 
             <div class="field-group">
                 <label for="description">Activity group</label>
-                <input id="activity_group" name="activity_group" type="text" maxlength="20" class="field-input" placeholder="Activity group name" value="default">
+                <input disabled id="activity_group" name="activity_group" type="text" maxlength="20" class="field-input" placeholder="Activity group name" value="default">
             </div>
         </fieldset>
 
@@ -128,6 +129,10 @@
 
 <div id="backdrop" onclick="toggleForms()" class="hidden fill-available"></div>
 
+<div id="loading-backdrop" class="hidden">
+        Running Annealer. This may take a minute.<br>
+        <span style="font-size: 1rem; color: lightgray;">(check the canopy console to see stats and progress)</span> <br>
+</div>
 
 <!-- settings script -->
 <script src="{{url_for('static',filename='js/scheduler.js')}}"></script>

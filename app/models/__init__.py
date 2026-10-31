@@ -6,7 +6,8 @@ from ..extensions import db, pwd_hasher
 db_logger = logging.getLogger('database')
 
 from .base import BaseModel
-from .timetable_items import Activity, Block
+from .schedule import Activity, Schedule
+from .timetable_items import Block
 from .user import Settings, User
 
 
@@ -21,6 +22,7 @@ __all__ = [
     # 'Task',
     'Block',
     # 'Routine',
+    'Schedule',
     'Settings',
     'User',
     'db',
