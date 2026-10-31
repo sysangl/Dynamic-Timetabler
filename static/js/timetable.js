@@ -198,15 +198,28 @@ function updateTime() {
 function showPopupMenu(target, e) {
     const backdrop  = document.getElementById('backdrop')
     const popupMenu = document.getElementById('popup-menu');
+    const popupBlockTitle = document.getElementById('popup-block-title');
+    const popupBlockTime = document.getElementById('popup-block-time');
+    const popupBlockInfo = document.getElementById('popup-block-info');
+
+
     const alreadyOpen = popupMenu.classList.contains('open') && target === popupMenu._currentTarget;
     if (alreadyOpen) {
         closePopupMenu();
         return;
     }
-    const bRect = target.getBoundingClientRect()
     popupMenu.style.top = `${e.pageY}px`;
     // popupMenu.style.left = `${bRect.left + window.scrollX}px`;
     popupMenu.style.left = `${e.pageX}px`;
+    if ((e.pageX + popupMenu.clientWidth)>=document.documentElement.clientWidth) {
+        popupMenu.style.right= '10px';
+        popupMenu.style.left = 'unset';
+    }
+
+    popupBlockTitle.textContent = target.dataset.blockTitle;
+    popupBlockTime.textContent = target.dataset.blockTime;
+    popupBlockInfo.style.background = target.dataset.blockColour;
+
     popupMenu._currentTarget = target;
     popupMenu.classList.add('open');
     backdrop.classList.add('active');
@@ -293,7 +306,10 @@ function splitBlock(block) {
 
         const el = document.createElement('div');
         el.className = 'timetable-block';
+        el.dataset.blockTitle = block.title;
+        el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
+        el.dataset.blockColour = block.colour;
         el.id = `timetable-block-${block.id}`;
 
         if (window.settings.timetable_view =='horizontal') {

@@ -187,12 +187,12 @@
     min-width: 150px;
     background-color: #f5f5f5;
     box-shadow: 0 4px 12px rgba(0,0,0,.15);
-    padding: 0.7rem;
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
     transition: opacity .2s, visibility .2s;
 }
+
 #popup-menu.open {
     opacity: 1;
     visibility: visible;
@@ -214,6 +214,14 @@
 
 #popup-menu button:disabled {
     color: #c0c0c0;
+}
+
+#popup-block-info {
+
+    border-radius: 0.2rem;
+    color: var(--text-primary);
+    margin: 0.2rem;
+    padding: 0.4rem;
 }
 
 #backdrop {

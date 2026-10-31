@@ -178,7 +178,6 @@
     min-width: 150px;
     background-color: #f5f5f5;
     box-shadow: 0 4px 12px rgba(0,0,0,.15);
-    padding: 0.7rem;
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
