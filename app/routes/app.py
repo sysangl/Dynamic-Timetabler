@@ -39,6 +39,10 @@ def _render(page_name:str, **jinja_vars: Any):
 def redirect_to_timetable():
     return redirect(url_for('app.serve_timetable')),302
 
+@bp.route("/")
+def serve_info():
+    return _render("info", display_name=current_user.display_name)
+
 @bp.route("/dashboard")
 @login_required
 def dashboard():
