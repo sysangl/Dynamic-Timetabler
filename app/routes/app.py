@@ -75,12 +75,13 @@ def serve_settings():
 
 @bp.route("/page/<string:page>", methods=['GET'])
 @login_required
-def page_fragment(page, **kwargs):
+def page_fragment(page:str, **kwargs):
     """
     returns page fragment
     """
     if page not in ALLOWED_PAGES:
-        from flask import abort
-        abort(404)
+        if len(page) >= 10:
+            page = page[:6]+'...'
+        return render_template('404.html', url_string=page), 404
     
     return _render(page, **kwargs)

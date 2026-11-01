@@ -1,7 +1,7 @@
 # app/routes/__init__.py
 import logging
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template, request
 
 from .app import bp as app_bp
 from .auth import bp as auth_bp
@@ -29,6 +29,14 @@ def _register_utility_routes(app: Flask)->None:
         """health-check ep"""
         return jsonify({"status":"ok"})
 
+    @app.errorhandler(404)
+    def not_found(e):
+        page = request.url.split('/')[-1]
+        if len(page) >= 15:
+            page = page[:10]+'...'
+        return render_template('404.html', url_string=page), 404
+
+
 def register_routes(app: Flask) -> None:
     log = logging.getLogger("app")
     log.info("Initialising routes")
@@ -38,3 +46,4 @@ def register_routes(app: Flask) -> None:
 
     log.info("Registering utility routes")
     _register_utility_routes(app)
+
