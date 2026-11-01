@@ -136,3 +136,8 @@ class Schedule(db.Model):
 
     activities_to_blocks : Mapped[dict[int, int]] = mapped_column(JSON, default=dict())
     table : Mapped[list[list[int]]] = mapped_column(JSON,default=list())
+
+    start_date : Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+    def __init__(self) -> None:
+        super().__init__()

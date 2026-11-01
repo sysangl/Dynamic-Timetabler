@@ -5,7 +5,7 @@ timezone = "Australia/Melbourne"
 engine_only = false
 
 [server]
-debug = false
+debug = true
 host = "localhost"
 port = 58362
 

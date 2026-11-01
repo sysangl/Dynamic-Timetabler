@@ -8,7 +8,7 @@ const buttons = document.querySelectorAll('.sidebar-btn');
  * @returns 
  */
 async function loadPage(page, push = true) {
-    if(!['timetable','settings','management','scheduler'].includes(page)) page = 'unknown';
+    if(!['timetable','settings','management','scheduler', 'info'].includes(page)) page = 'unknown';
     if(currentPage==page) return;
 
     // getch fragment 

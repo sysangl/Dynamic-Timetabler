@@ -169,6 +169,16 @@ input, button {
     padding: 0;
 }
 
+#sidebar-spacer {
+    width: auto;
+    width: -moz-available;
+    width: -webkit-fill-available;
+    height: auto;
+    height: -moz-available;
+    height: -webkit-fill-available;
+
+}
+
 .sidebar-btn {
     width: var(--sidebar-width);
     padding: 15px;
@@ -185,4 +195,9 @@ input, button {
 
 .sidebar-btn:hover {
     background-color: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-btn:last-child {
+    position: absolute;
+    bottom: 0;
 }

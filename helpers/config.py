@@ -15,6 +15,7 @@ server_logger = logging.getLogger("server")
 PROJECT_NAME = 'canopy-suite'
 DATA_DIRECTORY = Path.home() / f'.{PROJECT_NAME}'
 _DEFAULT_CFG = Path(resource_path('config')) / 'default.toml'
+_TESTING_CFG = Path(resource_path('config')) / 'testing.toml'
 _USER_CFG = DATA_DIRECTORY / 'default.toml'
 
 _lock = threading.RLock()
@@ -48,9 +49,11 @@ def _load_config()->dict:
 
 CONFIG = _load_config()
 
-def get_config(default=False)->dict:
+def get_config(default=False, testing=False)->dict:
     if default:
         return _read_config(_DEFAULT_CFG)
+    if testing:
+        return _read_config(_TESTING_CFG)
     return CONFIG
 
 def reload_config():

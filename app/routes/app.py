@@ -15,7 +15,8 @@ ALLOWED_PAGES = [
     'timetable',
     'management',
     'settings',
-    'scheduler'
+    'scheduler',
+    'info'
 ]
 
 # helper func

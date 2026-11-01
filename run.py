@@ -4,11 +4,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--mode', required=False)
 args = parser.parse_args()
 
-def run_server() -> None:
+def run_server(debug=False) -> None:
     import atexit
     import logging
     import multiprocessing
-    import webbrowser
 
     from app import create_app
     from helpers.config import get_config
@@ -17,7 +16,7 @@ def run_server() -> None:
     initialise_logging()
     multiprocessing.freeze_support()
 
-    config = get_config()
+    config = get_config(testing=debug)
     app = create_app()
 
     print( "==========================================================================")
@@ -44,7 +43,6 @@ def run_server() -> None:
             print(f"{rule.endpoint:35s} {rule}")
         print("===========================================================================\n")
     server_logger = logging.getLogger('server')
-    webbrowser.open(f"http://{config['server']['host']}:{config['server']['port']}/app")
     app.run(debug=config['server']['debug'], host=config['server']['host'], port=config['server']['port'])
 
     def server_stop():
@@ -54,8 +52,22 @@ def run_server() -> None:
 
 if __name__ == "__main__":
     match args.mode:
-        case 'testing':
+        case 'engine':
             from app.engine.testing import test
             test()
+        case 'debug':
+            import webbrowser
+
+            from helpers.config import get_config
+            
+            config = get_config()
+            webbrowser.open(f"http://{config['server']['host']}:{config['server']['port']}/app")
+            run_server(debug=True)
         case _:
+            import webbrowser
+
+            from helpers.config import get_config
+            
+            config = get_config()
+            webbrowser.open(f"http://{config['server']['host']}:{config['server']['port']}/app")
             run_server()
