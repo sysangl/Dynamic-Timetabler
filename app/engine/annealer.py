@@ -25,6 +25,7 @@ def clamp(value, min_value, max_value):
 
 class CostEvaluator:
     def __init__(self,
+                schedule:_Schedule,
                 activities: dict[int, _Activity],
                 blocks: dict[int, _Block],
                 atb: ATB,
@@ -41,6 +42,7 @@ class CostEvaluator:
         self.idle = 0
         self.balance = 0
         self.table = table
+        self.schedule = schedule
 
     def calculate_cost(self, a_id:int):
         activity = self.activities[a_id]
@@ -58,14 +60,14 @@ class CostEvaluator:
         #cost for even spacing
         if activity.even_spacing and len(block_list) > 1:
             days = sorted(b.day for b in block_list)
-            ideal = _Schedule.SIZE / activity.frequency
+            ideal = self.schedule.SIZE / activity.frequency
             # calcultaing standard error, spesh coming in clutch
             standard_err = sum((days[day+1]-days[day]-ideal) for day in range(len(days)-1))
             cost += standard_err**2 * PENALTY_WEIGHTS.EVEN_SPACING
 
         #cost for over load
         blocks_per_day = collections.Counter(b.day for b in block_list)
-        target = math.ceil(activity.frequency/_Schedule.SIZE)
+        target = math.ceil(activity.frequency/self.schedule.SIZE)
         for count in blocks_per_day.values():
             if count > target:
                 cost += (count-target)**2 * PENALTY_WEIGHTS.OVERLOAD
@@ -81,11 +83,11 @@ class CostEvaluator:
                 cost += (activity.min_block_slots - b.length) * PENALTY_WEIGHTS.MIN_LENGTH
 
             # cost for bounds
-            early_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.EARLY_SLOTS > slot)
-            late_oob = sum(1 for slot in range(b.start, b.start + b.length) if _Schedule.LATE_SLOTS < slot)
+            early_oob = sum(1 for slot in range(b.start, b.start + b.length) if self.schedule.EARLY_SLOTS > slot)
+            late_oob = sum(1 for slot in range(b.start, b.start + b.length) if self.schedule.LATE_SLOTS < slot)
             cost += (early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND)
 
-            bounds = _Schedule.HIGH_COST_BOUNDS.get(b.day, [])
+            bounds = self.schedule.HIGH_COST_BOUNDS.get(b.day, [])
             for bound in bounds:
                 hcb = sum(1 for slot in range(b.start, b.start+b.length) if bound[0] <= slot <= bound[1])
                 cost += hcb**2 * PENALTY_WEIGHTS.HIGH_COST_BOUND
@@ -109,7 +111,7 @@ class CostEvaluator:
         # cost for not using time
         empty = sum(day.count(None) for day in self.table)
         idle_prev = self.idle
-        idle_current = (empty * PENALTY_WEIGHTS.IDLE)/_Schedule.SLOTS_PER_DAY
+        idle_current = (empty * PENALTY_WEIGHTS.IDLE)/self.schedule.SLOTS_PER_DAY
         self.idle = idle_current
         return idle_current - idle_prev 
 
@@ -119,7 +121,7 @@ class CostEvaluator:
         total = sum(blocks_per_day)
         balance_current = 0
         for count in blocks_per_day:
-            balance_current += (count-(total/_Schedule.SIZE))**2 * PENALTY_WEIGHTS.BALANCE
+            balance_current += (count-(total/self.schedule.SIZE))**2 * PENALTY_WEIGHTS.BALANCE
         balance_prev = self.balance
         self.balance = balance_current
         return balance_current-balance_prev
@@ -162,10 +164,10 @@ def shift_move(
     affected = {activity.id}
 
     day_offset = random.choice([-1,0,1])
-    start_offset = random.choice(range(-int(_Schedule.SLOTS_PER_DAY//12),int(_Schedule.SLOTS_PER_DAY//12)))
+    start_offset = random.choice(range(-int(activity.schedule.SLOTS_PER_DAY//12),int(activity.schedule.SLOTS_PER_DAY//12)))
     
-    new_day = clamp(old_day+day_offset, 0,_Schedule.SIZE-1)
-    new_start = clamp(old_start+start_offset, 0, _Schedule.SLOTS_PER_DAY-1)
+    new_day = clamp(old_day+day_offset, 0,activity.schedule.SIZE-1)
+    new_start = clamp(old_start+start_offset, 0, activity.schedule.SLOTS_PER_DAY-1)
 
     # if new_start < activity.min_start_slot:
     #     return ChangeResult(LIMIT.HARD, undo=lambda: None) # maybe make the penalty scale with prio? or use the soft hard hybrid
@@ -176,7 +178,7 @@ def shift_move(
         start=new_start,
         length=block.length
     )
-    if not can_place(table, test_block):
+    if not can_place(activity.schedule,table, test_block):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     clear_block(table,block)
@@ -234,7 +236,7 @@ def swap_blocks(
     test1 = _Block(id=b1.id, activity_id=b2.activity_id, day=b2.day, start=b2.start, length=b1.length)
     test2 = _Block(id=b2.id, activity_id=b1.activity_id, day=b1.day, start=b1.start, length=b2.length)
 
-    if not (can_place(table, test1) and can_place(table, test2)):
+    if not (can_place(a1.schedule,table, test1) and can_place(a2.schedule,table, test2)):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     clear_block(table, b1)
@@ -310,7 +312,7 @@ def resize_block(
         return ChangeResult(LIMIT.SOFT, undo=lambda: None)
 
     next_slot = block.start + block.length
-    if next_slot >= _Schedule.SLOTS_PER_DAY:
+    if next_slot >= activity.schedule.SLOTS_PER_DAY:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
     if table[block.day][next_slot] is not None:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
@@ -361,10 +363,10 @@ def split_block(
 
     clear_block(table, parent)
     day_load[parent.day] -= 1
-
+    schedule = activities[parent.activity_id].schedule
     # check placement
     # restore
-    if not (can_place(table, child1) and can_place(table, child2)):
+    if not (can_place(schedule,table, child1) and can_place(schedule,table, child2)):
         place_block(table, parent)
         day_load[parent.day] += 1
         return ChangeResult(delta=LIMIT.HARD, undo=lambda: None)
@@ -557,6 +559,7 @@ def random_reschedule(
 class Annealer:
 
     def __init__(self,
+                schedule:_Schedule,
                 table: Table,
                 activities:list[_Activity],
                 atb:ATB,
@@ -575,7 +578,9 @@ class Annealer:
         self.atb = atb
         self.day_load = day_load
 
-        self.evaluator = CostEvaluator(self.activities,
+        self.evaluator = CostEvaluator(
+                                    schedule,
+                                    self.activities,
                                     self.blocks,
                                     self.atb,
                                     self.day_load,

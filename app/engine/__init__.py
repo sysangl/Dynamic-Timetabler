@@ -55,7 +55,7 @@ def initial_table(db_schedule: Schedule):
 
     dba_map = {a.id:a for a in db_activities}
 
-    blocks, _, atb, _ = greedy_initial(activities)
+    blocks, _, atb, _ = greedy_initial(engine_schedule, activities)
 
     dbb_list = engine_to_db_blocks(engine_schedule,blocks,atb,activities)
     for dbb in dbb_list:
@@ -67,7 +67,11 @@ def initial_table(db_schedule: Schedule):
     return dbb_list
 
 def anneal_table(db_schedule:Schedule, owner:User):
-    from .classes import db_to_engine_activities, engine_to_db_blocks
+    from .classes import (
+        db_to_engine_activities,
+        db_to_engine_schedule,
+        engine_to_db_blocks,
+    )
     from .scheduler import greedy_initial, greedy_schedule
 
     engine_schedule = db_to_engine_schedule(db_schedule)
@@ -76,7 +80,7 @@ def anneal_table(db_schedule:Schedule, owner:User):
     activities = db_to_engine_activities(engine_schedule, db_activities)
 
     dba_map = {a.id:a for a in db_activities}
-    blocks, table, atb, day_load = greedy_initial(activities)
+    blocks, table, atb, day_load = greedy_initial(engine_schedule, activities)
 
     print('\n\nINITIAL =======================================')
     for day in range(engine_schedule.SIZE):
@@ -102,6 +106,7 @@ def anneal_table(db_schedule:Schedule, owner:User):
 
     from app.engine.annealer import Annealer
     annealer = Annealer(
+        engine_schedule,
         table=table,
         activities=activities,
         blocks=blocks,

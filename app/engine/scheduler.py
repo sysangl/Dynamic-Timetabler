@@ -41,10 +41,10 @@ def allocate_lengths(needed:int, sessions:int, max_len:int)->list[int]:
             break
     return lengths
 
-def can_place(table:Table, b:_Block):
+def can_place(schedule:_Schedule, table:Table, b:_Block):
     for slot in range(b.start, b.start + b.length):
         try:
-            if slot >= _Schedule.SLOTS_PER_DAY or not (0<=b.day<_Schedule.SIZE):
+            if slot >= schedule.SLOTS_PER_DAY or not (0<=b.day<schedule.SIZE):
                 return False
             if table[b.day][slot] not in {None, b.id}:
                 return False
@@ -67,7 +67,7 @@ def greedy_schedule(activity:_Activity, table:Table, blocks:dict[int, _Block], a
 
 
     if activity.even_spacing:
-        target_days = [min(max(0, round(i * _Schedule.SIZE / needed_sessions)), _Schedule.SIZE-1) for i in range(needed_sessions)]
+        target_days = [min(max(0, round(i * activity.schedule.SIZE / needed_sessions)), activity.schedule.SIZE-1) for i in range(needed_sessions)]
     else:
         target_days = [None] * needed_sessions
 
@@ -76,31 +76,31 @@ def greedy_schedule(activity:_Activity, table:Table, blocks:dict[int, _Block], a
         if activity.even_spacing:
             ideal = target_days[idx]
             offsets = []
-            for day in range(_Schedule.SIZE):
+            for day in range(activity.schedule.SIZE):
                 offsets.append(day)
                 offsets.append(-day)
             for offset in offsets:
                 day = ideal + offset
-                if 0<=day<_Schedule.SIZE and day not in used_days:
+                if 0<=day<activity.schedule.SIZE and day not in used_days:
                     candidate_days.append(day)
             if not candidate_days:
-                candidate_days = list(range(_Schedule.SIZE))
+                candidate_days = list(range(activity.schedule.SIZE))
         elif len(activity.preferred_days) > 0:
             candidate_days = activity.preferred_days
 
         else:
             activities_per_day = [
-                (day, sum(1 for id in activity_to_blocks[activity.id] if blocks[id].day == day), day_load[day]) for day in range(_Schedule.SIZE)
+                (day, sum(1 for id in activity_to_blocks[activity.id] if blocks[id].day == day), day_load[day]) for day in range(activity.schedule.SIZE)
             ]
             activities_per_day.sort(key=lambda x: (x[1],x[2]))
             candidate_days = [day for day,_,_ in activities_per_day]
 
         placed = False
 
-        slot_variation = random.randint(_Schedule.SLOTS_PER_DAY//20, _Schedule.SLOTS_PER_DAY//20)
+        slot_variation = random.randint(activity.schedule.SLOTS_PER_DAY//20, activity.schedule.SLOTS_PER_DAY//20)
 
         for day in candidate_days:
-            free_slots_start = find_free_slots(day, block_length, table, start_from=clamp(activity.min_start_slot+slot_variation, 0, _Schedule.SLOTS_PER_DAY-block_length))
+            free_slots_start = find_free_slots(day, block_length, table, start_from=clamp(activity.min_start_slot+slot_variation, 0, activity.schedule.SLOTS_PER_DAY-block_length))
             if free_slots_start is not None:
                 b = _Block(
                     activity_id=activity.id,
@@ -147,7 +147,7 @@ def random_schedule(activity:_Activity, table:Table, blocks:dict[int, _Block], a
     total_needed = max(activity.min_weekly_slots, needed_sessions)
 
     lengths = allocate_lengths(total_needed, needed_sessions, activity.max_block_slots)
-    days = range(_Schedule.SIZE)
+    days = range(activity.schedule.SIZE)
 
     while len(lengths) != 0:
         block_length = lengths.pop()
@@ -206,7 +206,7 @@ def place_fixed_blocks(table:Table, activities: list[_Activity], blocks: dict[in
                 length=length,
                 fixed=True
             )
-            if not can_place(table, b):
+            if not can_place(activity.schedule,table, b):
                 raise ValueError(f'fixed block for activity {activity.id} overlaps another block')
                 
             place_block(table, b)
@@ -214,12 +214,12 @@ def place_fixed_blocks(table:Table, activities: list[_Activity], blocks: dict[in
             activity_to_blocks[activity.id].add(b.id)
             day_load[day] += 1
 
-def greedy_initial(activities: list[_Activity], schedule_size:int=_Schedule.SIZE, slots_per_day:int=_Schedule.SLOTS_PER_DAY, slot_size:int=_Schedule.SLOT_SIZE):
-    table: Table = [[None for _ in range(slots_per_day) ] for _ in range(_Schedule.SIZE)]
+def greedy_initial(schedule: _Schedule,activities: list[_Activity]):
+    table: Table = [[None for _ in range(schedule.SLOTS_PER_DAY) ] for _ in range(schedule.SIZE)]
     blocks: dict[int, _Block] = {}
     activity_to_blocks:ATB = {}
     activity_to_blocks = {a.id: set() for a in activities}
-    day_load:list[int] = [0]*slots_per_day
+    day_load:list[int] = [0]*schedule.SLOTS_PER_DAY
 
     place_fixed_blocks(table, activities, blocks, activity_to_blocks, day_load)
 

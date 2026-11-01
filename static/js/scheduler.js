@@ -107,6 +107,48 @@ async function fetchTimetableItems() {
  * timetableItems is what items to use, defaults to grabbing the item from the server
  * @param {JSON} timetableItems 
  */
+async function generateScheduleTable(timetableItems = null) {
+    timetableItems = await fetchTimetableItems()
+    const itemTable = document.getElementById('schedule-table-body')
+    itemTable.innerHTML = "";
+    let itemCount = 0
+
+    for (const [itemType, items] of Object.entries(timetableItems)) {
+        if ('schedules' != itemType) {
+            continue
+        }
+        if (itemType == 'status') continue;
+        for (const item of items) {
+            const row = document.createElement('tr');
+            row.id = `${itemType}-${item.id}`
+            const nameText = document.createElement('td')
+            nameText.textContent = item.title
+            const priorityText = document.createElement('td')
+            priorityText.textContent = item.priority
+            
+            const frequencyText = document.createElement('td')
+            frequencyText.textContent = item.frequency
+
+            const minTimeText = document.createElement('td')
+            minTimeText.textContent = item.min_time
+            const maxLengthText = document.createElement('td')
+            maxLengthText.textContent = item.max_length
+            
+            row.ondblclick = ()=>{editItem(row.id)}
+            row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)
+            itemTable.append(row)
+            itemCount += 1
+        }
+    }
+    document.getElementById('schedule-counter').textContent = itemCount;
+}
+
+
+/**
+ * Generates and populates the item table
+ * timetableItems is what items to use, defaults to grabbing the item from the server
+ * @param {JSON} timetableItems 
+ */
 async function generateActivityTable(timetableItems = null) {
     timetableItems = await fetchTimetableItems()
     const itemTable = document.getElementById('activity-table-body')
