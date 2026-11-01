@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, time
+from datetime import date, datetime, time
 
 import pytz
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Uuid
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Uuid, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger
@@ -60,6 +60,19 @@ class Activity(db.Model):
         lazy="dynamic",
     )
     colour : Mapped[str] = mapped_column(nullable=False, default="#75547e")
+
+
+    schedule_id : Mapped[uuid.UUID|None] = mapped_column(
+        Uuid,
+        ForeignKey("schedules.id", ondelete="CASCADE"),
+        index=True,
+    )
+
+    schedule : Mapped[Schedule] = relationship(
+        "Schedule",
+        back_populates="activities"
+    )
+
     def __init__(self,
                 name:str,
                 owner:User,
@@ -134,10 +147,57 @@ class Schedule(db.Model):
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
     description : Mapped[str] = mapped_column(nullable=False, default="")
 
-    activities_to_blocks : Mapped[dict[int, int]] = mapped_column(JSON, default=dict())
+    activities_to_blocks : Mapped[dict[int, set[int]]] = mapped_column(JSON, default=dict())
     table : Mapped[list[list[int]]] = mapped_column(JSON,default=list())
 
-    start_date : Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    start_date : Mapped[date] = mapped_column(Date, nullable=False)
+    length : Mapped[int] = mapped_column(default=7)
 
-    def __init__(self) -> None:
-        super().__init__()
+    slot_size : Mapped[int] = mapped_column(default=10)
+    early : Mapped[int] = mapped_column(default=360)
+    late : Mapped[int] = mapped_column(default=1320)
+
+    owner_id : Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    owner : Mapped[User] = relationship(
+        "User",
+        back_populates="activities"
+    )
+
+    activities = relationship(
+        "Activity",
+        back_populates="schedule",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+
+
+    def __init__(self,
+                name:str,
+                owner:User,
+                start_date:date|None = None,
+                group_name: str = 'default',
+                description:str = '',
+                atb : dict[int,set[int]] = dict(),
+                table : list[list[int]] = list(),
+                length: int = 7,
+                slot_size:int=10,
+                early:int=360,
+                late:int=1320
+                ) -> None:
+        if not start_date:
+            self.start_date = datetime.now().date()
+        self.name = name
+        self.group_name = group_name
+        self.description = description
+        self.activities_to_blocks = atb
+        self.table = table
+        self.length = length
+        self.owner = owner
+        self.slot_size = slot_size
+        self.early = early
+        self.late = late

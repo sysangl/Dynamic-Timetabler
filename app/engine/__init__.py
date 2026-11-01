@@ -1,3 +1,4 @@
+from ..models import Activity, Schedule, User
 from .classes import (
     ATB,
     Table,
@@ -39,20 +40,24 @@ def reset_ids(table: Table, atb:ATB, blocks:dict[int, _Block], start_from:int=1)
     return table, blocks
 
 
-def initial_table(db_activities, owner):
-    from .classes import db_to_engine_activities, engine_to_db_blocks
+def initial_table(db_schedule: Schedule):
+    from .classes import (
+        db_to_engine_activities,
+        db_to_engine_schedule,
+        engine_to_db_blocks,
+    )
     from .scheduler import greedy_initial
 
-    activities = db_to_engine_activities(db_activities)
+    engine_schedule = db_to_engine_schedule(db_schedule)
+
+    db_activities = db_schedule.activities
+    activities = db_to_engine_activities(engine_schedule, db_activities)
 
     dba_map = {a.id:a for a in db_activities}
 
     blocks, _, atb, _ = greedy_initial(activities)
 
-    schedule = _Schedule(owner)
-    schedule.owner = owner
-
-    dbb_list = engine_to_db_blocks(schedule,blocks,atb,activities)
+    dbb_list = engine_to_db_blocks(engine_schedule,blocks,atb,activities)
     for dbb in dbb_list:
         dbb.activity = dba_map[dbb.activity_id]
         dbb.group_name = dba_map[dbb.activity_id].group_name
@@ -61,26 +66,28 @@ def initial_table(db_activities, owner):
 
     return dbb_list
 
-def anneal_table(db_activities, owner):
+def anneal_table(db_schedule:Schedule, owner:User):
     from .classes import db_to_engine_activities, engine_to_db_blocks
     from .scheduler import greedy_initial, greedy_schedule
 
-    activities = db_to_engine_activities(db_activities)
+    engine_schedule = db_to_engine_schedule(db_schedule)
+
+    db_activities = db_schedule.activities
+    activities = db_to_engine_activities(engine_schedule, db_activities)
 
     dba_map = {a.id:a for a in db_activities}
-
     blocks, table, atb, day_load = greedy_initial(activities)
 
     print('\n\nINITIAL =======================================')
-    for day in range(_Schedule.SIZE):
+    for day in range(engine_schedule.SIZE):
         print(f'----- day {day}-------------------')
         day_blocks = [b for b in blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
         for block in day_blocks:
             activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * _Schedule.SLOT_SIZE
-            end_mins = (block.start + block.length) * _Schedule.SLOT_SIZE
+            start_mins = block.start * engine_schedule.SLOT_SIZE
+            end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
             start_hours = start_mins // 60
             start_mins = start_mins % 60
             end_hours = end_mins // 60
@@ -114,15 +121,15 @@ def anneal_table(db_activities, owner):
     best_table, best_blocks = reset_ids(best_table, new_atb, best_blocks)
 
 
-    for day in range(_Schedule.SIZE):
+    for day in range(engine_schedule.SIZE):
         print(f'----- day {day}-------------------')
         day_blocks = [b for b in best_blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
         for block in day_blocks:
             activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * _Schedule.SLOT_SIZE
-            end_mins = (block.start + block.length) * _Schedule.SLOT_SIZE
+            start_mins = block.start * engine_schedule.SLOT_SIZE
+            end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
             start_hours = start_mins // 60
             start_mins = start_mins % 60
             end_hours = end_mins // 60
@@ -138,10 +145,8 @@ def anneal_table(db_activities, owner):
     print(f'Final Cost: {best_cost}')
 
 
-    schedule = _Schedule(owner)
-    schedule.owner = owner
 
-    dbb_list = engine_to_db_blocks(schedule,blocks,atb,activities)
+    dbb_list = engine_to_db_blocks(engine_schedule,blocks,atb,activities)
     for dbb in dbb_list:
         dbb.activity = dba_map[dbb.activity_id]
         dbb.group_name = dba_map[dbb.activity_id].group_name

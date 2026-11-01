@@ -7,7 +7,7 @@ from typing import Any
 
 from helpers.config import get_config
 
-from ..models import Activity, Block, User
+from ..models import Activity, Block, User, Schedule
 
 type ATB = dict[int, set[int]]
 type Table = list[list[int | None]]
@@ -43,25 +43,31 @@ class PENALTY_WEIGHTS:
     MIN_LENGTH = 20.0
 
 class _Schedule:
-    def __init__(self, owner: User) -> None:
-        self.table: Table = []
-        self.start_date : date = datetime.now(tz=zoneinfo.ZoneInfo(get_config()["general"]["timezone"])).date()
-        self.owner : User = owner
-
-
-    SIZE = 7
     MINS_IN_DAY = 24 * 60
-    SLOT_SIZE = 10 #mins
-    SLOTS_PER_DAY = MINS_IN_DAY//SLOT_SIZE
-    EARLY = 6*60
-    EARLY_SLOTS = EARLY//SLOT_SIZE
+    def __init__(self,
+                owner: User,
+                start_date : date,
+                size:int=7,
+                slot_size:int=10,
+                early:int=360,
+                late:int=1320,
 
-    LATE=22*60
-    LATE_SLOTS = LATE//SLOT_SIZE
+                ) -> None:
+        self.table: Table = []
+        self.start_date:date = start_date
+        self.owner : User = owner
+        self.SIZE = size
+        self.SLOT_SIZE = slot_size
+        self.SLOTS_PER_DAY = self.MINS_IN_DAY//self.SLOT_SIZE
+        self.EARLY = early
+        self.EARLY_SLOTS = self.EARLY//self.SLOT_SIZE
 
-    HIGH_COST_BOUNDS:dict[int,list[tuple[int, int]]] = {  # noqa: RUF012
-        6:[(9*60//SLOT_SIZE,12*60//SLOT_SIZE)]
-    }
+        self.LATE=late
+        self.LATE_SLOTS = self.LATE//self.SLOT_SIZE
+
+        self.HIGH_COST_BOUNDS:dict[int,list[tuple[int, int]]] = {
+            6:[(9*60//self.SLOT_SIZE,12*60//self.SLOT_SIZE)]
+        }
 
     def __call__(self, *args: Any, **kwds: Any) -> Table:
         return self.table
@@ -76,6 +82,7 @@ class _Activity:
     def __init__(self,
                 name:str,
                 db_id,
+                schedule: _Schedule,
                 frequency:int=1,
                 even_spacing:bool = False,
                 min_weekly_minutes: int = 0,
@@ -112,32 +119,32 @@ class _Activity:
         self.preferred_days: list[int] = preferred_days
         # activity priority, affects penalty calculations
         self.priority = priority
-
+        self.schedule =schedule
         self.db_id = db_id
     
     @property
     def min_weekly_slots(self)->int:
-        return math.ceil(self.min_weekly_minutes / _Schedule.SLOT_SIZE)
+        return math.ceil(self.min_weekly_minutes / self.schedule.SLOT_SIZE)
 
     @property
     def min_block_slots(self)->int:
-        return math.floor(self.min_block_minutes//_Schedule.SLOT_SIZE)
+        return math.floor(self.min_block_minutes//self.schedule.SLOT_SIZE)
     
     @property
     def max_block_slots(self)->int:
-        return max(1,self.max_block_minutes//_Schedule.SLOT_SIZE)
+        return max(1,self.max_block_minutes//self.schedule.SLOT_SIZE)
 
     @property
     def min_start_slot(self)->int:
-        return math.floor(self.min_start_minutes / _Schedule.SLOT_SIZE)
+        return math.floor(self.min_start_minutes / self.schedule.SLOT_SIZE)
 
     @property
     def fixed_blocks(self)->list[tuple[int, int, int]]:
         # convert fixed block minuts to slots
         output = []
         for day, start_mins, length_mins in self.fixed:
-            start_slot = start_mins // _Schedule.SLOT_SIZE
-            length = max(1, length_mins// _Schedule.SLOT_SIZE)
+            start_slot = start_mins // self.schedule.SLOT_SIZE
+            length = max(1, length_mins// self.schedule.SLOT_SIZE)
             output.append((day,start_slot, length))
         return output
 
@@ -188,11 +195,11 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
         for bid in atb[a.id]:
             b = blocks[bid]
             tz = get_config()["general"]["timezone"]
-            start_hours = math.floor(b.start*_Schedule.SLOT_SIZE/60)
-            start_time = (b.start*_Schedule.SLOT_SIZE)%60
+            start_hours = math.floor(b.start*schedule.SLOT_SIZE/60)
+            start_time = (b.start*schedule.SLOT_SIZE)%60
             start_datetime = datetime(schedule.start_date.year, schedule.start_date.month, schedule.start_date.day, start_hours, start_time, tzinfo=zoneinfo.ZoneInfo(tz)) + timedelta(days=b.day)
-            length_hours = (b.length*_Schedule.SLOT_SIZE)//60
-            length_mins = (b.length*_Schedule.SLOT_SIZE)%60
+            length_hours = (b.length*schedule.SLOT_SIZE)//60
+            length_mins = (b.length*schedule.SLOT_SIZE)%60
             end_datetime = start_datetime + timedelta(hours=length_hours, minutes=length_mins)
             dbb = Block(
                 title=a.name,
@@ -206,7 +213,7 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
             db_blocks.append(dbb)
     return db_blocks
 
-def db_to_engine_activities(activities: list[Activity])->list[_Activity]:
+def db_to_engine_activities(schedule:_Schedule,activities: list[Activity])->list[_Activity]:
     engine_activities = []
     for a in activities:
         ea = _Activity(
@@ -220,7 +227,21 @@ def db_to_engine_activities(activities: list[Activity])->list[_Activity]:
             fixed=a.fixed,
             preferred_days=a.preferred_days,
             priority=a.priority,
+            schedule=schedule,
             db_id=a.id
         )
         engine_activities.append(ea)
     return engine_activities
+
+def db_to_engine_schedule(schedule: Schedule)->_Schedule:
+    engine_schedule = _Schedule(
+        owner=schedule.owner,
+        start_date=schedule.start_date,
+        size=schedule.length,
+        slot_size=schedule.slot_size,
+        early=schedule.early,
+        late=schedule.late
+
+    )
+
+    return engine_schedule
