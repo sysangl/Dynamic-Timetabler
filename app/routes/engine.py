@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from flask import Blueprint, request
+from flask import Blueprint
 from flask_login import current_user, login_required
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -10,9 +10,9 @@ from helpers.config import get_config
 from helpers.datetime import combine_date_time, parse_iso_date
 from helpers.server import _json_error, _json_success
 
+from ..engine import anneal_table, initial_table
 from ..extensions import db
-from ..models import Activity, Block
-from ..engine import initial_table, anneal_table
+from ..models import Activity, Block, Schedule
 
 bp = Blueprint('engine', __name__)
 
@@ -22,14 +22,19 @@ log = logging.getLogger('app')
 @login_required
 def generate_activity_group(group):
 
-    activities: list[Activity] = Activity.query.filter(
-        Activity.owner == current_user,
-        Activity.group_name == group
-    ).all()
+    schedule = Schedule.query.filter(
+        Schedule.owner == current_user,
+        Schedule.group_name == group
+    ).first()
+
+    if not schedule:
+        return _json_error(f'Schedule of group "{group}" does not exist')
+
+    activities= schedule.activities
 
     log.info([a.serialise() for a in activities])
 
-    blocks = initial_table(activities, current_user)
+    blocks = initial_table(schedule)
     
 
     try:
@@ -58,14 +63,20 @@ def generate_activity_group(group):
 @bp.route('/anneal/<string:group>', methods=['POST'])
 @login_required
 def anneal_activity_group(group):
-    activities: list[Activity] = Activity.query.filter(
-        Activity.owner == current_user,
-        Activity.group_name == group
-    ).all()
+
+    schedule = Schedule.query.filter(
+        Schedule.owner == current_user,
+        Schedule.group_name == group
+    ).first()
+
+    if not schedule:
+        return _json_error(f'Schedule of group "{group}" does not exist')
+
+    activities= schedule.activities
 
     log.info([a.serialise() for a in activities])
 
-    blocks = anneal_table(activities, current_user)
+    blocks = anneal_table(schedule)
     
 
     try:

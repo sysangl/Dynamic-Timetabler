@@ -165,7 +165,7 @@ class Schedule(db.Model):
     )
     owner : Mapped[User] = relationship(
         "User",
-        back_populates="activities"
+        back_populates="schedules"
     )
 
     activities = relationship(

@@ -66,7 +66,7 @@ def initial_table(db_schedule: Schedule):
 
     return dbb_list
 
-def anneal_table(db_schedule:Schedule, owner:User):
+def anneal_table(db_schedule:Schedule):
     from .classes import (
         db_to_engine_activities,
         db_to_engine_schedule,
