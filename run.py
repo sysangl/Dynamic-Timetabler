@@ -1,13 +1,14 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('mode')
+parser.add_argument('--mode', required=False)
 args = parser.parse_args()
 
 def run_server() -> None:
     import atexit
     import logging
     import multiprocessing
+    import webbrowser
 
     from app import create_app
     from helpers.config import get_config
@@ -34,7 +35,7 @@ def run_server() -> None:
     print( "==========================================================================")
     print()
     print( "================================== INFO ==================================")
-    print(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app ")
+    print(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app' ")
     print( "==========================================================================")
     if config['server']['debug']:
         print()
@@ -43,6 +44,7 @@ def run_server() -> None:
             print(f"{rule.endpoint:35s} {rule}")
         print("===========================================================================\n")
     server_logger = logging.getLogger('server')
+    webbrowser.open(f"http://{config['server']['host']}:{config['server']['port']}/app")
     app.run(debug=config['server']['debug'], host=config['server']['host'], port=config['server']['port'])
 
     def server_stop():
