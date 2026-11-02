@@ -22,7 +22,7 @@ log = logging.getLogger('app')
 @bp.route('/', methods=['GET'])
 @login_required
 def get_items():
-    log.info(f'Fetching timetable items for User:{current_user.username} (id:{current_user.id})')
+    log.info(f'Fetching schedule items for User:{current_user.username} (id:{current_user.id})')
 
     try:
         schedules = Schedule.query.filter(
@@ -45,27 +45,21 @@ def get_items():
         return _json_error("Failed to retrieve schedule items.", 500)
 
 
-@bp.route('/<string:item>/<int:id>',methods=['GET'])
+@bp.route('/<int:id>',methods=['GET'])
 @login_required
 def get_item(item: str, id: int):
-    item_class = None
-    match item:
-        case 'schedule':
-            item_class = Schedule
-        case 'activity':
-            item_class = Activity
-        case _:
-            log.info(f'"{item}" is not a valid timetable item')
-            return _json_error(f'"{item}" is not a valid schedule item', 404)
-    si = item_class.query.filter_by(id=id).first()
-    if not si:
-        return _json_error(f'{item} with id "{id}" does not exist', 404)
-    return _json_success(si.serialise())
+    schedule = Schedule.query.filter(
+        Schedule.owner == current_user,
+        Schedule.id == id
+    ).first()
+    if not schedule:
+        return _json_error(f'Schedule with id "{id}" does not exist', 404)
+    return _json_success(schedule.serialise())
 
 
 @bp.route('/create', methods=['POST'])
 @login_required
-def create_item():
+def create_schedule():
     data = request.get_json()
     tz = get_config()["general"]["timezone"]
     data['start_date'] = parse_iso_date(data.get('start_date'))
@@ -89,39 +83,15 @@ def create_item():
         return _json_error('Database error while trying to create "Schedule" instance', 500)
         
 
-
-@bp.route('/<int:id>', methods=['PUT'])
-@login_required
-def update_item(id):
-    data = request.get_json()
-
-    s = Schedule.query.filter_by(id=id).first()
-    if not s:
-        return {'error':f'"Schedule" with id: {id} does not exist'}, 404
-    for key in data:
-        try:
-            s.__setattr__(key, data[key])
-        except Exception as e:  # noqa: BLE001
-            return _json_error(f'Invalid key : {e!s}', 500)
-
-    try:
-        db.session.commit()
-        log.info(f'Updated "Schedule" (id: {id}) for user {current_user.username}')
-        return _json_success(s.serialise())
-    except SQLAlchemyError:
-        db.session.rollback()
-        log.exception(f'Database error while updating "Schedule" (id:{id}) for user {current_user.username}')
-        return _json_error('Failed to update "Schedule".', 500)
-
 @bp.route('/<int:id>', methods=['DELETE'])
 @login_required
-def delete_item(id):
-    s = Schedule.query.filter_by(id=id).first()
+def delete_schedule(id):
+    s = Schedule.query.filter(
+        Schedule.id == id,
+        Schedule.owner == current_user
+        ).first()
     if not s:
         return _json_error(f'"Schedule" with id "{id}" does not exist', 404)
-    if s.owner_id != current_user.id:
-        return _json_error(f'"Schedule" with id "{id}" does not belong to User:{current_user.username} (id:{current_user.id})', 403)
-
     try:
         db.session.delete(s)
         db.session.commit()
@@ -133,25 +103,40 @@ def delete_item(id):
         return _json_error(f'Database error while trying to delete Schedule:"{s.title}', 500)
 
 
-@bp.route('/<int:id>/activities/blocks',methods=['GET'])
+@bp.route('/<int:id>/blocks',methods=['GET'])
 @login_required
-def get_blocks_from_activity_group(id:int):
-    schedules = Schedule.query.filter(
-        Schedule.owner == current_user,
-        Schedule.id == id
-        ).all()
-    return _json_success({'schedules':[s.serialise() for s in schedules]})
+def get_schedule_blocks(id:int):
+    # s = Schedule.query.filter(
+    #     Schedule.owner == current_user,
+    #     Schedule.id == id
+    #     ).first()
+    # if not s:
+    #     return _json_error(f'"Schedule" with id "{id}" does not exist', 404)
+    # blocks:set[Block] = set()
+    # for a in s.activities:
+    #     blocks += a.blocks
+    
+    blocks = Block.query.filter(
+        Block.activity.schedule.id == id
+    )
+    return _json_success({'blocks':[b.serialise() for b in blocks]})
 
-@bp.route('/<int:id>/activities/blocks',methods=['DELETE'])
+@bp.route('/<int:id>/blocks',methods=['DELETE'])
 @login_required
-def delete_activity_blocks(id:int):
-    schedules = Schedule.query.filter(
-        Schedule.owner == current_user,
-        Schedule.id == id
-        ).all()
-    for s in schedules:
-        s.activity.blocks.remove(s)
-        db.session.delete(s)
+def delete_schedule_blocks(id:int):
+    blocks = Block.query.filter(
+        Block.activity.schedule.id == id
+    )
+    # s:Schedule|None = Schedule.query.filter(
+    #     Schedule.owner == current_user,
+    #     Schedule.id == id
+    #     ).first()
+    # if not s:
+    #     return _json_error(f'"Schedule" with id "{id}" does not exist', 404)
+    # for a in s.activities:
+    for b in blocks:
+        b.activity.blocks.remove(b)
+        db.session.delete(b)
     try:
         db.session.commit()
         log.info(f'Successfully deleted all blocks in Schedule (id:{id})')
