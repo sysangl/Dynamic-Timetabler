@@ -51,13 +51,13 @@ More information is located in `docs/Quickstart.md`
 | WORKING | Timetable functionality (event creation and display)                                                                          |
 | WORKING | Block Management                                                                                                              |
 | WORKING | User management                                                                                                               |
-| WORKING | Dynamic Table Engine - Auto generating timetables                                                                             |
+| WORKING | (MINIMAL) Dynamic Table Engine - Auto generating timetables                                                                   |
 | FUTURE  | Dynamic Table Engine - Dynamic routines                                                                                       |
 | WORKING | Web Interface (Basic timetable view, settings page and a basic block creation page)                                           |
 | WORKING | Timetable layouts/views (horizontal & vertical)                                                                               |
 | WORKING | Portable (Currently works as an .exe or python project. The source code *should* work on most platforms that support python.) |
-| WIP     | Pomodoro Timer                                                                                                                |
-| WIP     | Dashboard View                                                                                                                |
+| FUTURE  | Pomodoro Timer                                                                                                                |
+| FUTURE  | Dashboard View                                                                                                                |
 | PLANNED | Wakatime (and other time keeping software) integration                                                                        |
 | PLANNED | Internet calendar integration                                                                                                 |
 | PLANNED | Calendar/'Timetable Items' import/export                                                                                      |
