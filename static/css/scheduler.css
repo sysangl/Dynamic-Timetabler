@@ -223,3 +223,10 @@
     z-index: 1;
     box-sizing: border-box;
 }
+
+#activity-table tbody tr.selected td {
+    border-left: 8px solid var(--accent);
+    border-right: 8px solid var(--accent);
+    z-index: 1;
+    box-sizing: border-box;
+}

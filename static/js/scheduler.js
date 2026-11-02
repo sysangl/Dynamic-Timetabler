@@ -2,6 +2,7 @@ itemFormContainer = document.getElementById('item-forms');
 itemForms = itemFormContainer.getElementsByClassName('item-form');
 editFormOpen = false
 currentScheduleId = null
+currentActivityId = null
 
 function plural_to_single(item) {
     words = {
@@ -103,6 +104,15 @@ function setActiveSchedule(id) {
     document.getElementById(`schedule-${id}`).classList.add('selected')
 }
 
+function setActiveActivity(id) {
+    const prevActivity = document.getElementById(`activity-${currentActivityId}`)
+    if (prevActivity) {prevActivity.classList.remove('selected')};
+
+    currentActivityId=id
+    generateBlockTable(currentScheduleId, id)
+    document.getElementById(`activity-${id}`).classList.add('selected')
+}
+
 /**
  * Toggle the item form containers.
  * If editMode is set to true, the 'Create' button is changed to 'Update'
@@ -150,47 +160,40 @@ async function generateScheduleTable() {
     if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`)
     }
-    schedules = await response.json()
-    console.log(schedules)
+    res = await response.json()
 
-    const itemTable = document.getElementById('schedule-table-body')
-    itemTable.innerHTML = "";
-    let itemCount = 0
+    const scheduleTable = document.getElementById('schedule-table-body')
+    scheduleTable.innerHTML = "";
+    let scheduleCount = 0
 
-    for (const [itemType, items] of Object.entries(schedules)) {
-        if ('schedules' != itemType) {
-            continue
-        }
-        if (itemType == 'status') continue;
-        for (const item of items) {
-            const row = document.createElement('tr');
+    for (const schedule of res.schedules) {
+        const row = document.createElement('tr');
 
-            row.id = `schedule-${item.id}`
-            const nameText = document.createElement('td')
-            nameText.textContent = item.name
-            const groupText = document.createElement('td')
-            groupText.textContent = item.group_name
+        row.id = `schedule-${schedule.id}`
+        const nameText = document.createElement('td')
+        nameText.textContent = schedule.name
+        const groupText = document.createElement('td')
+        groupText.textContent = schedule.group_name
 
 
-            const startDateText = document.createElement('td')
-            const startDate = new Date(item.start_date)
-            startDateText.textContent = startDate.toLocaleDateString()
-            
-            const sizeText = document.createElement('td')
-            sizeText.textContent = item.length
+        const startDateText = document.createElement('td')
+        const startDate = new Date(schedule.start_date)
+        startDateText.textContent = startDate.toLocaleDateString()
+        
+        const sizeText = document.createElement('td')
+        sizeText.textContent = schedule.length
 
-            const slotSizeText = document.createElement('td')
-            slotSizeText.textContent = item.slot_size
+        const slotSizeText = document.createElement('td')
+        slotSizeText.textContent = schedule.slot_size
 
 
-            
-            row.ondblclick = ()=>{setActiveSchedule(item.id)}
-            row.append(nameText, groupText, startDateText, sizeText, slotSizeText)
-            itemTable.append(row)
-            itemCount += 1
-        }
+        
+        row.ondblclick = ()=>{setActiveSchedule(schedule.id)}
+        row.append(nameText, groupText, startDateText, sizeText, slotSizeText)
+        scheduleTable.append(row)
+        scheduleCount += 1
     }
-    document.getElementById('schedule-counter').textContent = itemCount;
+    document.getElementById('schedule-counter').textContent = scheduleCount;
 }
 
 
@@ -206,39 +209,37 @@ async function generateActivityTable(id) {
     if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`)
     }
-    activities = await response.json()
+    res = await response.json()
 
-    const itemTable = document.getElementById('activity-table-body')
-    itemTable.innerHTML = "";
-    let itemCount = 0
+    const activityTable = document.getElementById('activity-table-body')
+    activityTable.innerHTML = "";
+    let activityCount = 0
 
-    for (const [itemType, items] of Object.entries(activities)) {
-        if ('activities' != itemType) {
-            continue
+    for (const activity of res.activities) {
+        const row = document.createElement('tr');
+        row.id = `activity-${activity.id}`
+        const nameText = document.createElement('td')
+        nameText.textContent = activity.title
+        const priorityText = document.createElement('td')
+        priorityText.textContent = activity.priority
+        
+        const frequencyText = document.createElement('td')
+        frequencyText.textContent = activity.frequency
+
+        const minTimeText = document.createElement('td')
+        minTimeText.textContent = activity.min_time
+        const maxLengthText = document.createElement('td')
+        maxLengthText.textContent = activity.max_length
+        
+        row.ondblclick = () => {
+            setActiveActivity(activity.id)
         }
-        if (itemType == 'status') continue;
-        for (const item of items) {
-            const row = document.createElement('tr');
-            row.id = `${itemType}-${item.id}`
-            const nameText = document.createElement('td')
-            nameText.textContent = item.title
-            const priorityText = document.createElement('td')
-            priorityText.textContent = item.priority
-            
-            const frequencyText = document.createElement('td')
-            frequencyText.textContent = item.frequency
-
-            const minTimeText = document.createElement('td')
-            minTimeText.textContent = item.min_time
-            const maxLengthText = document.createElement('td')
-            maxLengthText.textContent = item.max_length
-            
-            row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)
-            itemTable.append(row)
-            itemCount += 1
-        }
+        row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)
+        activityTable.append(row)
+        activityCount += 1
     }
-    document.getElementById('activity-counter').textContent = itemCount;
+
+    document.getElementById('activity-counter').textContent = activityCount;
 }
 
 
@@ -246,8 +247,10 @@ async function generateActivityTable(id) {
 /**
  * Generates and populates the blocks table
  */
-async function generateBlockTable(id) {
-    var url = `/api/schedules/${id}/blocks`
+async function generateBlockTable(sid, aid=null) {
+    var url = `/api/schedules/${sid}`
+    if (aid) {url+=`/activities/${aid}`}
+    url+=`/blocks`
     const response = await fetch(url, {
         method : 'GET'
     });
@@ -255,52 +258,47 @@ async function generateBlockTable(id) {
     if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`)
     }
-    blocks = await response.json()
+    res = await response.json()
 
-    const itemTable = document.getElementById('block-table-body')
-    itemTable.innerHTML = "";
-    let itemCount = 0
+    const blockTable = document.getElementById('block-table-body')
+    blockTable.innerHTML = "";
+    let blockCount = 0;
+    for (const block of res.blocks) {
+        const row = document.createElement('tr');
+        row.id = `block-${block.id}`
+        const blockTitleText = document.createElement('td')
+        const blockColour = document.createElement('span')
+        blockColour.classList.add('fa-solid', 'fa-circle')
+        blockColour.style.color = block.colour
+        blockColour.style.marginRight = '5px';
+        blockTitleText.append(blockColour)
 
-    for (const [itemType, items] of Object.entries(blocks)) {
-        if (itemType == 'status') continue;
-        for (const item of items) {
-            const row = document.createElement('tr');
-            row.id = `${itemType}-${item.id}`
-            const itemTypeText = document.createElement('td')
-            itemTypeText.textContent = plural_to_single(itemType).toLocaleUpperCase()
-            const itemTitleText = document.createElement('td')
-            const itemColour = document.createElement('span')
-            itemColour.classList.add('fa-solid', 'fa-circle')
-            itemColour.style.color = item.colour
-            itemColour.style.marginRight = '5px';
-            itemTitleText.append(itemColour)
+        blockTitleText.innerHTML += block.title
+        const blockStart = document.createElement('td')
+        const startDateTime = new Date(block.start_datetime)
+        const sDate = document.createElement('p')
+        sDate.textContent = startDateTime.toLocaleDateString()
+        const sTime = document.createElement('p')
+        sTime.textContent = startDateTime.toLocaleTimeString().replace(':00 ',' ')
+        blockStart.append(sDate,sTime)
 
-            itemTitleText.innerHTML += item.title
-            const itemStart = document.createElement('td')
-            const startDateTime = new Date(item.start_datetime)
-            const sDate = document.createElement('p')
-            sDate.textContent = startDateTime.toLocaleDateString()
-            const sTime = document.createElement('p')
-            sTime.textContent = startDateTime.toLocaleTimeString().replace(':00 ',' ')
-            itemStart.append(sDate,sTime)
+        const blockEnd = document.createElement('td')
+        const endDateTime = new Date(block.end_datetime)
+        const eDate = document.createElement('p')
+        eDate.textContent = endDateTime.toLocaleDateString()
+        const eTime = document.createElement('p')
+        eTime.textContent = endDateTime.toLocaleTimeString().replace(':00 ',' ')
+        blockEnd.append(eDate,eTime)
 
-            const itemEnd = document.createElement('td')
-            const endDateTime = new Date(item.end_datetime)
-            const eDate = document.createElement('p')
-            eDate.textContent = endDateTime.toLocaleDateString()
-            const eTime = document.createElement('p')
-            eTime.textContent = endDateTime.toLocaleTimeString().replace(':00 ',' ')
-            itemEnd.append(eDate,eTime)
-
-            const itemStatus = document.createElement('td')
-            itemStatus.textContent = 'Uncompleted'
-            
-            row.append(itemTypeText, itemTitleText, itemStart, itemEnd, itemStatus)
-            itemTable.append(row)
-            itemCount += 1
-        }
+        const blockStatus = document.createElement('td')
+        blockStatus.textContent = 'Uncompleted'
+        
+        row.append(blockTitleText, blockStart, blockEnd, blockStatus)
+        blockTable.append(row)
+        blockCount += 1
     }
-    document.getElementById('block-counter').textContent = itemCount;
+
+    document.getElementById('block-counter').textContent = blockCount;
 }
 
 
