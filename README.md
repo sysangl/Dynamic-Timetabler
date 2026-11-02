@@ -22,9 +22,9 @@ A productivity suite with various things to help you keep track of your time.
 *...making time management tools to help manage my time better, but now im spending all my time making time management tools to help...*
 
 
-API, Server & Database written in **Python** using *Flask & SQLAlchemy*
-Web Interface written using **HTML, JS and CSS**
-EXE compiled with **PyInstaller**
+API, Server & Database written in **Python** using *Flask & SQLAlchemy* <br>
+Web Interface written using **HTML, JS and CSS**<br>
+EXE compiled with **PyInstaller**<br>
 
 # How to run
 
