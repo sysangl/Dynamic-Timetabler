@@ -108,6 +108,12 @@ function setActiveActivity(id) {
     const prevActivity = document.getElementById(`activity-${currentActivityId}`)
     if (prevActivity) {prevActivity.classList.remove('selected')};
 
+    if (id==currentActivityId){
+        generateBlockTable(currentScheduleId, null)
+        currentActivityId = null
+        return
+    }
+
     currentActivityId=id
     generateBlockTable(currentScheduleId, id)
     document.getElementById(`activity-${id}`).classList.add('selected')
