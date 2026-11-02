@@ -224,8 +224,14 @@ async function generateActivityTable(id) {
     for (const activity of res.activities) {
         const row = document.createElement('tr');
         row.id = `activity-${activity.id}`
-        const nameText = document.createElement('td')
-        nameText.textContent = activity.title
+        const activityTitleText = document.createElement('td')
+        const activityColour = document.createElement('span')
+        activityColour.classList.add('fa-solid', 'fa-circle')
+        activityColour.style.color = activity.colour
+        activityColour.style.marginRight = '5px';
+        activityTitleText.append(activityColour)
+        activityTitleText.innerHTML += activity.title
+        
         const priorityText = document.createElement('td')
         priorityText.textContent = activity.priority
         
@@ -240,7 +246,7 @@ async function generateActivityTable(id) {
         row.ondblclick = () => {
             setActiveActivity(activity.id)
         }
-        row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)
+        row.append(activityTitleText, priorityText, frequencyText, minTimeText, maxLengthText)
         activityTable.append(row)
         activityCount += 1
     }
@@ -278,8 +284,8 @@ async function generateBlockTable(sid, aid=null) {
         blockColour.style.color = block.colour
         blockColour.style.marginRight = '5px';
         blockTitleText.append(blockColour)
-
         blockTitleText.innerHTML += block.title
+
         const blockStart = document.createElement('td')
         const startDateTime = new Date(block.start_datetime)
         const sDate = document.createElement('p')
