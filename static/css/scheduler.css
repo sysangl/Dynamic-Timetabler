@@ -74,6 +74,7 @@
     width: auto;
     width: -moz-available;
     width: -webkit-fill-available;  
+    border-collapse: collapse;
 }
 
 .item-container table th {
@@ -138,6 +139,11 @@
 
 .item-table-body {
     overflow-y: scroll;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -khtml-user-select: none;
 }
 
 #filter-container {
@@ -209,4 +215,11 @@
 
 #loading-backdrop.hidden {
     display: none;
+}
+
+#schedule-table tbody tr.selected td {
+    border-left: 8px solid var(--accent);
+    border-right: 8px solid var(--accent);
+    z-index: 1;
+    box-sizing: border-box;
 }

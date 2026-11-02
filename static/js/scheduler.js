@@ -43,7 +43,6 @@ sform.addEventListener('submit',async (e) => {
         console.log('Success:', data);
         sform.reset();
         generateScheduleTable();
-        setActiveSchedule(data.id)
         toggleForms();
     })
     .catch(error => {
@@ -93,10 +92,15 @@ aform.addEventListener('submit',async (e) => {
 })
 
 function setActiveSchedule(id) {
+    const prevSchedule = document.getElementById(`schedule-${currentScheduleId}`)
+    if (prevSchedule) {prevSchedule.classList.remove('selected')};
+
     enableTables()
     currentScheduleId=id
     generateBlockTable(id)
     generateActivityTable(id)
+
+    document.getElementById(`schedule-${id}`).classList.add('selected')
 }
 
 /**
@@ -158,7 +162,7 @@ async function generateScheduleTable() {
         for (const item of items) {
             const row = document.createElement('tr');
 
-            row.id = `${itemType}-${item.id}`
+            row.id = `schedule-${item.id}`
             const nameText = document.createElement('td')
             nameText.textContent = item.name
             const groupText = document.createElement('td')
@@ -383,6 +387,8 @@ function sortTable(column, item='block') {
 }
 
 async function generateSchedule() {
+    deleteScheduleBlocks();
+
     var url = `/api/engine/generate/${currentScheduleId}`
     const response = await fetch(url, {
         method : 'POST'
