@@ -121,8 +121,11 @@ function toggleForms(item='activities') {
     document.getElementById('form-error-messages').textContent=''
 }
 
-async function fetchScheduleBlocks(id) {
-    var url = `/api/schedules/${id}/blocks`
+async function fetchBlocks(sid, aid=null) {
+    var url = `/api/schedules/${sid}/blocks`
+    if (aid) {
+        url += `/activities/${aid}/blocks`
+    }
     const response = await fetch(url, {
         method : 'GET'
     });

@@ -210,15 +210,6 @@ def delete_schedule_activity(sid: str, aid:str):
 @bp.route('/<string:sid>/blocks',methods=['GET'])
 @login_required
 def get_schedule_blocks(sid:str):
-    # s = Schedule.query.filter(
-    #     Schedule.owner == current_user,
-    #     Schedule.id == id
-    #     ).first()
-    # if not s:
-    #     return _json_error(f'"Schedule" with id "{id}" does not exist', 404)
-    # blocks:set[Block] = set()
-    # for a in s.activities:
-    #     blocks += a.blocks
     try:
         suuid = uuid.UUID(sid)
     except ValueError:
@@ -256,3 +247,59 @@ def delete_schedule_blocks(sid:str):
         db.session.rollback()
         log.exception(f'Database error while trying to delete "Schedule (id:{sid})" blocks')
         return _json_error(f'Database error while trying to delete "Schedule (id:{sid})" blocks', 500)
+
+
+@bp.route('/<string:sid>/activities/<string:aid>/blocks',methods=['GET'])
+@login_required
+def get_activity_blocks(sid:str, aid:str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
+    try:
+        auuid = uuid.UUID(aid)
+    except ValueError:
+        return _json_error(f'"{aid}" is not a valid Schedule ID')
+
+    a = Activity.query.filter(
+        Activity.schedule_id == suuid,
+        Activity.id == auuid
+    ).first()
+
+    if not a:
+        return _json_error(f'Activity (id:{aid}) belonging to Schedule (id:{sid}) does not exist', 404)
+
+    return _json_success({'blocks':[b.serialise() for b in a.blocks]})
+
+@bp.route('/<string:sid>/activities/<string:aid>/blocks',methods=['DELETE'])
+@login_required
+def delete_activity_blocks(sid:str,aid:str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
+    try:
+        auuid = uuid.UUID(aid)
+    except ValueError:
+        return _json_error(f'"{aid}" is not a valid Schedule ID')
+
+    a = Activity.query.filter(
+        Activity.schedule_id == suuid,
+        Activity.id == auuid
+    ).first()
+
+    if not a:
+        return _json_error(f'Activity (id:{aid}) belonging to Schedule (id:{sid}) does not exist', 404)
+    
+    for b in a.blocks:
+        a.blocks.remove(b)
+        b.schedule.blocks.remove(b)
+        db.session.delete(b)
+    try:
+        db.session.commit()
+        log.info(f'Successfully deleted all blocks for Activity (id:{aid}) belonging to Schedule (id:{sid})')
+        return _json_success({'msg':'success'})
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception(f'Database error while trying to delete blocks for Activity (id:{aid}) belonging to Schedule (id:{sid})')
+        return _json_error(f'Database error while trying to delete blocks for Activity (id:{aid}) belonging to Schedule (id:{sid})', 500)
