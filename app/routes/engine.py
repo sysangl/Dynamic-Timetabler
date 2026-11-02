@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -18,21 +19,18 @@ bp = Blueprint('engine', __name__)
 
 log = logging.getLogger('app')
 
-@bp.route('/generate/<string:group>', methods=['POST'])
+@bp.route('/generate/<string:sid>', methods=['POST'])
 @login_required
-def generate_activity_group(group):
+def generate_schedule(sid):
+    suuid = uuid.UUID(sid)
 
     schedule = Schedule.query.filter(
         Schedule.owner == current_user,
-        Schedule.group_name == group
+        Schedule.id == suuid
     ).first()
 
     if not schedule:
-        return _json_error(f'Schedule of group "{group}" does not exist')
-
-    activities= schedule.activities
-
-    log.info([a.serialise() for a in activities])
+        return _json_error('Schedule (id:{'+sid+'}) does not exist')
 
     blocks = initial_table(schedule)
     
@@ -44,10 +42,7 @@ def generate_activity_group(group):
 
         log.info(f'Successfully added {len(blocks)} blocks from a generated timetable')
         
-        blocks = Block.query.filter(
-            Block.owner == current_user,
-            Block.group_name  == group
-        ).all()
+        blocks = schedule.blocks
 
         result = [b.serialise() for b in blocks]
         
