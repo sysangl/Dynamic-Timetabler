@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime, time
 from typing import Any
 
@@ -46,9 +47,13 @@ def get_items():
 @bp.route('/<string:sid>',methods=['GET'])
 @login_required
 def get_item(sid: str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
     schedule = Schedule.query.filter(
         Schedule.owner == current_user,
-        Schedule.id == sid
+        Schedule.id == suuid
     ).first()
     if not schedule:
         return _json_error(f'Schedule with id "{sid}" does not exist', 404)
@@ -83,8 +88,12 @@ def create_schedule():
 @login_required
 def create_activity(sid:str):
     data = request.get_json()
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
     s:Schedule|None = Schedule.query.filter(
-        Schedule.id == sid,
+        Schedule.id == suuid,
         Schedule.owner == current_user
         ).first()
     if not s:
@@ -114,9 +123,13 @@ def create_activity(sid:str):
 @bp.route('/<string:sid>/activities',methods=['GET'])
 @login_required
 def get_schedule_activities(sid: str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
     schedule = Schedule.query.filter(
         Schedule.owner == current_user,
-        Schedule.id == sid
+        Schedule.id == suuid
     ).first()
     if not schedule:
         return _json_error(f'Schedule with id "{sid}" does not exist', 404)
@@ -125,16 +138,24 @@ def get_schedule_activities(sid: str):
 @bp.route('/<string:sid>/activities/<string:aid>',methods=['DELETE'])
 @login_required
 def delete_schedule_activity(sid: str, aid:str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
     schedule = Schedule.query.filter(
         Schedule.owner == current_user,
-        Schedule.id == sid
+        Schedule.id == suuid
     ).first()
     if not schedule:
         return _json_error(f'Schedule with id "{sid}" does not exist', 404)
 
+    try:
+        auuid = uuid.UUID(aid)
+    except ValueError:
+        return _json_error(f'"{aid}" is not a vlaid Activity id')
     a = Activity.query.filter(
         Activity.schedule == schedule,
-        Activity.id == aid,
+        Activity.id == auuid,
     ).first()
 
     if not a:
@@ -155,8 +176,12 @@ def delete_schedule_activity(sid: str, aid:str):
 @bp.route('/<string:sid>', methods=['DELETE'])
 @login_required
 def delete_schedule(sid:str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
     s = Schedule.query.filter(
-        Schedule.id == sid,
+        Schedule.id == suuid,
         Schedule.owner == current_user
         ).first()
     if not s:
@@ -184,17 +209,24 @@ def get_schedule_blocks(sid:str):
     # blocks:set[Block] = set()
     # for a in s.activities:
     #     blocks += a.blocks
-    
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
     blocks = Block.query.filter(
-        Block.activity.schedule.id == sid
+        Block.activity.schedule.id == suuid
     )
     return _json_success({'blocks':[b.serialise() for b in blocks]})
 
 @bp.route('/<string:sid>/blocks',methods=['DELETE'])
 @login_required
 def delete_schedule_blocks(sid:str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
     blocks = Block.query.filter(
-        Block.activity.schedule.id == sid
+        Block.activity.schedule.id == suuid
     )
     # s:Schedule|None = Schedule.query.filter(
     #     Schedule.owner == current_user,

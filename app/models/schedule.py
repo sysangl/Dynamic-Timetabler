@@ -204,6 +204,7 @@ class Schedule(db.Model):
 
     def serialise(self)->dict:
         return {
+            'id':str(self.id),
             'name':self.name,
             'group_name':self.group_name,
             'length':self.length,

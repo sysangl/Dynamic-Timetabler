@@ -42,6 +42,7 @@ sform.addEventListener('submit',async (e) => {
     .then(data => {
         console.log('Success:', data);
         sform.reset();
+        generateScheduleTable();
         generateActivityTable(data.id);
         generateBlockTable(data.id)
         currentScheduleId = data.id
@@ -144,6 +145,7 @@ async function generateScheduleTable() {
         throw new Error(`${response.status} ${response.statusText}`)
     }
     schedules = await response.json()
+    console.log(schedules)
 
     const itemTable = document.getElementById('schedule-table-body')
     itemTable.innerHTML = "";
@@ -163,13 +165,14 @@ async function generateScheduleTable() {
 
             row.id = `${itemType}-${item.id}`
             const nameText = document.createElement('td')
-            nameText.textContent = item.title
+            nameText.textContent = item.name
             const groupText = document.createElement('td')
             groupText.textContent = item.group_name
 
 
             const startDateText = document.createElement('td')
-            startDateText.textContent = item.start_date
+            const startDate = new Date(item.start_date)
+            startDateText.textContent = startDate.toLocaleDateString()
             
             const sizeText = document.createElement('td')
             sizeText.textContent = item.length
@@ -242,7 +245,7 @@ async function generateActivityTable(id) {
 /**
  * Generates and populates the blocks table
  */
-async function generateBlockTable() {
+async function generateBlockTable(id) {
     var url = `/api/schedules/${id}/blocks`
     const response = await fetch(url, {
         method : 'GET'
@@ -304,6 +307,9 @@ async function generateBlockTable() {
 
 async function setupScheduler () {
     let settings = await fetchSettings()
+
+    generateScheduleTable()
+
     if (currentScheduleId) {
         generateActivityTable();
         var url = `/api/schedules/${currentScheduleId}/blocks`
