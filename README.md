@@ -1,12 +1,12 @@
 ```
-     _____
-    /  __ \
-    | /  \/ __ _ _ __   ___  _ __  _   _
-    | |    / _` | '_ \ / _ \| '_ \| | | |
-    | \__/\ (_| | | | | (_) | |_) | |_| |
-     \____/\__,_|_| |_|\___/| .__/ \__, |
-                            | |     __/ |
-                            |_|    |___/
+      _____                                 _____       _ _       
+     /  __ \                               /  ___|     (_) |      
+     | /  \/ __ _ _ __   ___  _ __  _   _  \ `--. _   _ _| |_ ___ 
+     | |    / _` | '_ \ / _ \| '_ \| | | |  `--. \ | | | | __/ _ \
+     | \__/\ (_| | | | | (_) | |_) | |_| | /\__/ / |_| | | ||  __/
+      \____/\__,_|_| |_|\___/| .__/ \__, | \____/ \__,_|_|\__\___|
+                             | |     __/ |                        
+                             |_|    |___/                         
 ```
 
 ==========================================================================
@@ -21,6 +21,10 @@ A productivity suite with various things to help you keep track of your time.
 
 *...making time management tools to help manage my time better, but now im spending all my time making time management tools to help...*
 
+
+API, Server & Database written in **Python** using *Flask & SQLAlchemy*
+Web Interface written using **HTML, JS and CSS**
+EXE compiled with **PyInstaller**
 
 # How to run
 
@@ -69,4 +73,8 @@ This is the initial timetable, sometimes it's good, but usually it's bad (subopt
 The second is a Simulated Annealing algorithm.
 It uses the intiial greedy algorithm, and randomly applies changes to it. It has a variable called 'Temperature' which decreases as the algorithm runs. High temperatures means the algorithm is more likely to select a suboptimal solution to escape a local optima. Eventually, once the temperature cools down enough, the algorithm will start to only accept changes that make the timetable better.
 
-(Theres a bunch of other stuff like cost calculation and penalties but that's not really too important. I'll have a more detailed explanation in the docs.)
+(There is a bunch of other stuff like cost calculation and penalties but that's not really too important. I'll have a more detailed explanation in the docs.)
+
+
+# Credits
+This project uses [FontAwesome](https://fontawesome.com) icons.
