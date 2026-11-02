@@ -43,9 +43,7 @@ sform.addEventListener('submit',async (e) => {
         console.log('Success:', data);
         sform.reset();
         generateScheduleTable();
-        generateActivityTable(data.id);
-        generateBlockTable(data.id)
-        currentScheduleId = data.id
+        setActiveSchedule(data.id)
         toggleForms();
     })
     .catch(error => {
@@ -69,7 +67,7 @@ aform.addEventListener('submit',async (e) => {
             object[key] = value}
         }
     );
-    fetch(`/api/schedules/${currentScheduleId}/activites/create`, {
+    fetch(`/api/schedules/${currentScheduleId}/activities/create`, {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
@@ -85,7 +83,7 @@ aform.addEventListener('submit',async (e) => {
     .then(data => {
         console.log('Success:', data);
         aform.reset();
-        generateActivityTable();
+        generateActivityTable(currentScheduleId);
         toggleForms();
     })
     .catch(error => {
@@ -96,6 +94,7 @@ aform.addEventListener('submit',async (e) => {
 
 function setActiveSchedule(id) {
     enableTables()
+    currentScheduleId=id
     generateBlockTable(id)
     generateActivityTable(id)
 }
@@ -159,10 +158,6 @@ async function generateScheduleTable() {
         for (const item of items) {
             const row = document.createElement('tr');
 
-            row.onclick = (e) => {
-                setActiveSchedule(item.id)
-            }
-
             row.id = `${itemType}-${item.id}`
             const nameText = document.createElement('td')
             nameText.textContent = item.name
@@ -182,7 +177,7 @@ async function generateScheduleTable() {
 
 
             
-            row.ondblclick = ()=>{editItem(row.id)}
+            row.ondblclick = ()=>{setActiveSchedule(item.id)}
             row.append(nameText, groupText, startDateText, sizeText, slotSizeText)
             itemTable.append(row)
             itemCount += 1
@@ -231,7 +226,6 @@ async function generateActivityTable(id) {
             const maxLengthText = document.createElement('td')
             maxLengthText.textContent = item.max_length
             
-            row.ondblclick = ()=>{editItem(row.id)}
             row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)
             itemTable.append(row)
             itemCount += 1
@@ -294,7 +288,6 @@ async function generateBlockTable(id) {
             const itemStatus = document.createElement('td')
             itemStatus.textContent = 'Uncompleted'
             
-            row.ondblclick = ()=>{editItem(row.id)}
             row.append(itemTypeText, itemTitleText, itemStart, itemEnd, itemStatus)
             itemTable.append(row)
             itemCount += 1
@@ -309,22 +302,8 @@ async function setupScheduler () {
     let settings = await fetchSettings()
 
     generateScheduleTable()
-
-    if (currentScheduleId) {
-        generateActivityTable();
-        var url = `/api/schedules/${currentScheduleId}/blocks`
-        const response = await fetch(url, {
-            method : 'GET'
-        });
-
-        if (!response.ok) {
-            throw new Error(`${response.status} ${response.statusText}`)
-        }
-        blocks = await response.json()
-        generateBlockTable(blocks);
-    }
-
     disableTables();
+    
 }
 
 function enableTables() {
@@ -404,7 +383,7 @@ function sortTable(column, item='block') {
 }
 
 async function generateSchedule() {
-    var url = '/api/engine/generate/default'
+    var url = `/api/engine/generate/${currentScheduleId}`
     const response = await fetch(url, {
         method : 'POST'
     });
@@ -420,7 +399,7 @@ async function generateSchedule() {
     return blocks
 }
 
-async function annealTimetable() {
+async function annealSchedule() {
     const backdrop = document.getElementById('loading-backdrop')
 
     backdrop.classList.remove('hidden')

@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime, time
 
 import pytz
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Uuid, Date
+from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger
@@ -175,6 +175,12 @@ class Schedule(db.Model):
         lazy="dynamic",
     )
 
+    blocks = relationship(
+        "Block",
+        back_populates="schedule",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
 
     def __init__(self,
                 name:str,
@@ -208,5 +214,8 @@ class Schedule(db.Model):
             'name':self.name,
             'group_name':self.group_name,
             'length':self.length,
-            'start_date':self.start_date
+            'start_date':self.start_date,
+            'slot_size':self.slot_size,
+            'early':self.early,
+            'late':self.late
         }

@@ -18,7 +18,8 @@ bp = Blueprint('schedules', __name__)
 
 log = logging.getLogger('app')
 
-
+# =========================================================
+# SCHEDULES
 
 @bp.route('/', methods=['GET'])
 @login_required
@@ -46,7 +47,7 @@ def get_items():
 
 @bp.route('/<string:sid>',methods=['GET'])
 @login_required
-def get_item(sid: str):
+def get_schedule(sid: str):
     try:
         suuid = uuid.UUID(sid)
     except ValueError:
@@ -84,6 +85,50 @@ def create_schedule():
         log.exception('Database error while trying to create "Schedule" instance')
         return _json_error('Database error while trying to create "Schedule" instance', 500)
 
+@bp.route('/<string:sid>', methods=['DELETE'])
+@login_required
+def delete_schedule(sid:str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
+    s = Schedule.query.filter(
+        Schedule.id == suuid,
+        Schedule.owner == current_user
+        ).first()
+    if not s:
+        return _json_error(f'"Schedule" with id "{sid}" does not exist', 404)
+    try:
+        db.session.delete(s)
+        db.session.commit()
+        log.info(f'Successfully deleted Schedule:"{s.title}"')
+        return _json_success({'message':f'"Schedule" {s.title} ({s.id}) deleted successfully'})
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception(f'Database error while trying to delete Schedule:"{s.title}"')
+        return _json_error(f'Database error while trying to delete Schedule:"{s.title}', 500)
+
+
+# ================================================
+# ACTIVIITIES
+
+
+@bp.route('/<string:sid>/activities',methods=['GET'])
+@login_required
+def get_schedule_activities(sid: str):
+    try:
+        suuid = uuid.UUID(sid)
+    except ValueError:
+        return _json_error(f'"{sid}" is not a valid Schedule ID')
+    schedule = Schedule.query.filter(
+        Schedule.owner == current_user,
+        Schedule.id == suuid
+    ).first()
+    if not schedule:
+        return _json_error(f'Schedule with id "{sid}" does not exist', 404)
+    return _json_success({'activities':[a.serialise() for a in schedule.activities]})
+
+
 @bp.route('/<string:sid>/activities/create', methods=['POST'])
 @login_required
 def create_activity(sid:str):
@@ -120,20 +165,6 @@ def create_activity(sid:str):
         log.exception('Database error while trying to create "Activity" instance')
         return _json_error('Database error while trying to create "Activity" instance', 500)
 
-@bp.route('/<string:sid>/activities',methods=['GET'])
-@login_required
-def get_schedule_activities(sid: str):
-    try:
-        suuid = uuid.UUID(sid)
-    except ValueError:
-        return _json_error(f'"{sid}" is not a valid Schedule ID')
-    schedule = Schedule.query.filter(
-        Schedule.owner == current_user,
-        Schedule.id == suuid
-    ).first()
-    if not schedule:
-        return _json_error(f'Schedule with id "{sid}" does not exist', 404)
-    return _json_success({'activities':[a.serialise() for a in schedule.activities]})
 
 @bp.route('/<string:sid>/activities/<string:aid>',methods=['DELETE'])
 @login_required
@@ -172,29 +203,8 @@ def delete_schedule_activity(sid: str, aid:str):
         return _json_error(f'Database error while trying to delete Activity:"{a.title}', 500)
 
 
-
-@bp.route('/<string:sid>', methods=['DELETE'])
-@login_required
-def delete_schedule(sid:str):
-    try:
-        suuid = uuid.UUID(sid)
-    except ValueError:
-        return _json_error(f'"{sid}" is not a valid Schedule ID')
-    s = Schedule.query.filter(
-        Schedule.id == suuid,
-        Schedule.owner == current_user
-        ).first()
-    if not s:
-        return _json_error(f'"Schedule" with id "{sid}" does not exist', 404)
-    try:
-        db.session.delete(s)
-        db.session.commit()
-        log.info(f'Successfully deleted Schedule:"{s.title}"')
-        return _json_success({'message':f'"Schedule" {s.title} ({s.id}) deleted successfully'})
-    except SQLAlchemyError:
-        db.session.rollback()
-        log.exception(f'Database error while trying to delete Schedule:"{s.title}"')
-        return _json_error(f'Database error while trying to delete Schedule:"{s.title}', 500)
+# =================================================
+# BLOCKS
 
 
 @bp.route('/<string:sid>/blocks',methods=['GET'])
@@ -213,10 +223,14 @@ def get_schedule_blocks(sid:str):
         suuid = uuid.UUID(sid)
     except ValueError:
         return _json_error(f'"{sid}" is not a valid Schedule ID')
-    blocks = Block.query.filter(
-        Block.activity.schedule.id == suuid
-    )
-    return _json_success({'blocks':[b.serialise() for b in blocks]})
+    s = Schedule.query.filter(
+        Schedule.id == suuid
+    ).first()
+    if not s:
+        return _json_error(f'"Schedule" with id "{sid}" does not exist', 404)
+
+
+    return _json_success({'blocks':[b.serialise() for b in s.blocks]})
 
 @bp.route('/<string:sid>/blocks',methods=['DELETE'])
 @login_required
@@ -225,18 +239,14 @@ def delete_schedule_blocks(sid:str):
         suuid = uuid.UUID(sid)
     except ValueError:
         return _json_error(f'"{sid}" is not a valid Schedule ID')
-    blocks = Block.query.filter(
-        Block.activity.schedule.id == suuid
-    )
-    # s:Schedule|None = Schedule.query.filter(
-    #     Schedule.owner == current_user,
-    #     Schedule.id == id
-    #     ).first()
-    # if not s:
-    #     return _json_error(f'"Schedule" with id "{id}" does not exist', 404)
-    # for a in s.activities:
-    for b in blocks:
+    s = Schedule.query.filter(
+        Schedule.id == suuid
+    ).first()
+    if not s:
+        return _json_error(f'"Schedule" with id "{sid}" does not exist', 404)
+    for b in s.blocks:
         b.activity.blocks.remove(b)
+        b.schedule.blocks.remove(b)
         db.session.delete(b)
     try:
         db.session.commit()

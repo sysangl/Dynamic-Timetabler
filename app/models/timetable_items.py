@@ -8,7 +8,7 @@ from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger
-from .schedule import Activity
+from .schedule import Activity, Schedule
 from .user import User
 
 
@@ -104,9 +104,19 @@ class Block(db.Model):
         index=True,
     )
 
-
     activity : Mapped[Activity] = relationship(
         "Activity",
+        back_populates="blocks"
+    )
+
+    schedule_id : Mapped[uuid.UUID|None] = mapped_column(
+        Uuid,
+        ForeignKey("schedules.id", ondelete="CASCADE"),
+        index=True,
+    )
+
+    schedule : Mapped[Schedule] = relationship(
+        "Schedule",
         back_populates="blocks"
     )
 
