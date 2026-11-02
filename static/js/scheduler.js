@@ -59,11 +59,11 @@ for (const form of itemForms) {
  * If editMode is set to true, the 'Create' button is changed to 'Update'
  * @param {Boolean} editMode 
  */
-function toggleForms(editMode=false) {
+function toggleForms(editMode=false, item='activities') {
     document.getElementById('backdrop').classList.toggle('hidden')
     document.getElementById('item-forms').classList.toggle('hidden')
     for (const container of document.getElementById('item-forms').children)  {
-        if (container.id != `activities-form-container`){
+        if (container.id != `${item}-form-container`){
             container.classList.add('hidden')
         } else {
             container.classList.remove('hidden')
@@ -123,16 +123,20 @@ async function generateScheduleTable(timetableItems = null) {
             row.id = `${itemType}-${item.id}`
             const nameText = document.createElement('td')
             nameText.textContent = item.title
-            const priorityText = document.createElement('td')
-            priorityText.textContent = item.priority
-            
-            const frequencyText = document.createElement('td')
-            frequencyText.textContent = item.frequency
+            const groupText = document.createElement('td')
+            groupText.textContent = item.group_name
 
-            const minTimeText = document.createElement('td')
-            minTimeText.textContent = item.min_time
-            const maxLengthText = document.createElement('td')
-            maxLengthText.textContent = item.max_length
+
+            const startDateText = document.createElement('td')
+            startDateText.textContent = item.start_date
+            
+            const sizeText = document.createElement('td')
+            sizeText.textContent = item.length
+
+            const slotSizeText = document.createElement('td')
+            slotSizeText.textContent = item.slot_size
+
+
             
             row.ondblclick = ()=>{editItem(row.id)}
             row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)

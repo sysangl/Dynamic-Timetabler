@@ -56,12 +56,6 @@ if __name__ == "__main__":
             from app.engine.testing import test
             test()
         case 'debug':
-            import webbrowser
-
-            from helpers.config import get_config
-            
-            config = get_config()
-            webbrowser.open(f"http://{config['server']['host']}:{config['server']['port']}/app")
             run_server(debug=True)
         case _:
             import webbrowser

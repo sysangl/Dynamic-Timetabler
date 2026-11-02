@@ -201,3 +201,11 @@ class Schedule(db.Model):
         self.slot_size = slot_size
         self.early = early
         self.late = late
+
+    def serialise(self)->dict:
+        return {
+            'name':self.name,
+            'group_name':self.group_name,
+            'length':self.length,
+            'start_date':self.start_date
+        }

@@ -6,6 +6,7 @@ from flask import Flask, jsonify, render_template, request
 from .app import bp as app_bp
 from .auth import bp as auth_bp
 from .engine import bp as engine_bp
+from .schedule import bp as schedules_bp
 from .settings import bp as settings_bp
 from .timetable import bp as timetable_bp
 from .users import bp as users_bp
@@ -16,7 +17,8 @@ BLUEPRINTS = (
     (settings_bp,"/api/users/settings"),
     (timetable_bp,"/api/timetable"),
     (users_bp,"/api/users"),
-    (engine_bp,"/api/engine")
+    (engine_bp,"/api/engine"),
+    (schedules_bp, "/api/schedules")
 )
 
 def _register_blueprints(app: Flask)->None:

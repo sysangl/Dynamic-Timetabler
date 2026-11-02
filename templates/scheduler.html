@@ -8,16 +8,16 @@
         <span class="title">Schedules&nbsp;</span>
         <span id="counter">| <span id="schedule-counter">0</span> Schedules</span>
         <div></div>
-        <button id="create-new-btn" onclick="toggleForms()">New Schedule</button>
+        <button id="create-new-btn" onclick="toggleForms(item='schedule')">New Schedule</button>
     </header>
     <table id="schedule-table">
         <thead>
             <tr>
-                <th onclick="sortTable(0, 'activity')">Name <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(1, 'activity')">Priority <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(2, 'activity')">Frequency <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(3, 'activity')">Min Time <span class="table-sort-arrows fa-solid fa-sort"></span></th>
-                <th onclick="sortTable(4, 'activity')">Max Length<span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(0, 'schedule')">Name <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(1, 'schedule')">Group <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(2, 'schedule')">Start Date <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(3, 'schedule')">Schedule Size <span class="table-sort-arrows fa-solid fa-sort"></span></th>
+                <th onclick="sortTable(4, 'schedule')">Slot Size <span class="table-sort-arrows fa-solid fa-sort"></span></th>
             </tr>
         </thead>
         
@@ -163,8 +163,47 @@
             <button id="form-submit-button" class="submit-button form-btn" type="submit">Create</button>
         </div>
     </form>
-
 </div>
+
+<div id="schedule-form-container" class="form-container">
+    <form id="schedule-form" class="item-form form-body" method="post" action="{{ url_for('timetable.create_item', item='activity') }}">
+        <fieldset class="card-section">
+            <legend class="section-title">General information</legend>
+
+            <div class="field-group">
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" maxlength="30" required class="field-input" placeholder="Short title">
+            </div>
+
+            <div class="field-group">
+                <label for="description">Activity group</label>
+                <input disabled id="activity_group" name="activity_group" type="text" maxlength="20" class="field-input" placeholder="Activity group name" value="default">
+            </div>
+
+            <div class="field-group">
+                <label for="description">Description</label>
+                <input id="description" name="description" type="text" maxlength="300" class="field-input" placeholder="Optional longer description">
+            </div>
+
+        </fieldset>
+
+        <fieldset class="card-section">
+            <legend class="section-title">Parameters</legend>
+
+            <div class="field-group">
+                <label for="length">Length<span class="hint"><br>(Length of the schedule in days)</span></label>
+                <input id="length" name="length" type="number" required class="field-input" min=0 max=365 placeholder=7>
+            </div>
+        </fieldset>
+
+
+        <div class="form-actions">
+            <button id="form-cancel-button" class="cancel-button form-btn" type="reset">Clear</button>
+            <button id="form-submit-button" class="submit-button form-btn" type="submit">Create</button>
+        </div>
+    </form>
+</div>
+
 </div>
 
 <div id="backdrop" onclick="toggleForms()" class="hidden fill-available"></div>
