@@ -47,7 +47,7 @@ def get_items():
 
 @bp.route('/<int:id>',methods=['GET'])
 @login_required
-def get_item(item: str, id: int):
+def get_item(id: int):
     schedule = Schedule.query.filter(
         Schedule.owner == current_user,
         Schedule.id == id
@@ -81,7 +81,80 @@ def create_schedule():
         db.session.rollback()
         log.exception('Database error while trying to create "Schedule" instance')
         return _json_error('Database error while trying to create "Schedule" instance', 500)
-        
+
+@bp.route('/<int:id>/activities/create', methods=['POST'])
+@login_required
+def create_activity():
+    data = request.get_json()
+    s:Schedule|None = Schedule.query.filter(
+        Schedule.id == id,
+        Schedule.owner == current_user
+        ).first()
+    if not s:
+        return _json_error(f'"Schedule" with id "{id}" does not exist', 404)
+    data['min_start_time'] = time.fromisoformat(data.get('min_start_time'))
+    data['preferred_days'] = str(data.get('preferred_days')).split()
+
+    a = Activity(
+        **data,
+        owner=s.owner,
+    )
+    a.schedule = s
+    a.schedule_id = s
+    a.owner_id = s.owner.id
+    s.activities.add(a)
+
+    try:
+        db.session.add(a)
+        db.session.commit()
+        log.info(f'Successfully created an Activity instance for {current_user.username}')
+        # return redirect(url_for('app.serve_management'))
+        return _json_success(a.serialise(), 201)
+    except Exception:
+        db.session.rollback()
+        log.exception('Database error while trying to create "Activity" instance')
+        return _json_error('Database error while trying to create "Activity" instance', 500)
+
+@bp.route('/<int:id>/activities',methods=['GET'])
+@login_required
+def get_schedule_activities(id: int):
+    schedule = Schedule.query.filter(
+        Schedule.owner == current_user,
+        Schedule.id == id
+    ).first()
+    if not schedule:
+        return _json_error(f'Schedule with id "{id}" does not exist', 404)
+    return _json_success({'activities':[a.serialise() for a in schedule.activities]})
+
+@bp.route('/<int:sid>/activities/<int:aid>',methods=['DELETE'])
+@login_required
+def delete_schedule_activity(sid: int, aid:int):
+    schedule = Schedule.query.filter(
+        Schedule.owner == current_user,
+        Schedule.id == sid
+    ).first()
+    if not schedule:
+        return _json_error(f'Schedule with id "{sid}" does not exist', 404)
+
+    a = Activity.query.filter(
+        Activity.schedule == schedule,
+        Activity.id == aid,
+    ).first()
+
+    if not a:
+        return _json_error(f'Activity with id "{aid}" does not exist', 404)
+
+    try:
+        db.session.delete(a)
+        db.session.commit()
+        log.info(f'Successfully deleted Activity:"{a.title}"')
+        return _json_success({'message':f'Activity {a.title} ({a.id}) deleted successfully'})
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception(f'Database error while trying to delete Activity:"{a.title}"')
+        return _json_error(f'Database error while trying to delete Activity:"{a.title}', 500)
+
+
 
 @bp.route('/<int:id>', methods=['DELETE'])
 @login_required

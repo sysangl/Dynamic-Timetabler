@@ -84,7 +84,7 @@
 <div id="item-forms" class="hidden">
 <div id="form-error-messages"></div>
 <div id="activities-form-container" class="form-container">
-    <form id="activities-form" class="item-form form-body" method="post" action="{{ url_for('timetable.create_item', item='activity') }}">
+    <form id="activities-form" class="item-form form-body" method="post" action="{{ url_for('schedules.create_activity')}}">
         <fieldset class="card-section">
             <legend class="section-title">General information</legend>
 
@@ -166,7 +166,7 @@
 </div>
 
 <div id="schedule-form-container" class="form-container">
-    <form id="schedule-form" class="item-form form-body" method="post" action="{{ url_for('timetable.create_item', item='activity') }}">
+    <form id="schedule-form" class="item-form form-body" method="post" action="{{ url_for('schedules.create_schedule') }}">
         <fieldset class="card-section">
             <legend class="section-title">General information</legend>
 
