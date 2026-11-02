@@ -315,8 +315,8 @@ function disableTables() {
     document.getElementById('activity-container').classList.add('disabled')
     document.getElementById('block-container').classList.add('disabled')
 }
-async function deleteScheduleBlocks(id) {
-    var url = `/api/schedules/${id}/blocks`
+async function deleteScheduleBlocks() {
+    var url = `/api/schedules/${currentScheduleId}/blocks`
     const response = await fetch(url, {
         method : 'DELETE'
     });
@@ -325,7 +325,7 @@ async function deleteScheduleBlocks(id) {
         throw new Error(`${response.status} ${response.statusText}`)
     }
 
-    generateBlockTable(fetchScheduleBlocks());
+    generateBlockTable(currentScheduleId);
 }
 
 
@@ -394,7 +394,7 @@ async function generateSchedule() {
 
     blocks = await response.json()
 
-    generateBlockTable()
+    generateBlockTable(currentScheduleId)
 
     return blocks
 }
@@ -415,7 +415,7 @@ async function annealSchedule() {
 
     blocks = await response.json()
     backdrop.classList.add('hidden')
-    generateBlockTable(blocks)
+    generateBlockTable(currentScheduleId)
 
     return blocks
 }

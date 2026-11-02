@@ -1,4 +1,5 @@
 import math
+import uuid
 import zoneinfo
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -7,7 +8,7 @@ from typing import Any
 
 from helpers.config import get_config
 
-from ..models import Activity, Block, User, Schedule
+from ..models import Activity, Block, Schedule, User
 
 type ATB = dict[int, set[int]]
 type Table = list[list[int | None]]
@@ -45,6 +46,7 @@ class PENALTY_WEIGHTS:
 class _Schedule:
     MINS_IN_DAY = 24 * 60
     def __init__(self,
+                db_id:uuid.UUID,
                 owner: User,
                 start_date : date,
                 size:int=7,
@@ -53,6 +55,7 @@ class _Schedule:
                 late:int=1320,
 
                 ) -> None:
+        self.db_id = db_id
         self.table: Table = []
         self.start_date:date = start_date
         self.owner : User = owner
@@ -190,7 +193,6 @@ class _Block:
 
 def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, activities:list[_Activity])->list[Block]:
     db_blocks:list[Block] = []
-    from helpers.config import get_config
     for a in activities:
         for bid in atb[a.id]:
             b = blocks[bid]
@@ -210,6 +212,7 @@ def engine_to_db_blocks(schedule: _Schedule, blocks:dict[int, _Block], atb:ATB, 
                 # start_time=start_datetime.time().isoformat()[0:4]
             )
             dbb.activity_id = a.db_id
+            dbb.schedule_id = schedule.db_id
             db_blocks.append(dbb)
     return db_blocks
 
@@ -235,6 +238,7 @@ def db_to_engine_activities(schedule:_Schedule,activities: list[Activity])->list
 
 def db_to_engine_schedule(schedule: Schedule)->_Schedule:
     engine_schedule = _Schedule(
+        db_id=schedule.id,
         owner=schedule.owner,
         start_date=schedule.start_date,
         size=schedule.length,
