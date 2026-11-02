@@ -8,7 +8,7 @@
         <span class="title">Schedules&nbsp;</span>
         <span id="counter">| <span id="schedule-counter">0</span> Schedules</span>
         <div></div>
-        <button id="create-new-btn" onclick="toggleForms(item='schedule')">New Schedule</button>
+        <button id="create-new-btn" onclick="toggleForms(item='schedules')">New Schedule</button>
     </header>
     <table id="schedule-table">
         <thead>
@@ -84,7 +84,7 @@
 <div id="item-forms" class="hidden">
 <div id="form-error-messages"></div>
 <div id="activities-form-container" class="form-container">
-    <form id="activities-form" class="item-form form-body" method="post" action="{{ url_for('schedules.create_activity')}}">
+    <form id="activities-form" class="item-form form-body" method="post" action="{{ url_for('schedules.create_activity',sid='PLACHOLDER_SID')}}">
         <fieldset class="card-section">
             <legend class="section-title">General information</legend>
 
@@ -165,8 +165,8 @@
     </form>
 </div>
 
-<div id="schedule-form-container" class="form-container">
-    <form id="schedule-form" class="item-form form-body" method="post" action="{{ url_for('schedules.create_schedule') }}">
+<div id="schedules-form-container" class="form-container">
+    <form id="schedules-form" class="item-form form-body" method="post" action="{{ url_for('schedules.create_schedule') }}">
         <fieldset class="card-section">
             <legend class="section-title">General information</legend>
 

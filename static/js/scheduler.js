@@ -1,6 +1,8 @@
 itemFormContainer = document.getElementById('item-forms');
 itemForms = itemFormContainer.getElementsByClassName('item-form');
 editFormOpen = false
+currentScheduleId = null
+
 function plural_to_single(item) {
     words = {
         'activities':'activity'
@@ -15,7 +17,7 @@ function plural_to_single(item) {
 /**
  * Stop the default behaviour of forms of reloading the page
  */
-sform = document.getElementById('activities-form')
+sform = document.getElementById('schedules-form')
 sform.addEventListener('submit',async (e) => {
     e.preventDefault();
 
@@ -40,7 +42,9 @@ sform.addEventListener('submit',async (e) => {
     .then(data => {
         console.log('Success:', data);
         sform.reset();
-        generateActivityTable();
+        generateActivityTable(data.id);
+        generateBlockTable(data.id)
+        currentScheduleId = data.id
         toggleForms();
     })
     .catch(error => {
@@ -64,7 +68,7 @@ aform.addEventListener('submit',async (e) => {
             object[key] = value}
         }
     );
-    fetch(`/api/schedules/{current_schedule_id}/activites/create`, {
+    fetch(`/api/schedules/${currentScheduleId}/activites/create`, {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
@@ -95,7 +99,7 @@ aform.addEventListener('submit',async (e) => {
  * If editMode is set to true, the 'Create' button is changed to 'Update'
  * @param {Boolean} editMode 
  */
-function toggleForms(editMode=false, item='activities') {
+function toggleForms(item='activities') {
     document.getElementById('backdrop').classList.toggle('hidden')
     document.getElementById('item-forms').classList.toggle('hidden')
     for (const container of document.getElementById('item-forms').children)  {
@@ -108,7 +112,7 @@ function toggleForms(editMode=false, item='activities') {
     document.getElementById('form-error-messages').textContent=''
 }
 
-async function fetchScheduleBlocks(id=0) {
+async function fetchScheduleBlocks(id) {
     var url = `/api/schedules/${id}/blocks`
     const response = await fetch(url, {
         method : 'GET'
@@ -123,17 +127,24 @@ async function fetchScheduleBlocks(id=0) {
 
 
 /**
- * Generates and populates the item table
- * timetableItems is what items to use, defaults to grabbing the item from the server
- * @param {JSON} timetableItems 
+ * Generates and populates the schedule table
  */
-async function generateScheduleTable(timetableItems = null) {
-    timetableItems = await fetchTimetableItems()
+async function generateScheduleTable() {
+    var url = `/api/schedules`
+    const response = await fetch(url, {
+        method : 'GET'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+    schedules = await response.json()
+
     const itemTable = document.getElementById('schedule-table-body')
     itemTable.innerHTML = "";
     let itemCount = 0
 
-    for (const [itemType, items] of Object.entries(timetableItems)) {
+    for (const [itemType, items] of Object.entries(schedules)) {
         if ('schedules' != itemType) {
             continue
         }
@@ -159,7 +170,7 @@ async function generateScheduleTable(timetableItems = null) {
 
             
             row.ondblclick = ()=>{editItem(row.id)}
-            row.append(nameText, priorityText, frequencyText, minTimeText, maxLengthText)
+            row.append(nameText, groupText, startDateText, sizeText, slotSizeText)
             itemTable.append(row)
             itemCount += 1
         }
@@ -169,17 +180,24 @@ async function generateScheduleTable(timetableItems = null) {
 
 
 /**
- * Generates and populates the item table
- * timetableItems is what items to use, defaults to grabbing the item from the server
- * @param {JSON} timetableItems 
+ * Generates and populates the activity table
  */
-async function generateActivityTable(timetableItems = null) {
-    timetableItems = await fetchTimetableItems()
+async function generateActivityTable(id) {
+    var url = `/api/schedules/${id}/activities`
+    const response = await fetch(url, {
+        method : 'GET'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+    activities = await response.json()
+
     const itemTable = document.getElementById('activity-table-body')
     itemTable.innerHTML = "";
     let itemCount = 0
 
-    for (const [itemType, items] of Object.entries(timetableItems)) {
+    for (const [itemType, items] of Object.entries(activities)) {
         if ('activities' != itemType) {
             continue
         }
@@ -212,39 +230,27 @@ async function generateActivityTable(timetableItems = null) {
 
 
 /**
- * Generates and populates the item table
- * selectedItem is the item class to generate, defaults to the selected item in the dropdown
- * timetableItems is what items to use, defaults to grabbing the item from the server
- * @param {string} selectedItem 
- * @param {JSON} timetableItems 
+ * Generates and populates the blocks table
  */
-async function generateBlockTable(timetableItems = null) {
-    selectedItem = 'blocks'
-    timetableItems = timetableItems || await fetchTimetableItems()
+async function generateBlockTable() {
+    var url = `/api/schedules/${id}/blocks`
+    const response = await fetch(url, {
+        method : 'GET'
+    });
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+    }
+    blocks = await response.json()
+
     const itemTable = document.getElementById('block-table-body')
     itemTable.innerHTML = "";
     let itemCount = 0
 
-    for (const [itemType, items] of Object.entries(timetableItems)) {
-        if ((selectedItem != itemType) && (selectedItem != 'all')) {
-            continue
-        }
+    for (const [itemType, items] of Object.entries(blocks)) {
         if (itemType == 'status') continue;
         for (const item of items) {
             const row = document.createElement('tr');
-            row.onclick = (e) => {
-                if (!getPressedKeys().includes('Control')) {
-                    const selectedElements = document.getElementsByClassName('selected');
-                    for (let index = 0; index < selectedElements.length; index++) {
-                        const element = selectedElements[index];
-                        if (element != row) {
-                            element.classList.remove('selected')
-                        }
-                    }
-                    
-                }
-                row.classList.toggle('selected')
-            };
             row.id = `${itemType}-${item.id}`
             const itemTypeText = document.createElement('td')
             itemTypeText.textContent = plural_to_single(itemType).toLocaleUpperCase()
@@ -288,20 +294,22 @@ async function generateBlockTable(timetableItems = null) {
 
 async function setupScheduler () {
     let settings = await fetchSettings()
-    generateActivityTable();
-    var url = '/api/timetable/activities/default/blocks'
-    const response = await fetch(url, {
-        method : 'GET'
-    });
+    if (currentScheduleId) {
+        generateActivityTable();
+        var url = `/api/schedules/${currentScheduleId}/blocks`
+        const response = await fetch(url, {
+            method : 'GET'
+        });
 
-    if (!response.ok) {
-        throw new Error(`${response.status} ${response.statusText}`)
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`)
+        }
+        blocks = await response.json()
+        generateBlockTable(blocks);
     }
-    blocks = await response.json()
-    generateBlockTable(blocks);
 }
 
-async function deleteScheduleBlocks(id=0) {
+async function deleteScheduleBlocks(id) {
     var url = `/api/schedules/${id}/blocks`
     const response = await fetch(url, {
         method : 'DELETE'
@@ -368,7 +376,7 @@ function sortTable(column, item='block') {
     }
 }
 
-async function generateTimetable() {
+async function generateSchedule() {
     var url = '/api/engine/generate/default'
     const response = await fetch(url, {
         method : 'POST'
@@ -380,7 +388,7 @@ async function generateTimetable() {
 
     blocks = await response.json()
 
-    generateBlockTable(blocks)
+    generateBlockTable()
 
     return blocks
 }
