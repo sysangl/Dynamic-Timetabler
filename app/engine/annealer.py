@@ -36,13 +36,13 @@ class CostEvaluator:
         self.activities = activities
         self.blocks = blocks
         self.atb = atb
+        self.schedule = schedule
         self.day_load = day_load
         self.activity_cost = {a_id: self.calculate_cost(a_id) for a_id in self.activities}
         self.total_cost = sum(self.activity_cost.values())
         self.idle = 0
         self.balance = 0
         self.table = table
-        self.schedule = schedule
 
     def calculate_cost(self, a_id:int):
         activity = self.activities[a_id]
