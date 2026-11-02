@@ -241,7 +241,6 @@ def db_to_engine_schedule(schedule: Schedule)->_Schedule:
         slot_size=schedule.slot_size,
         early=schedule.early,
         late=schedule.late
-
     )
 
     return engine_schedule

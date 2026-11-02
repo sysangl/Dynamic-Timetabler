@@ -12,7 +12,7 @@
 }
 
 .item-container {
-    padding: 50px;
+    margin: 10px 20px 10px 20px;
     width: auto;
     width: -moz-available;
     width: -webkit-fill-available;
@@ -105,6 +105,17 @@
 .table-sort-arrows {
     font-size: 12px ;
 }
+
+.item-container.disabled {
+    filter: brightness(0.6);
+    user-select: none;
+    cursor: not-allowed;
+}
+
+.item-container.disabled * {
+    pointer-events: none !important;
+}
+
 
 #item-forms {
     position: absolute;

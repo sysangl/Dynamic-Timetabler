@@ -33,8 +33,6 @@ def get_items():
         ).all()
 
         payload = {
-            #"todos": [todo.serialise() for todo in todos],
-            #"tasks": [task.serialise() for task in tasks],
             "schedules": [schedule.serialise() for schedule in schedules],
             "activities": [activity.serialise() for activity in activities]
         }
@@ -75,7 +73,6 @@ def create_schedule():
         db.session.add(s)
         db.session.commit()
         log.info(f'Successfully created a "Schedule" instance for {current_user.username}')
-        # return redirect(url_for('app.serve_management'))
         return _json_success(s.serialise(), 201)
     except Exception:
         db.session.rollback()
@@ -108,7 +105,6 @@ def create_activity(sid:str):
         db.session.add(a)
         db.session.commit()
         log.info(f'Successfully created an Activity instance for {current_user.username}')
-        # return redirect(url_for('app.serve_management'))
         return _json_success(a.serialise(), 201)
     except Exception:
         db.session.rollback()

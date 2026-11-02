@@ -93,6 +93,11 @@ aform.addEventListener('submit',async (e) => {
     });
 })
 
+function setActiveSchedule(id) {
+    enableTables()
+    generateBlockTable(id)
+    generateActivityTable(id)
+}
 
 /**
  * Toggle the item form containers.
@@ -151,6 +156,11 @@ async function generateScheduleTable() {
         if (itemType == 'status') continue;
         for (const item of items) {
             const row = document.createElement('tr');
+
+            row.onclick = (e) => {
+                setActiveSchedule(item.id)
+            }
+
             row.id = `${itemType}-${item.id}`
             const nameText = document.createElement('td')
             nameText.textContent = item.title
@@ -307,8 +317,19 @@ async function setupScheduler () {
         blocks = await response.json()
         generateBlockTable(blocks);
     }
+
+    disableTables();
 }
 
+function enableTables() {
+    document.getElementById('activity-container').classList.remove('disabled')
+    document.getElementById('block-container').classList.remove('disabled')
+}
+
+function disableTables() {
+    document.getElementById('activity-container').classList.add('disabled')
+    document.getElementById('block-container').classList.add('disabled')
+}
 async function deleteScheduleBlocks(id) {
     var url = `/api/schedules/${id}/blocks`
     const response = await fetch(url, {
