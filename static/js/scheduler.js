@@ -15,44 +15,80 @@ function plural_to_single(item) {
 /**
  * Stop the default behaviour of forms of reloading the page
  */
-for (const form of itemForms) {
-    form.addEventListener('submit',async (e) => {
-        e.preventDefault();
+sform = document.getElementById('activities-form')
+sform.addEventListener('submit',async (e) => {
+    e.preventDefault();
 
-        const formData = new FormData(form)
-        var object = {};
-        formData.forEach((value, key) => {
-            if (key=='even_frequency_spacing') {
-                object[key] = document.getElementById(key).checked
-            } else {
-                object[key] = value}
-            }
-        );
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(object)
-        })
-        .then(response => {
-            if (!response.ok) {
-            throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Success:', data);
-            form.reset();
-            generateActivityTable();
-            toggleForms();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('form-error-messages').textContent = 'Item creation failed. Please try again.';
-        });
+    const formData = new FormData(sform)
+    var object = {};
+    formData.forEach((value, key) => {
+            object[key] = value}
+    );
+    fetch(`/api/schedules/create`, {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(object)
     })
-}
+    .then(response => {
+        if (!response.ok) {
+        throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success:', data);
+        sform.reset();
+        generateActivityTable();
+        toggleForms();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('form-error-messages').textContent = 'Item creation failed. Please try again.';
+    });
+})
+
+
+
+aform = document.getElementById('activities-form')
+aform.addEventListener('submit',async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(aform)
+    var object = {};
+    formData.forEach((value, key) => {
+        if (key=='even_frequency_spacing') {
+            object[key] = document.getElementById(key).checked
+        } else {
+            object[key] = value}
+        }
+    );
+    fetch(`/api/schedules/{current_schedule_id}/activites/create`, {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(object)
+    })
+    .then(response => {
+        if (!response.ok) {
+        throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success:', data);
+        aform.reset();
+        generateActivityTable();
+        toggleForms();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('form-error-messages').textContent = 'Item creation failed. Please try again.';
+    });
+})
+
 
 /**
  * Toggle the item form containers.
@@ -72,8 +108,8 @@ function toggleForms(editMode=false, item='activities') {
     document.getElementById('form-error-messages').textContent=''
 }
 
-async function fetchActivityBlocks(group='default') {
-    var url = `/api/timetable/activities/${group}/blocks`
+async function fetchScheduleBlocks(id=0) {
+    var url = `/api/schedules/${id}/blocks`
     const response = await fetch(url, {
         method : 'GET'
     });
@@ -85,22 +121,6 @@ async function fetchActivityBlocks(group='default') {
     return blocks
 }
 
-/**
- * Gets the timetable items, with filters applied (if any).
- * @returns {Promise<any>}
- */
-async function fetchTimetableItems() {
-
-    var url = '/api/timetable'
-    const response = await fetch(url, {
-        method : 'GET'
-    });
-
-    if (!response.ok) {
-        throw new Error(`${response.status} ${response.statusText}`)
-    }
-    return await response.json()
-}
 
 /**
  * Generates and populates the item table
@@ -281,8 +301,8 @@ async function setupScheduler () {
     generateBlockTable(blocks);
 }
 
-async function deleteActivityBlocks() {
-    var url = '/api/timetable/activities/default/blocks'
+async function deleteScheduleBlocks(id=0) {
+    var url = `/api/schedules/${id}/blocks`
     const response = await fetch(url, {
         method : 'DELETE'
     });
@@ -291,7 +311,7 @@ async function deleteActivityBlocks() {
         throw new Error(`${response.status} ${response.statusText}`)
     }
 
-    generateBlockTable(fetchActivityBlocks());
+    generateBlockTable(fetchScheduleBlocks());
 }
 
 
