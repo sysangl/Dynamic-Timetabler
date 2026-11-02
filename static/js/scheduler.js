@@ -413,10 +413,11 @@ async function generateSchedule() {
 }
 
 async function annealSchedule() {
+    deleteScheduleBlocks();
     const backdrop = document.getElementById('loading-backdrop')
 
     backdrop.classList.remove('hidden')
-    var url = '/api/engine/anneal/default'
+    var url = `/api/engine/anneal/${currentScheduleId}`
     const response = await fetch(url, {
         method : 'POST'
     });
