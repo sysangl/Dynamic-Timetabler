@@ -148,6 +148,37 @@
 
         </fieldset>
 
+
+
+        <fieldset class="card-section">
+            <legend class="section-title">Fixed Blocks</legend>
+            <span class="hint"><br>These blocks will not be affected by the optimisation algorithm.</span>
+
+
+            <div id="fixed-blocks-container" class="item-container">
+                <header>
+                    <div></div>
+                    <button type="button" id="delete-all-blocks-btn" onclick="deleteScheduleBlocks()">CLEAR ALL</button>
+                    <button type="button" id="create-fixed=block-btn" onclick="addNewFixedBlock()">New</button>
+                </header>
+            <table id="fixed-blocks-table">
+                <thead>
+                    <tr>
+                        <th>Day  </th>
+                        <th>Start</th>
+                        <th>End  </th>
+                    </tr>
+                </thead>
+                
+                <tbody id="fixed-blocks-table-body" class="item-table-body">
+                </tbody>
+
+            </table>
+            </div>
+        </fieldset>
+
+
+
         <fieldset class="card-section">
             <legend class="section-title">Appearance</legend>
 
@@ -202,7 +233,6 @@
                 <input id="late" name="late" type="time" required class="field-input" value="22:00">
             </div>
         </fieldset>
-
 
         <div class="form-actions">
             <button id="form-cancel-button" class="cancel-button form-btn" type="reset">Clear</button>

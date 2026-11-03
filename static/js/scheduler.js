@@ -3,6 +3,7 @@ itemForms = itemFormContainer.getElementsByClassName('item-form');
 editFormOpen = false
 currentScheduleId = null
 currentActivityId = null
+fixedBlockCount = 0
 
 function plural_to_single(item) {
     words = {
@@ -60,13 +61,26 @@ aform.addEventListener('submit',async (e) => {
 
     const formData = new FormData(aform)
     var object = {};
+    var fixedBlocks = [];
     formData.forEach((value, key) => {
         if (key=='even_frequency_spacing') {
             object[key] = document.getElementById(key).checked
-        } else {
+        } else  {
             object[key] = value}
         }
     );
+    console.log(object)
+    for (let fbIdx = 0; fbIdx < fixedBlockCount; fbIdx++) {
+        fixedBlocks.append([
+            object[`fixed-block-day-${fbIdx}`].
+            object[`fixed-block-start-${fbIdx}`].
+            object[`fixed-block-end-${fbIdx}`]
+        ])
+        
+    }
+    console.log(fixedBlocks)
+    object['fixed'] = fixedBlocks
+
     fetch(`/api/schedules/${currentScheduleId}/activities/create`, {
         method: 'POST',
         headers: {
@@ -82,6 +96,7 @@ aform.addEventListener('submit',async (e) => {
     })
     .then(data => {
         console.log('Success:', data);
+        fixedBlockCount = 0
         aform.reset();
         generateActivityTable(currentScheduleId);
         toggleForms();
@@ -313,6 +328,40 @@ async function generateBlockTable(sid, aid=null) {
     document.getElementById('block-counter').textContent = blockCount;
 }
 
+function addNewFixedBlock() {
+    const fbt = document.getElementById('fixed-blocks-table')
+    const row = document.createElement('tr')
+    
+    const day = document.createElement('td')
+    const dayInput = document.createElement('input')
+    dayInput.classList.add('field-input')
+    dayInput.type = 'number'
+    dayInput.placeholder = `0-length`
+    dayInput.required = true
+    dayInput.name = `fixed-block-day-${fixedBlockCount}`
+    day.append(dayInput)
+
+    const start = document.createElement('td')
+    const startInput = document.createElement('input')
+    startInput.classList.add('field-input')
+    startInput.type = 'time'
+    startInput.required = true
+    startInput.name = `fixed-block-start-${fixedBlockCount}`
+    start.append(startInput)
+    
+    const end = document.createElement('td')
+    const endInput = document.createElement('input')
+    endInput.classList.add('field-input')
+    endInput.type = 'time'
+    endInput.required = true
+    endInput.name = `fixed-block-end-${fixedBlockCount}`
+    end.append(endInput)
+
+
+    row.append(day, start, end)
+    fbt.append(row)
+    fixedBlockCount++;
+}
 
 
 async function setupScheduler () {

@@ -64,6 +64,15 @@
     background-color: var(--bg-button-cancel-hover) !important;
 }
 
+#create-fixed-block-btn {
+    background-color: var(--bg-button-other) !important;
+}
+
+#create-fixed-block-btn:hover {
+    background-color: var(--bg-button-submit-hover) !important;
+}
+
+
 .item-container #counter {
     font-size: 1.0rem;
     color: var(--text-muted);

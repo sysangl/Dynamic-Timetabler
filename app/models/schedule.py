@@ -89,6 +89,7 @@ class Activity(db.Model):
                 time_limit_reset:list[int]|None=None,
                 group_name: str = 'default',
                 colour:str = '#75547e',
+                fixed:list[tuple[int, int, int]] = list(), # noqa: B006
                 **extra
                 ) -> None:
         if time_limit_reset is None:
@@ -113,7 +114,7 @@ class Activity(db.Model):
             self.extra = extra
             self.preferred_days: list[int] = preferred_days
             self.colour=colour
-
+            self.fixed = fixed
 
         except Exception:
             db_logger.exception("Failed to create Activity instance")
