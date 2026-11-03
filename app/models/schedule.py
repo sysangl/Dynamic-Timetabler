@@ -115,7 +115,7 @@ class Activity(db.Model):
             # self.max_time = max_time
             # self.time_limit_reset = time_limit_reset
             self.extra = extra
-            self.preferred_days: list[int] = preferred_days
+            self.preferred_days = preferred_days
             self.colour=colour
             self.fixed = fixed
 
