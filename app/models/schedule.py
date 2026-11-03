@@ -137,7 +137,8 @@ class Activity(db.Model):
             'time_limit_reset' : self.time_limit_reset,
             'time_spent' : self.time_spent,
             'colour': self.colour,
-            'block_count' : len(self.blocks.all())
+            'block_count' : len(self.blocks.all()),
+            'fixed':self.fixed
         }
 
 class Schedule(db.Model):

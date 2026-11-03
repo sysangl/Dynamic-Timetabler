@@ -49,7 +49,8 @@ sform.addEventListener('submit',async (e) => {
     })
     .catch(error => {
         console.error('Error:', error);
-        document.getElementById('form-error-messages').textContent = 'Item creation failed. Please try again.';
+        document.getElementById('form-error-messages').textContent = 'Schedule creation failed. Please try again.';
+        document.getElementById('form-error-messages').classList.remove('hidden')
     });
 })
 
@@ -103,7 +104,8 @@ aform.addEventListener('submit',async (e) => {
     })
     .catch(error => {
         console.error('Error:', error);
-        document.getElementById('form-error-messages').textContent = 'Item creation failed. Please try again.';
+        document.getElementById('form-error-messages').textContent = 'Activity creation failed. Please try again.';
+        document.getElementById('form-error-messages').classList.remove('hidden')
     });
 })
 
@@ -150,6 +152,7 @@ function toggleForms(item='activities') {
         }
     }
     document.getElementById('form-error-messages').textContent=''
+    document.getElementById('form-error-messages').classList.add('hidden')
 }
 
 async function fetchBlocks(sid, aid=null) {

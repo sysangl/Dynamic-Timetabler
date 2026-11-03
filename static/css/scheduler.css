@@ -130,7 +130,7 @@
 #item-forms {
     position: absolute;
     display: flex;
-    justify-content: center;
+    /* justify-content: center; */
     justify-items: center;
     align-content: center;
     align-items: center;
@@ -139,11 +139,9 @@
     align-self: center;
     justify-self: center;
     flex-direction: column;
-    overflow-y: scroll;
-    height: 80%;
-    top: 50%;
-    transform: translate(0, -50%);
-    padding-top: 5rem;
+    height: auto;
+    height: -moz-available;
+    height: -webkit-fill-available;  
 }
 
 .item-table-body {
@@ -186,6 +184,10 @@
     display: none !important;
 }
 
+.form-container {
+    overflow-y: scroll;
+}
+
 .form-container.hidden {
     display: none !important;
 }
@@ -197,6 +199,10 @@
     align-content: center;
     color: red;
     padding: 2rem;
+}
+
+#form-error-messages.hidden {
+    display: none;
 }
 
 #backdrop {
