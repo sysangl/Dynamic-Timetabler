@@ -1,161 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Canopy Suite Login / Register</title>
 
-        <link rel="stylesheet"
-            href="{{ url_for('static', filename='css/login.css') }}" />
-        <link rel="stylesheet"
-            href="{{ url_for('static', filename='css/forms.css') }}" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canopy Suite Login / Register</title>
 
-        <style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}" />
+
+    <style>
         @font-face {
             font-family: Aleo;
             src: url("{{ url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf') }}");
         }
     </style>
-    </head>
-    <body>
-        <div id="content">
-            <!-- Flash messages (used for both login & registration) -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <flashlist class="flashes">
-                {% for category, msg in messages %}
-                <li class="{{ category }}">{{ msg }}</li>
-                {% endfor %}
-            </flashlist>
-            {% endif %}
-            {% endwith %}
+</head>
 
-            <h2>Canopy Suite</h2>
-            <form id="auth-form" class="form-body">
-                <fieldset class="card-section">
-                    <legend id="form-heading"
-                        class="section-title">Login</legend>
+<body>
+    <div id="content">
+        <!-- Flash messages (used for both login & registration) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <flashlist class="flashes">
+            {% for category, msg in messages %}
+            <li class="{{ category }}">{{ msg }}</li>
+            {% endfor %}
+        </flashlist>
+        {% endif %}
+        {% endwith %}
 
-                    <div class="field-group">
-                        <label for="username">Username</label>
-                        <input name="username" type="text" maxlength="20"
-                            placeholder="user" required class="field-input" />
-                    </div>
+        <h2>Canopy Suite</h2>
+        <form id="auth-form" class="form-body">
+            <fieldset class="card-section">
+                <legend id="form-heading" class="section-title">Login</legend>
 
-                    <div class="field-group" id="display-name-wrapper"
-                        style="display:none;">
-                        <label for="display_name">Display name</label>
-                        <input name="display_name" type="text" maxlength="20"
-                            placeholder="User" class="field-input" />
-                    </div>
-
-                    <div class="field-group">
-                        <label for="password">Password</label>
-                        <input name="password" type="password"
-                            placeholder="****" required class="field-input" />
-                    </div>
-
-                </fieldset>
-
-                <div class="form-actions">
-                    <button id="toggle-btn" class="other-button"
-                        type="button">Switch to Registration</button>
-                    <button type="submit" id="submit-btn"
-                        class="submit-button">Log In</button>
+                <div class="field-group">
+                    <label for="username">Username</label>
+                    <input name="username" type="text" maxlength="20" placeholder="user" required class="field-input" />
                 </div>
 
-            </form>
+                <div class="field-group" id="display-name-wrapper" style="display:none;">
+                    <label for="display_name">Display name</label>
+                    <input name="display_name" type="text" maxlength="20" placeholder="User" class="field-input" />
+                </div>
 
-        </div>
+                <div class="field-group">
+                    <label for="password">Password</label>
+                    <input name="password" type="password" placeholder="****" required class="field-input" />
+                </div>
 
-        <script>
-let mode = 'login';
+            </fieldset>
 
-const heading        = document.getElementById('form-heading');
-const submitBtn      = document.getElementById('submit-btn');
-const toggleBtn      = document.getElementById('toggle-btn');
-const displayWrapper = document.getElementById('display-name-wrapper');
-const form           = document.getElementById('auth-form');
+            <div class="form-actions">
+                <button id="toggle-btn" class="other-button" type="button">Switch to Registration</button>
+                <button type="submit" id="submit-btn" class="submit-button">Log In</button>
+            </div>
 
-function switchToLogin() {
-    mode = 'login';
-    heading.textContent = 'Login';
-    submitBtn.textContent = 'Log In';
-    toggleBtn.textContent = 'Switch to Registration';
-    displayWrapper.style.display = 'none';
-}
+        </form>
 
-function switchToRegister() {
-    mode = 'register';
-    heading.textContent = 'Register';
-    submitBtn.textContent = 'Create Account';
-    toggleBtn.textContent = 'Switch to Login';
-    displayWrapper.style.display = 'grid';
-}
+    </div>
 
-toggleBtn.addEventListener('click', () => {
-    if (mode === 'login') {
-        switchToRegister();
-    } else {
-        switchToLogin();
-    }
-});
+    <script>
+        let mode = 'login';
 
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();                 // we handle the request ourselves
+        const heading = document.getElementById('form-heading');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const displayWrapper = document.getElementById('display-name-wrapper');
+        const form = document.getElementById('auth-form');
 
-    const formData = new FormData(form);
-    const payload  = {
-        username: formData.get('username').trim(),
-        password: formData.get('password')
-    };
-
-    if (mode === 'register') {
-        const displayName = formData.get('display_name').trim();
-        if (displayName) payload.display_name = displayName;
-
-        try {
-            const resp = await fetch('{{ url_for("auth.register") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await resp.json();
-
-            const flashList = document.querySelector('.flashes') || document.createElement('flashList');
-            flashList.className = 'flashes';
-            flashList.innerHTML = '';
-
-            if (resp.ok) {
-                const li = document.createElement('li');
-                li.className = 'success';
-                li.textContent = data.msg || 'Registration successful!';
-                flashList.appendChild(li);
-                document.body.prepend(flashList);
-                switchToLogin();
-            } else {
-                const li = document.createElement('li');
-                li.className = 'error';
-                li.textContent = data.error || 'Something went wrong';
-                flashList.appendChild(li);
-                document.body.prepend(flashList);
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Network error - see console for details.');
+        function switchToLogin() {
+            mode = 'login';
+            heading.textContent = 'Login';
+            submitBtn.textContent = 'Log In';
+            toggleBtn.textContent = 'Switch to Registration';
+            displayWrapper.style.display = 'none';
         }
-        return;
-    }
 
-    form.action = '{{ url_for("auth.login") }}' + window.location.search;
-    form.method = 'post';
-    form.submit();
-});
+        function switchToRegister() {
+            mode = 'register';
+            heading.textContent = 'Register';
+            submitBtn.textContent = 'Create Account';
+            toggleBtn.textContent = 'Switch to Login';
+            displayWrapper.style.display = 'grid';
+        }
 
-switchToLogin();
-        </script>
-    </body>
+        toggleBtn.addEventListener('click', () => {
+            if (mode === 'login') {
+                switchToRegister();
+            } else {
+                switchToLogin();
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();                 // we handle the request ourselves
+
+            const formData = new FormData(form);
+            const payload = {
+                username: formData.get('username').trim(),
+                password: formData.get('password')
+            };
+
+            if (mode === 'register') {
+                const displayName = formData.get('display_name').trim();
+                if (displayName) payload.display_name = displayName;
+
+                try {
+                    const resp = await fetch('{{ url_for("auth.register") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await resp.json();
+
+                    const flashList = document.querySelector('.flashes') || document.createElement('flashList');
+                    flashList.className = 'flashes';
+                    flashList.innerHTML = '';
+
+                    if (resp.ok) {
+                        const li = document.createElement('li');
+                        li.className = 'success';
+                        li.textContent = data.msg || 'Registration successful!';
+                        flashList.appendChild(li);
+                        document.body.prepend(flashList);
+                        switchToLogin();
+                    } else {
+                        const li = document.createElement('li');
+                        li.className = 'error';
+                        li.textContent = data.error || 'Something went wrong';
+                        flashList.appendChild(li);
+                        document.body.prepend(flashList);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Network error - see console for details.');
+                }
+                return;
+            }
+
+            form.action = '{{ url_for("auth.login") }}' + window.location.search;
+            form.method = 'post';
+            form.submit();
+        });
+
+        switchToLogin();
+    </script>
+</body>
+
 </html>

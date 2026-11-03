@@ -1,5 +1,6 @@
 <!-- shared forms css -->
-<link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}"></link>
+<link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}">
+</link>
 
 <form id="settings-form" class="form-body" method="post" action="{{ url_for('settings.update_settings') }}">
     <fieldset class="card-section">
@@ -7,29 +8,34 @@
 
         <div class="field-group">
             <label for="start_day">Starting day<span class="hint">(0 = Mon .. 6 = Sun)</span></label>
-                <input  id="start_day" name="start_day" type="number" min="0" max="6" placeholder="0-6" class="field-input" />
+            <input id="start_day" name="start_day" type="number" min="0" max="6" placeholder="0-6"
+                class="field-input" />
         </div>
 
         <div class="field-group">
             <label for="start_hour">Starting hour<span class="hint"> (0-23)</span></label>
-            <input disabled id="start_hour" name="start_hour" type="number" min="0" max="23" placeholder="0-23" class="field-input" />
+            <input disabled id="start_hour" name="start_hour" type="number" min="0" max="23" placeholder="0-23"
+                class="field-input" />
         </div>
 
         <div class="field-group">
             <label for="timetable_view">Timetable view<span class="hint"> (vertical/horizontal)</span></label>
             <label>
                 <label for="timetable_view_h">Horizontal
-                    <input id="timetable_view_h" name="timetable_view" type="radio" placeholder="horizontal" class="field-input" value="horizontal" title="Horizontal"/>
+                    <input id="timetable_view_h" name="timetable_view" type="radio" placeholder="horizontal"
+                        class="field-input" value="horizontal" title="Horizontal" />
                 </label>
                 <label for="timetable_view_v">Vertical
-                    <input id="timetable_view_v" name="timetable_view" type="radio" placeholder="vertical" class="field-input" value="vertical" title="Vertical"/>
+                    <input id="timetable_view_v" name="timetable_view" type="radio" placeholder="vertical"
+                        class="field-input" value="vertical" title="Vertical" />
                 </label>
             </label>
         </div>
 
         <div class="field-group">
             <label for="days_per_view">Days per view<span class="hint">(1-7)</span></label>
-                <input  id="days_per_view" name="days_per_view" type="number" min="1" max="7" placeholder="1-7" class="field-input" />
+            <input id="days_per_view" name="days_per_view" type="number" min="1" max="7" placeholder="1-7"
+                class="field-input" />
         </div>
 
     </fieldset>
@@ -39,12 +45,14 @@
 
         <div class="field-group">
             <label for="default_block_length">Default block length (minutes)</label>
-            <input id="default_block_length" name="default_block_length" type="number" min="0" max="720" placeholder="30" class="field-input" />
+            <input id="default_block_length" name="default_block_length" type="number" min="0" max="720"
+                placeholder="30" class="field-input" />
         </div>
 
         <div class="field-group">
             <label for="default_block_colour">Default block colour</label>
-            <input id="default_block_colour" name="default_block_colour" type="color" class="field-input colour-input" />
+            <input id="default_block_colour" name="default_block_colour" type="color"
+                class="field-input colour-input" />
         </div>
     </fieldset>
 
