@@ -12,6 +12,7 @@ from ..models import Activity, Block, Schedule, User
 
 type ATB = dict[int, set[int]]
 type Table = list[list[int | None]]
+type OverlapTable = list[list[set]]
 
 
 @dataclass
@@ -60,7 +61,7 @@ class _Schedule:
         late: int = 1320,
     ) -> None:
         self.db_id = db_id
-        self.table: Table = []
+        self.table: OverlapTable = []
         self.start_date: date = start_date
         self.owner: User = owner
         self.SIZE = size
@@ -76,7 +77,7 @@ class _Schedule:
             6: [(9 * 60 // self.SLOT_SIZE, 12 * 60 // self.SLOT_SIZE)]
         }
 
-    def __call__(self, *args: Any, **kwds: Any) -> Table:
+    def __call__(self, *args: Any, **kwds: Any) -> OverlapTable:
         return self.table
 
 

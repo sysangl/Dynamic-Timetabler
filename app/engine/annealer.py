@@ -10,7 +10,7 @@ from app.engine.classes import (
     LIMIT,
     PENALTY_WEIGHTS,
     ChangeResult,
-    Table,
+    OverlapTable,
     _Activity,
     _Block,
     _Schedule,
@@ -31,7 +31,7 @@ class CostEvaluator:
         blocks: dict[int, _Block],
         atb: ATB,
         day_load: list[int],
-        table: Table,
+        table: OverlapTable,
     ) -> None:
 
         self.activities = activities
@@ -131,7 +131,7 @@ class CostEvaluator:
 
     def _idle_penalty(self):
         # cost for not using time
-        empty = sum(day.count(None) for day in self.table)
+        empty = sum(day.count(set()) for day in self.table)
         idle_prev = self.idle
         idle_current = (empty * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
         self.idle = idle_current
@@ -168,7 +168,7 @@ class CostEvaluator:
 
 # different changes
 def shift_move(
-    table: Table,
+    table: OverlapTable,
     activities: list[_Activity],
     atb: ATB,
     blocks: dict[int, _Block],
@@ -230,7 +230,7 @@ def shift_move(
 
 
 def swap_blocks(
-    table: Table,
+    table: OverlapTable,
     activities: list[_Activity],
     atb: ATB,
     blocks: dict[int, _Block],
@@ -321,7 +321,7 @@ def swap_blocks(
 
 
 def resize_block(
-    table: Table,
+    table: OverlapTable,
     activities: list[_Activity],
     atb: ATB,
     blocks: dict[int, _Block],
@@ -375,7 +375,7 @@ def resize_block(
 
 
 def split_block(
-    table: Table,
+    table: OverlapTable,
     activities: list[_Activity],
     atb: ATB,
     blocks: dict[int, _Block],
@@ -461,7 +461,7 @@ def split_block(
 
 
 def merge_blocks(
-    table: Table,
+    table: OverlapTable,
     activities: list[_Activity],
     atb: ATB,
     blocks: dict[int, _Block],
@@ -548,7 +548,7 @@ def merge_blocks(
 
 
 def random_reschedule(
-    table: Table,
+    table: OverlapTable,
     activities: list[_Activity],
     atb: ATB,
     blocks: dict[int, _Block],
@@ -619,13 +619,13 @@ class Annealer:
     def __init__(
         self,
         schedule: _Schedule,
-        table: Table,
+        table: OverlapTable,
         activities: list[_Activity],
         atb: ATB,
         blocks: dict[int, _Block],
         day_load: list[int],
         scheduler: Callable[
-            [_Activity, Table, dict[int, _Block], ATB, list[int]], None
+            [_Activity, OverlapTable, dict[int, _Block], ATB, list[int]], None
         ],
     ) -> None:
         self.activities = {a.id: a for a in activities}

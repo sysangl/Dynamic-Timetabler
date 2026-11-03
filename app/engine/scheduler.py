@@ -1,25 +1,25 @@
 import random
 
-from .classes import ATB, Table, _Activity, _Block, _Schedule
+from .classes import ATB, OverlapTable, _Activity, _Block, _Schedule
 
 
 def clamp(value, min_value, max_value):
     return max(min_value, min(value, max_value))
 
 
-def clear_block(table: Table, b: _Block):
+def clear_block(table: OverlapTable, b: _Block):
     for slot in range(b.start, b.start + b.length):
-        table[b.day][slot] = None
+        table[b.day][slot].remove(b.id)
 
 
 def find_free_slots(
-    day: int, required_size: int, table: Table, start_from: int = 0
+    day: int, required_size: int, table: OverlapTable, start_from: int = 0
 ) -> int | None:
     start = 0
     free_slots = 0
     row = table[day]
     for slot in range(start_from, len(row)):
-        if row[slot] is None:
+        if len(row[slot]) == 0:
             if free_slots == 0:
                 start = slot
             free_slots += 1
@@ -46,12 +46,12 @@ def allocate_lengths(needed: int, sessions: int, max_len: int) -> list[int]:
     return lengths
 
 
-def can_place(schedule: _Schedule, table: Table, b: _Block):
+def can_place(schedule: _Schedule, table: OverlapTable, b: _Block):
     for slot in range(b.start, b.start + b.length):
         try:
             if slot >= schedule.SLOTS_PER_DAY or not (0 <= b.day < schedule.SIZE):
                 return False
-            if table[b.day][slot] not in {None, b.id}:
+            if not table[b.day][slot].issubset({b.id}):
                 return False
         except IndexError:
             print(f"can_place failed : slot {slot}")
@@ -59,14 +59,14 @@ def can_place(schedule: _Schedule, table: Table, b: _Block):
     return True
 
 
-def place_block(table: Table, b: _Block):
+def place_block(table: OverlapTable, b: _Block):
     for slot in range(b.start, b.start + b.length):
-        table[b.day][slot] = b.id
+        table[b.day][slot].add(b.id)
 
 
 def greedy_schedule(
     activity: _Activity,
-    table: Table,
+    table: OverlapTable,
     blocks: dict[int, _Block],
     activity_to_blocks: ATB,
     day_load: list[int],
@@ -188,7 +188,7 @@ def greedy_schedule(
 
 def random_schedule(
     activity: _Activity,
-    table: Table,
+    table: OverlapTable,
     blocks: dict[int, _Block],
     activity_to_blocks: ATB,
     day_load: list[int],
@@ -250,7 +250,7 @@ def random_schedule(
 
 
 def place_fixed_blocks(
-    table: Table,
+    table: OverlapTable,
     activities: list[_Activity],
     blocks: dict[int, _Block],
     activity_to_blocks: ATB,
@@ -278,8 +278,8 @@ def place_fixed_blocks(
 
 
 def greedy_initial(schedule: _Schedule, activities: list[_Activity]):
-    table: Table = [
-        [None for _ in range(schedule.SLOTS_PER_DAY)] for _ in range(schedule.SIZE)
+    table: OverlapTable = [
+        [set() for _ in range(schedule.SLOTS_PER_DAY)] for _ in range(schedule.SIZE)
     ]
     blocks: dict[int, _Block] = {}
     activity_to_blocks: ATB = {}
