@@ -193,6 +193,14 @@
                 <label for="length">Length<span class="hint"><br>(Length of the schedule in days)</span></label>
                 <input id="length" name="length" type="number" required class="field-input" min=0 max=365 placeholder=7>
             </div>
+            <div class="field-group">
+                <label for="early">Early Bound<span class="hint"><br>(Avoid blocks before this time)</span></label>
+                <input id="early" name="early" type="time" required class="field-input" value="06:00">
+            </div>
+            <div class="field-group">
+                <label for="late">Late Bound<span class="hint"><br>(Avoid blocks after this time)</span></label>
+                <input id="late" name="late" type="time" required class="field-input" value="22:00">
+            </div>
         </fieldset>
 
 
