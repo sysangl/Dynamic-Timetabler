@@ -1,0 +1,10 @@
+.venv/
+.build-env/
+__pycache__/
+instance/
+migrations/
+build/
+dist/
+target/
+
+.vscode/
