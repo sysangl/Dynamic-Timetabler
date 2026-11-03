@@ -1,65 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canopy Suite Login / Register</title>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Canopy Suite Login / Register</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}"/>
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/login.css') }}" />
+        <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/forms.css') }}" />
 
-    <style>
+        <style>
         @font-face {
             font-family: Aleo;
             src: url("{{ url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf') }}");
         }
     </style>
-</head>
-<body>
-<div id="content">
-    <!-- Flash messages (used for both login & registration) -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <flashList class="flashes">
+    </head>
+    <body>
+        <div id="content">
+            <!-- Flash messages (used for both login & registration) -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <flashlist class="flashes">
                 {% for category, msg in messages %}
-                    <li class="{{ category }}">{{ msg }}</li>
+                <li class="{{ category }}">{{ msg }}</li>
                 {% endfor %}
-            </flashList>
-        {% endif %}
-    {% endwith %}
+            </flashlist>
+            {% endif %}
+            {% endwith %}
 
-    <h2>Canopy Suite</h2>
-    <form id="auth-form" class="form-body">
-        <fieldset class="card-section">
-            <legend id="form-heading" class="section-title">Login</legend>
+            <h2>Canopy Suite</h2>
+            <form id="auth-form" class="form-body">
+                <fieldset class="card-section">
+                    <legend id="form-heading"
+                        class="section-title">Login</legend>
 
-            <div class="field-group">
-                <label for="username">Username</label>
-                <input name="username" type="text" maxlength="20" placeholder="user" required class="field-input"/>
-            </div>
+                    <div class="field-group">
+                        <label for="username">Username</label>
+                        <input name="username" type="text" maxlength="20"
+                            placeholder="user" required class="field-input" />
+                    </div>
 
-            <div class="field-group" id="display-name-wrapper" style="display:none;">
-                <label for="display_name">Display name</label>
-                <input name="display_name" type="text" maxlength="20" placeholder="User" class="field-input"/>
-            </div>
+                    <div class="field-group" id="display-name-wrapper"
+                        style="display:none;">
+                        <label for="display_name">Display name</label>
+                        <input name="display_name" type="text" maxlength="20"
+                            placeholder="User" class="field-input" />
+                    </div>
 
-            <div class="field-group">
-                <label for="password">Password</label>
-                <input name="password" type="password" placeholder="****" required class="field-input"/>
-            </div>
+                    <div class="field-group">
+                        <label for="password">Password</label>
+                        <input name="password" type="password"
+                            placeholder="****" required class="field-input" />
+                    </div>
 
-        </fieldset>
+                </fieldset>
 
-        <div class="form-actions">
-            <button id="toggle-btn" class="other-button" type="button">Switch to Registration</button>
-            <button type="submit" id="submit-btn" class="submit-button">Log In</button>
+                <div class="form-actions">
+                    <button id="toggle-btn" class="other-button"
+                        type="button">Switch to Registration</button>
+                    <button type="submit" id="submit-btn"
+                        class="submit-button">Log In</button>
+                </div>
+
+            </form>
+
         </div>
-        
-    </form>
 
-</div>
-
-<script>
+        <script>
 let mode = 'login';
 
 const heading        = document.getElementById('form-heading');
@@ -147,6 +156,6 @@ form.addEventListener('submit', async (e) => {
 });
 
 switchToLogin();
-</script>
-</body>
+        </script>
+    </body>
 </html>

@@ -1,41 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 Not found</title>
-</head>
-<body>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>404 Not found</title>
+    </head>
+    <body>
+        <style>
         @font-face {
             font-family: Aleo;
             src: url("{{url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf')}}");
         }
     </style>
 
-    <div id="container">
-        <div id="calendar-block">            
-            <div id="code-text">
-                <span>0</span>4<span>/</span>04
-            </div>
-            <div id="info-text">
-                <span>Event: {{ url_string }}</span><br>
-                <span>Status: </span>Not Found<br>
-                <span>Description: </span>
-            </div>
-            <div id="small-text">
-                <br>
-                It appears that the page you're trying to access, does not exist.
-            </div>
-            <div id="links">
-                <a id="home-link" href="/app">Home</a>
+        <div id="container">
+            <div id="calendar-block">
+                <div id="code-text">
+                    <span>0</span>4<span>/</span>04
+                </div>
+                <div id="info-text">
+                    <span>Event: {{ url_string }}</span><br>
+                    <span>Status: </span>Not Found<br>
+                    <span>Description: </span>
+                </div>
+                <div id="small-text">
+                    <br>
+                    It appears that the page you're trying to access, does not
+                    exist.
+                </div>
+                <div id="links">
+                    <a id="home-link" href="/app">Home</a>
+                </div>
             </div>
         </div>
-    </div>
 
-</body>
+    </body>
 
-<style>
+    <style>
 
 * {
     overflow: hidden;
