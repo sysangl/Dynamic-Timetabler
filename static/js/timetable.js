@@ -1,8 +1,7 @@
-
-displayDateElement = document.getElementById('displayDate');
+displayDateElement = document.getElementById("displayDate");
 displayDate = new Date();
 if (displayDateElement) {
-    displayDate = new Date(displayDateElement.dataset.date)
+    displayDate = new Date(displayDateElement.dataset.date);
 }
 
 /**
@@ -10,16 +9,19 @@ if (displayDateElement) {
  *  @returns {JSON}
  */
 async function fetchPayload() {
-    const dates = document.getElementsByClassName('day-container')
-    const dpv = window.settings['days_per_view'];
-    const response = await fetch(`/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[dpv-1].dataset.isoDate}`, {
-        method : 'GET'
-    });
+    const dates = document.getElementsByClassName("day-container");
+    const dpv = window.settings["days_per_view"];
+    const response = await fetch(
+        `/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[dpv - 1].dataset.isoDate}`,
+        {
+            method: "GET",
+        },
+    );
 
     if (!response.ok) {
-        throw new Error(`${response.status} ${response.statusText}`)
+        throw new Error(`${response.status} ${response.statusText}`);
     }
-    return response.json()
+    return response.json();
 }
 
 /**
@@ -27,48 +29,50 @@ async function fetchPayload() {
  */
 function generateDays() {
     window.dayContainers = window.dayContainers || [];
-    const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const legend = document.getElementById("tt-legend");
     const schedule = document.getElementById("tt-schedule");
     legend.innerHTML = '<div id="tt-time">-</div>';
-    const msInDay = 24*60*60*1000;
+    const msInDay = 24 * 60 * 60 * 1000;
     var now;
     if (displayDate) {
         now = new Date(displayDate);
     } else {
         now = new Date();
     }
-    window.dayContainers.forEach(element => {
+    window.dayContainers.forEach((element) => {
         element.remove();
     });
-    const dpv = window.settings['days_per_view']
+    const dpv = window.settings["days_per_view"];
     for (let inc = 0; inc < dpv; inc++) {
-        var dayIdx = ((inc + window.settings['start_day']) % 7);
-        const day = days[dayIdx+7-dpv];
-        if (dayIdx < window.settings['start_day']) {
-            dayIdx-=dpv
+        var dayIdx = (inc + window.settings["start_day"]) % 7;
+        const day = days[dayIdx + 7 - dpv];
+        if (dayIdx < window.settings["start_day"]) {
+            dayIdx -= dpv;
         }
-        const nextDay = new Date(now.getTime() + msInDay*(1-now.getDay()+dayIdx));
-        const newDay = document.createElement('div');
+        const nextDay = new Date(
+            now.getTime() + msInDay * (1 - now.getDay() + dayIdx),
+        );
+        const newDay = document.createElement("div");
         newDay.id = `day-${day}`;
-        newDay.classList.add('tt-weekday');
+        newDay.classList.add("tt-weekday");
 
-        const dayName = document.createElement('span');
+        const dayName = document.createElement("span");
         dayName.textContent = `${day}`;
-        dayName.className = 'day-name';
-        const dayDate = document.createElement('span');
+        dayName.className = "day-name";
+        const dayDate = document.createElement("span");
         dayDate.textContent = nextDay.toDateString().slice(3);
-        dayDate.className = 'day-date';
-        newDay.append(dayName, document.createElement('br'), dayDate)
+        dayDate.className = "day-date";
+        newDay.append(dayName, document.createElement("br"), dayDate);
 
-        const newDayCont = document.createElement('div');
+        const newDayCont = document.createElement("div");
         newDayCont.id = `day-container-${day}`;
-        newDayCont.classList.add('day-container');
-        newDayCont.dataset.date = nextDay.toDateString().slice(3)
-        newDayCont.dataset.isoDate = nextDay.toISOString().slice(0,10)
-        legend.appendChild(newDay)
-        schedule.appendChild(newDayCont)
-        window.dayContainers.push(newDayCont)
+        newDayCont.classList.add("day-container");
+        newDayCont.dataset.date = nextDay.toDateString().slice(3);
+        newDayCont.dataset.isoDate = nextDay.toISOString().slice(0, 10);
+        legend.appendChild(newDay);
+        schedule.appendChild(newDayCont);
+        window.dayContainers.push(newDayCont);
     }
 }
 
@@ -78,34 +82,33 @@ function generateDays() {
 function generateTimeline() {
     document.getElementById("tt-timeline").innerHTML = "";
     for (let inc = 0; inc < 24; inc++) {
-        const hour = (inc + window.settings['start_hour']) % 24;
-        const timeline = document.getElementById('tt-timeline');
-        const timelineNumber = document.createElement('div');
-        
-        if (hour >= 12 ) {
-            timelineNumber.classList.add('timeline-number-pm')
+        const hour = (inc + window.settings["start_hour"]) % 24;
+        const timeline = document.getElementById("tt-timeline");
+        const timelineNumber = document.createElement("div");
+
+        if (hour >= 12) {
+            timelineNumber.classList.add("timeline-number-pm");
         } else {
-            timelineNumber.classList.add('timeline-number')
+            timelineNumber.classList.add("timeline-number");
         }
         timelineNumber.innerText = hour;
-        timeline.appendChild(timelineNumber)
+        timeline.appendChild(timelineNumber);
     }
-
 }
 
 /**
  * Generates the grids that identify day and hour boundaries
  */
 function buildGrid() {
-    const hl = document.getElementById('hour-lines');
-    const dl = document.getElementById('day-lines');
+    const hl = document.getElementById("hour-lines");
+    const dl = document.getElementById("day-lines");
 
-    let hlHtml = '';
-    for (let i=0; i<24; i++) hlHtml += '<div></div>';
+    let hlHtml = "";
+    for (let i = 0; i < 24; i++) hlHtml += "<div></div>";
     hl.innerHTML = hlHtml;
 
-    let dlHtml = '';
-    for (let i=0; i<7; i++) dlHtml += '<div></div>';
+    let dlHtml = "";
+    for (let i = 0; i < 7; i++) dlHtml += "<div></div>";
     dl.innerHTML = dlHtml;
 }
 
@@ -115,7 +118,7 @@ function buildGrid() {
  */
 function dayProgress() {
     const now = new Date();
-    const start = new Date(now.getFullYear() , now.getMonth(), now.getDate());
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const msSinceMidnight = now - start;
     const dayMs = 24 * 60 * 60 * 1000;
     return msSinceMidnight / dayMs;
@@ -127,25 +130,35 @@ function dayProgress() {
  */
 function scheduleProgress() {
     const now = new Date();
-    const start = new Date(now.getFullYear() , now.getMonth(), now.getDate(), window.settings['start_hour'], 0, 0, 0)
+    const start = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        window.settings["start_hour"],
+        0,
+        0,
+        0,
+    );
     const dayMs = 24 * 60 * 60 * 1000;
     let elapsed = now - start;
-    if (elapsed<0) elapsed += dayMs;
+    if (elapsed < 0) elapsed += dayMs;
 
     return elapsed / dayMs;
 }
-
 
 /**
  * Moves the current time marker
  */
 function alignTimeMarker() {
-
-    if (window.settings.timetable_view == 'horizontal') {
-        const left = document.getElementById("tt-timeline").scrollWidth * scheduleProgress();
+    if (window.settings.timetable_view == "horizontal") {
+        const left =
+            document.getElementById("tt-timeline").scrollWidth *
+            scheduleProgress();
         document.getElementById("time-marker").style.left = left + "px";
     } else {
-        const top = document.getElementById("tt-timeline").scrollHeight * scheduleProgress();
+        const top =
+            document.getElementById("tt-timeline").scrollHeight *
+            scheduleProgress();
         document.getElementById("time-marker").style.top = top + "px";
     }
 }
@@ -154,56 +167,54 @@ function alignTimeMarker() {
  * Scroll the value so the timemarker is visible
  */
 function alignTimetimetableView() {
-    const schedule = document.getElementById("tt-schedule-container")
-    const marker = document.getElementById("time-marker")
-    if (window.settings.timetable_view == 'horizontal') {
-        var scroll = parseInt(marker.style.left) - (schedule.scrollWidth/24);
+    const schedule = document.getElementById("tt-schedule-container");
+    const marker = document.getElementById("time-marker");
+    if (window.settings.timetable_view == "horizontal") {
+        var scroll = parseInt(marker.style.left) - schedule.scrollWidth / 24;
         if (scroll < 0) scroll = 0;
         schedule.scrollLeft = scroll;
     } else {
-        var scroll = parseInt(marker.style.top) - (schedule.scrollHeight/24);
+        var scroll = parseInt(marker.style.top) - schedule.scrollHeight / 24;
         if (scroll < 0) scroll = 0;
         schedule.scrollTop = scroll;
     }
 }
 
-
 /**
  * Formats a number so it is always 2 digits (7 -> 07, 12 -> 12)
- * @param {number} number 
+ * @param {number} number
  */
 function formatTime(number) {
-    return number < 10 ? '0' + number : number;
+    return number < 10 ? "0" + number : number;
 }
 
 /**
  * Update the clock on the top left corner of the timetable
  */
 function updateTime() {
-    const clock = document.getElementById('tt-time');
+    const clock = document.getElementById("tt-time");
     const now = new Date();
     let hours = formatTime(now.getHours());
     let minutes = formatTime(now.getMinutes());
 
-    clock.innerHTML = hours + ':' + minutes
+    clock.innerHTML = hours + ":" + minutes;
 }
 
-
-
 /**
- * 
- * @param {HTMLDivElement} target 
- * @returns 
+ *
+ * @param {HTMLDivElement} target
+ * @returns
  */
 function showPopupMenu(target, e) {
-    const backdrop  = document.getElementById('backdrop')
-    const popupMenu = document.getElementById('popup-menu');
-    const popupBlockTitle = document.getElementById('popup-block-title');
-    const popupBlockTime = document.getElementById('popup-block-time');
-    const popupBlockInfo = document.getElementById('popup-block-info');
+    const backdrop = document.getElementById("backdrop");
+    const popupMenu = document.getElementById("popup-menu");
+    const popupBlockTitle = document.getElementById("popup-block-title");
+    const popupBlockTime = document.getElementById("popup-block-time");
+    const popupBlockInfo = document.getElementById("popup-block-info");
 
-
-    const alreadyOpen = popupMenu.classList.contains('open') && target === popupMenu._currentTarget;
+    const alreadyOpen =
+        popupMenu.classList.contains("open") &&
+        target === popupMenu._currentTarget;
     if (alreadyOpen) {
         closePopupMenu();
         return;
@@ -211,9 +222,12 @@ function showPopupMenu(target, e) {
     popupMenu.style.top = `${e.pageY}px`;
     // popupMenu.style.left = `${bRect.left + window.scrollX}px`;
     popupMenu.style.left = `${e.pageX}px`;
-    if ((e.pageX + popupMenu.clientWidth)>=document.documentElement.clientWidth) {
-        popupMenu.style.right= '10px';
-        popupMenu.style.left = 'unset';
+    if (
+        e.pageX + popupMenu.clientWidth >=
+        document.documentElement.clientWidth
+    ) {
+        popupMenu.style.right = "10px";
+        popupMenu.style.left = "unset";
     }
 
     popupBlockTitle.textContent = target.dataset.blockTitle;
@@ -221,141 +235,157 @@ function showPopupMenu(target, e) {
     popupBlockInfo.style.background = target.dataset.blockColour;
 
     popupMenu._currentTarget = target;
-    popupMenu.classList.add('open');
-    backdrop.classList.add('active');
+    popupMenu.classList.add("open");
+    backdrop.classList.add("active");
 }
 
 function closePopupMenu() {
-    const popupMenu = document.getElementById('popup-menu');
-    const backdrop  = document.getElementById('backdrop')
+    const popupMenu = document.getElementById("popup-menu");
+    const backdrop = document.getElementById("backdrop");
     if (!popupMenu || !backdrop) return;
-    popupMenu.classList.remove('open');
-    backdrop.classList.remove('active');
+    popupMenu.classList.remove("open");
+    backdrop.classList.remove("active");
     if (popupMenu._currentTarget) {
-        delete popupMenu._currentTarget
+        delete popupMenu._currentTarget;
     }
 }
 
 async function deleteBlock() {
-    const popupMenu = document.getElementById('popup-menu');
-    const blockId = popupMenu._currentTarget.dataset.blockId
-    const response = await fetch(`/api/timetable/block/${blockId}`,{
-        'method' : 'DELETE'
-    })
-    document.querySelectorAll(`#timetable-block-${blockId}`).forEach(block=>block.remove())
+    const popupMenu = document.getElementById("popup-menu");
+    const blockId = popupMenu._currentTarget.dataset.blockId;
+    const response = await fetch(`/api/timetable/block/${blockId}`, {
+        method: "DELETE",
+    });
+    document
+        .querySelectorAll(`#timetable-block-${blockId}`)
+        .forEach((block) => block.remove());
     closePopupMenu();
 }
 
 async function editBlock(target) {
-    console.log('edit')
-
+    console.log("edit");
 }
 
 /**
  * Marks the selected block as completed
- * 
+ *
  * @returns {JSON}
  */
 async function completeBlock() {
-    const response = await fetch(`/api/timetable/block/${popupMenu._currentTarget.dataset.blockId}`, {
-        method : 'PUT',
-        body: JSON.stringify({completed : true})
-    });
+    const response = await fetch(
+        `/api/timetable/block/${popupMenu._currentTarget.dataset.blockId}`,
+        {
+            method: "PUT",
+            body: JSON.stringify({ completed: true }),
+        },
+    );
 
     if (!response.ok) {
-        throw new Error(`${response.status} ${response.statusText}`)
+        throw new Error(`${response.status} ${response.statusText}`);
     }
-    return response.json()
+    return response.json();
 }
 
 function markRescheduleBlock() {
-    console.log('mark resc')
+    console.log("mark resc");
 }
 
 /**
  * Creates a block and splits it if it goes over visible time.
  * Returns an array of HTMLDivElements
- * 
- * @param {Object} block 
+ *
+ * @param {Object} block
  * @returns {Array[HTMLDivElement]}
  */
 function splitBlock(block) {
-    const schedule = document.getElementById('tt-schedule');
+    const schedule = document.getElementById("tt-schedule");
     const pieces = [];
-    const minsInDay = 24 * 60
+    const minsInDay = 24 * 60;
 
-    function splitBlockRecursive(currentBlock, wasSplit=false) {
+    function splitBlockRecursive(currentBlock, wasSplit = false) {
         const start = new Date(currentBlock.start_datetime);
         const end = new Date(currentBlock.end_datetime);
-        const endOfDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+        const endOfDay = new Date(
+            start.getFullYear(),
+            start.getMonth(),
+            start.getDate() + 1,
+        );
 
         const startMins = start.getHours() * 60 + start.getMinutes();
-        let lengthMins = (end-start) / (60*1000);
+        let lengthMins = (end - start) / (60 * 1000);
         const scheduleStartMins = (window.settings?.start_hour ?? 0) * 60;
 
-        var sTime = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())} `
-        var eTime = ` ${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`
+        var sTime = `${formatTime(start.getHours())}:${formatTime(start.getMinutes())} `;
+        var eTime = ` ${formatTime(end.getHours())}:${formatTime(end.getMinutes())}`;
         if (wasSplit) {
-            sTime = `<`
+            sTime = `<`;
         }
-        if (end>endOfDay) {
-            lengthMins = (endOfDay-start)/(60*1000);
-            eTime = `>`
+        if (end > endOfDay) {
+            lengthMins = (endOfDay - start) / (60 * 1000);
+            eTime = `>`;
         }
-        var displayTime = `${sTime}-${eTime}`
+        var displayTime = `${sTime}-${eTime}`;
 
-        const el = document.createElement('div');
-        el.className = 'timetable-block';
+        const el = document.createElement("div");
+        el.className = "timetable-block";
         el.dataset.blockTitle = block.title;
         el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
         el.dataset.blockColour = block.colour;
         el.id = `timetable-block-${block.id}`;
 
-        if (window.settings.timetable_view =='horizontal') {
-            const leftPx = ((startMins - scheduleStartMins) / minsInDay) * schedule.scrollWidth;
+        if (window.settings.timetable_view == "horizontal") {
+            const leftPx =
+                ((startMins - scheduleStartMins) / minsInDay) *
+                schedule.scrollWidth;
             const widthPx = (lengthMins / minsInDay) * schedule.scrollWidth;
-            el.style.setProperty('--left', `${leftPx}px`)
-            el.style.setProperty('--width', `${widthPx}px`)
+            el.style.setProperty("--left", `${leftPx}px`);
+            el.style.setProperty("--width", `${widthPx}px`);
         } else {
-            const topPx = ((startMins - scheduleStartMins) / minsInDay) * schedule.scrollHeight;
+            const topPx =
+                ((startMins - scheduleStartMins) / minsInDay) *
+                schedule.scrollHeight;
             const heightPx = (lengthMins / minsInDay) * schedule.scrollHeight;
-            el.style.setProperty('--top', `${topPx}px`)
-            el.style.setProperty('--height', `${heightPx}px`)
+            el.style.setProperty("--top", `${topPx}px`);
+            el.style.setProperty("--height", `${heightPx}px`);
         }
-        el.style.setProperty('--bg-colour', block.colour ?? (window.settings?.default_block_colour ?? '#3b3d68'))
-    
-        const infoDiv = document.createElement('div');
-        infoDiv.classList.add('block-info', 'sticky')
+        el.style.setProperty(
+            "--bg-colour",
+            block.colour ?? window.settings?.default_block_colour ?? "#3b3d68",
+        );
 
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'block-title';
+        const infoDiv = document.createElement("div");
+        infoDiv.classList.add("block-info", "sticky");
+
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "block-title";
         titleSpan.textContent = block.title;
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'block-time';
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "block-time";
         timeSpan.textContent = displayTime;
-        infoDiv.append(titleSpan, document.createElement('br'), timeSpan);
-        el.appendChild(infoDiv)
+        infoDiv.append(titleSpan, document.createElement("br"), timeSpan);
+        el.appendChild(infoDiv);
         el.dataset.date = start.toDateString().slice(3);
         pieces.push(el);
-        
+
         if (end > endOfDay) {
             const nextBlock = {
                 ...currentBlock,
-                start_datetime: endOfDay.toISOString()
-            }
+                start_datetime: endOfDay.toISOString(),
+            };
             splitBlockRecursive(nextBlock, true);
         }
     }
 
     splitBlockRecursive(block);
-    return pieces
+    return pieces;
 }
 
 async function renderTimetable() {
     const payload = await fetchPayload();
     const blocks = payload.blocks;
-    const getDayContainer = (date) => document.querySelector(`[data-date="${date}"]`)
+    const getDayContainer = (date) =>
+        document.querySelector(`[data-date="${date}"]`);
 
     const fragmentMap = new Map();
 
@@ -364,35 +394,39 @@ async function renderTimetable() {
         for (const el of pieces) {
             const date = el.dataset.date;
             if (!fragmentMap.has(date)) {
-                fragmentMap.set(date, document.createDocumentFragment())
+                fragmentMap.set(date, document.createDocumentFragment());
             }
             fragmentMap.get(date).appendChild(el);
         }
     }
 
-    fragmentMap.forEach((frag, date)=>{
+    fragmentMap.forEach((frag, date) => {
         const dayContainer = getDayContainer(date);
         if (dayContainer) {
             dayContainer.appendChild(frag);
         }
-    })
+    });
 }
 
 async function clearTimetable() {
     const dayContainers = Array.from({ length: 7 }, (_, i) => {
         // The DOM has: <section id="day-container-Mon"><div class="day-inner"></div></section>
-        const container = document.getElementById(`day-container-${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}`);
+        const container = document.getElementById(
+            `day-container-${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}`,
+        );
         return container;
     });
-    dayContainers.forEach(container => {
-        container.children.forEach(child=>child.remove())
-    })
+    dayContainers.forEach((container) => {
+        container.children.forEach((child) => child.remove());
+    });
 }
 
 function prevDate() {
-    console.log('previous')
-    const msInDay = 24*60*60*1000;
-    displayDate = new Date(displayDate.getTime() - msInDay*(window.settings['days_per_view']));
+    console.log("previous");
+    const msInDay = 24 * 60 * 60 * 1000;
+    displayDate = new Date(
+        displayDate.getTime() - msInDay * window.settings["days_per_view"],
+    );
     rebuildTimetable();
 }
 
@@ -402,30 +436,41 @@ function currentDate() {
 }
 
 function nextDate() {
-    console.log('next')
-    const msInDay = 24*60*60*1000;
-    displayDate = new Date(displayDate.getTime() + msInDay*(window.settings['days_per_view']));
+    console.log("next");
+    const msInDay = 24 * 60 * 60 * 1000;
+    displayDate = new Date(
+        displayDate.getTime() + msInDay * window.settings["days_per_view"],
+    );
     rebuildTimetable();
 }
 
 function buildTimetable() {
-    document.documentElement.style.setProperty('--days', window.settings['days_per_view']);
+    document.documentElement.style.setProperty(
+        "--days",
+        window.settings["days_per_view"],
+    );
     generateDays(); // generate first column of the timetable
     generateTimeline(); // generate top row of the timetable
     updateTime(); // set the timetable corner clock
     buildGrid(); // generate grid
     alignTimeMarker(); // make sure time marker is in the right place
 
-    document.getElementById('timetable-container').dispatchEvent(new Event('finishedBuilding'))
+    document
+        .getElementById("timetable-container")
+        .dispatchEvent(new Event("finishedBuilding"));
 }
 
 function rebuildTimetable() {
-    document.documentElement.style.setProperty('--days', window.settings['days_per_view']);
+    document.documentElement.style.setProperty(
+        "--days",
+        window.settings["days_per_view"],
+    );
     generateDays(); // generate first column of the timetable
     updateTime();
-    renderTimetable().catch(err => console.error('Timetable render failed:', err))
+    renderTimetable().catch((err) =>
+        console.error("Timetable render failed:", err),
+    );
 }
-
 
 /**
  * Initialise the timetable
@@ -433,31 +478,37 @@ function rebuildTimetable() {
 async function initTimetable() {
     // Build timetable (actual html and timetable divs)
     window.settings = await fetchSettings();
-    displayDate = displayDate || null
+    displayDate = displayDate || null;
     buildTimetable();
 
-    window.pageIntervals.temporary.push(setInterval(alignTimeMarker, 60*1000)); // update the time marker every 60 seconds
-    window.pageIntervals.temporary.push(setInterval(updateTime, 5*1000)); // set the timetable corner clock
+    window.pageIntervals.temporary.push(
+        setInterval(alignTimeMarker, 60 * 1000),
+    ); // update the time marker every 60 seconds
+    window.pageIntervals.temporary.push(setInterval(updateTime, 5 * 1000)); // set the timetable corner clock
     alignTimetimetableView(); // scroll timetable to the current time
 
     // Render timetable (events, block, content)
-    renderTimetable().catch(err => console.error('Timetable render failed:', err))
-    window.addEventListener('resize', closePopupMenu);
-    window.addEventListener('scroll', closePopupMenu);
+    renderTimetable().catch((err) =>
+        console.error("Timetable render failed:", err),
+    );
+    window.addEventListener("resize", closePopupMenu);
+    window.addEventListener("scroll", closePopupMenu);
 
-    const scheduleContainer = document.getElementById('tt-schedule-container')
-    scheduleContainer.addEventListener('click', (e)=>{
-        const block = e.target.closest('.timetable-block');
+    const scheduleContainer = document.getElementById("tt-schedule-container");
+    scheduleContainer.addEventListener("click", (e) => {
+        const block = e.target.closest(".timetable-block");
         if (!block) return;
         e.stopPropagation();
         showPopupMenu(block, e);
-    })
+    });
 
-    document.getElementById('backdrop').addEventListener('click', closePopupMenu)
-    document.addEventListener('keydown', (e) => {
-        const popupMenu  = document.getElementById('popup-menu')
+    document
+        .getElementById("backdrop")
+        .addEventListener("click", closePopupMenu);
+    document.addEventListener("keydown", (e) => {
+        const popupMenu = document.getElementById("popup-menu");
         if (!popupMenu) return;
-        if (e.key === 'Escape' && popupMenu.classList.contains('open')) {
+        if (e.key === "Escape" && popupMenu.classList.contains("open")) {
             closePopupMenu();
         }
     });
