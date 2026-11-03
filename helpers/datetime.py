@@ -44,3 +44,17 @@ def parse_iso_date(s: str)->date|None:
         return datetime.strptime(s, "%Y-%m-%d").date()
     except ValueError:
         return None
+
+def parse_iso_time_to_mins(time)->int:
+    """
+    Parses an ISO time string (eg. 20:10:10) and returns it in minutes from 0:00 am
+    """
+    try:
+        t: time = datetime.strptime(time, "%H:%M:%S.%f").time()
+    except ValueError:
+        try:
+            t = datetime.strptime(time, "%H:%M:%S").time()
+        except ValueError:
+            t = datetime.strptime(time, "%H:%M").time()
+
+    return t.hour * 60 + t.minute

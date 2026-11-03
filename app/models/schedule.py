@@ -3,8 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime, time
 
-import pytz
-from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, Uuid
+from sqlalchemy import JSON, Date, ForeignKey, Integer, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import db, db_logger
@@ -40,7 +39,7 @@ class Activity(db.Model):
 
     time_spent : Mapped[int] = mapped_column(default=0)
 
-    preferred_days : Mapped[list[int]] = mapped_column(JSON, default=list()) # type: ignore
+    preferred_days : Mapped[list[int]] = mapped_column(JSON, default=list()) # noqa: C408
 
     owner_id : Mapped[int] = mapped_column(
         Integer,
@@ -85,13 +84,17 @@ class Activity(db.Model):
                 min_time:int=0,
                 min_start_time:time=time(0,0,0),
                 max_time:int=-1,
-                preferred_days:list[int]=list(),  # noqa: B006
+                preferred_days:list[int]|None=None,
                 time_limit_reset:list[int]|None=None,
                 group_name: str = 'default',
                 colour:str = '#75547e',
-                fixed:list[tuple[int, int, int]] = list(), # noqa: B006
+                fixed:list[tuple[int, int, int]]|None = None,
                 **extra
                 ) -> None:
+        if preferred_days is None:
+            preferred_days = []
+        if fixed is None:
+            fixed = []
         if time_limit_reset is None:
             time_limit_reset = [0, 0, 0, 0, 0]
         if frequency is None:
@@ -149,8 +152,8 @@ class Schedule(db.Model):
     name : Mapped[str] = mapped_column(nullable=False, default="Untitled Activity")
     description : Mapped[str] = mapped_column(nullable=False, default="")
 
-    activities_to_blocks : Mapped[dict[int, set[int]]] = mapped_column(JSON, default=dict())
-    table : Mapped[list[list[int]]] = mapped_column(JSON,default=list())
+    activities_to_blocks : Mapped[dict[int, set[int]]] = mapped_column(JSON, default=dict()) # noqa: C408
+    table : Mapped[list[list[int]]] = mapped_column(JSON,default=list()) # noqa: C408
 
     start_date : Mapped[date] = mapped_column(Date, nullable=False)
     length : Mapped[int] = mapped_column(default=7)
@@ -190,13 +193,17 @@ class Schedule(db.Model):
                 start_date:date|None = None,
                 group_name: str = 'default',
                 description:str = '',
-                atb : dict[int,set[int]] = dict(),
-                table : list[list[int]] = list(),
+                atb : dict[int,set[int]]|None = None,
+                table : list[list[int]]|None = None,
                 length: int = 7,
                 slot_size:int=10,
                 early:int=360,
                 late:int=1320
                 ) -> None:
+        if atb is None:
+            atb = {}
+        if table is None:
+            table = []
         if not start_date:
             self.start_date = datetime.now().date()
         self.name = name

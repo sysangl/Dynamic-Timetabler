@@ -1,16 +1,11 @@
-from ..models import Activity, Schedule, User
+from ..models import Schedule
 from .classes import (
     ATB,
     Table,
     _Block,
-    _Schedule,
 )
 
 MAX_PRIORITY = 10
-
-
-
-
 
 
 def reset_ids(table: Table, atb:ATB, blocks:dict[int, _Block], start_from:int=1):

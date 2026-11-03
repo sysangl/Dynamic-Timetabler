@@ -1,18 +1,16 @@
 import logging
 import uuid
-from datetime import datetime, time
-from typing import Any
+from datetime import time
 
 from flask import Blueprint, request
 from flask_login import current_user, login_required
 from sqlalchemy.exc import SQLAlchemyError
 
-from helpers.config import get_config
-from helpers.datetime import combine_date_time, parse_iso_date
+from helpers.datetime import parse_iso_date, parse_iso_time_to_mins
 from helpers.server import _json_error, _json_success
 
 from ..extensions import db
-from ..models import Activity, Block, Schedule
+from ..models import Activity, Schedule
 
 bp = Blueprint('schedules', __name__)
 
@@ -65,10 +63,9 @@ def get_schedule(sid: str):
 @login_required
 def create_schedule():
     data = request.get_json()
-    tz = get_config()["general"]["timezone"]
     data['start_date'] = parse_iso_date(data.get('start_date'))
-    # data['early'] = combine_date_time(data.get('start_date'),data.get('start_time'), tz=tz) # type: ignore
-    # data['late'] = combine_date_time(data.get('end_date'),data.get('end_time'), tz=tz) #type: ignore
+    data['early'] = parse_iso_time_to_mins(data.get('early'))
+    data['late'] = parse_iso_time_to_mins(data.get('late'))
 
     s = Schedule(
         **data,
