@@ -7,7 +7,8 @@ from datetime import date, datetime, time
 
 from flask import Blueprint
 
-bp = Blueprint('app', __name__)
+bp = Blueprint("app", __name__)
+
 
 def combine_date_time(date_str: str, time_str: str, tz: str | None = None) -> datetime:
     """
@@ -34,7 +35,8 @@ def combine_date_time(date_str: str, time_str: str, tz: str | None = None) -> da
 
     return combined
 
-def parse_iso_date(s: str)->date|None:
+
+def parse_iso_date(s: str) -> date | None:
     """
     Parses an ISO date string (eg. 2026-10-25), and returns the date object.
     """
@@ -45,7 +47,8 @@ def parse_iso_date(s: str)->date|None:
     except ValueError:
         return None
 
-def parse_iso_time_to_mins(time)->int:
+
+def parse_iso_time_to_mins(time) -> int:
     """
     Parses an ISO time string (eg. 20:10:10) and returns it in minutes from 0:00 am
     """

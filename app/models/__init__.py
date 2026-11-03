@@ -1,9 +1,8 @@
-
 import logging
 
 from ..extensions import db, pwd_hasher
 
-db_logger = logging.getLogger('database')
+db_logger = logging.getLogger("database")
 
 from .base import BaseModel
 from .schedule import Activity, Schedule
@@ -15,16 +14,17 @@ def create_db(app):
     with app.app_context():
         db.create_all()
 
+
 __all__ = [
-    'Activity',
-    'BaseModel',
+    "Activity",
+    "BaseModel",
     # 'ToDo',
     # 'Task',
-    'Block',
+    "Block",
     # 'Routine',
-    'Schedule',
-    'Settings',
-    'User',
-    'db',
-    'pwd_hasher',
+    "Schedule",
+    "Settings",
+    "User",
+    "db",
+    "pwd_hasher",
 ]

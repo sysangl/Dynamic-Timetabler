@@ -20,90 +20,112 @@ from .scheduler import can_place, clear_block, place_block
 
 
 def clamp(value, min_value, max_value):
-    return max(min_value,min(value,max_value))
+    return max(min_value, min(value, max_value))
 
 
 class CostEvaluator:
-    def __init__(self,
-                schedule:_Schedule,
-                activities: dict[int, _Activity],
-                blocks: dict[int, _Block],
-                atb: ATB,
-                day_load: list[int],
-                table:Table,
-                ) -> None:
+    def __init__(
+        self,
+        schedule: _Schedule,
+        activities: dict[int, _Activity],
+        blocks: dict[int, _Block],
+        atb: ATB,
+        day_load: list[int],
+        table: Table,
+    ) -> None:
 
         self.activities = activities
         self.blocks = blocks
         self.atb = atb
         self.schedule = schedule
         self.day_load = day_load
-        self.activity_cost = {a_id: self.calculate_cost(a_id) for a_id in self.activities}
+        self.activity_cost = {
+            a_id: self.calculate_cost(a_id) for a_id in self.activities
+        }
         self.total_cost = sum(self.activity_cost.values())
         self.idle = 0
         self.balance = 0
         self.table = table
 
-    def calculate_cost(self, a_id:int):
+    def calculate_cost(self, a_id: int):
         activity = self.activities[a_id]
         block_list = [self.blocks[bid] for bid in self.atb[a_id]]
 
-        #cost for min time
+        # cost for min time
         total_slots = sum(b.length for b in block_list)
         missing_time = max(0, activity.min_weekly_slots - total_slots)
         cost = missing_time * PENALTY_WEIGHTS.MIN_TIME
 
-        #cost for frequency
+        # cost for frequency
         missing_freq = abs(len(block_list) - activity.frequency)
         cost += missing_freq * PENALTY_WEIGHTS.FREQ
 
-        #cost for even spacing
+        # cost for even spacing
         if activity.even_spacing and len(block_list) > 1:
             days = sorted(b.day for b in block_list)
             ideal = self.schedule.SIZE / activity.frequency
             # calcultaing standard error, spesh coming in clutch
-            standard_err = sum((days[day+1]-days[day]-ideal) for day in range(len(days)-1))
+            standard_err = sum(
+                (days[day + 1] - days[day] - ideal) for day in range(len(days) - 1)
+            )
             cost += standard_err**2 * PENALTY_WEIGHTS.EVEN_SPACING
 
-        #cost for over load
+        # cost for over load
         blocks_per_day = collections.Counter(b.day for b in block_list)
-        target = math.ceil(activity.frequency/self.schedule.SIZE)
+        target = math.ceil(activity.frequency / self.schedule.SIZE)
         for count in blocks_per_day.values():
             if count > target:
-                cost += (count-target)**2 * PENALTY_WEIGHTS.OVERLOAD
+                cost += (count - target) ** 2 * PENALTY_WEIGHTS.OVERLOAD
 
-        preferred_day_count=0
-        
+        preferred_day_count = 0
+
         for b in block_list:
-            #cost for block size
+            # cost for block size
             if b.length > activity.max_block_slots:
-                cost+= LIMIT.HARD_SOFT * 2
+                cost += LIMIT.HARD_SOFT * 2
 
             if b.length < activity.min_block_slots:
-                cost += (activity.min_block_slots - b.length) * PENALTY_WEIGHTS.MIN_LENGTH
+                cost += (
+                    activity.min_block_slots - b.length
+                ) * PENALTY_WEIGHTS.MIN_LENGTH
 
             # cost for bounds
-            early_oob = sum(1 for slot in range(b.start, b.start + b.length) if self.schedule.EARLY_SLOTS > slot)
-            late_oob = sum(1 for slot in range(b.start, b.start + b.length) if self.schedule.LATE_SLOTS < slot)
-            cost += (early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND)
+            early_oob = sum(
+                1
+                for slot in range(b.start, b.start + b.length)
+                if self.schedule.EARLY_SLOTS > slot
+            )
+            late_oob = sum(
+                1
+                for slot in range(b.start, b.start + b.length)
+                if self.schedule.LATE_SLOTS < slot
+            )
+            cost += (
+                early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND
+                + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND
+            )
 
             bounds = self.schedule.HIGH_COST_BOUNDS.get(b.day, [])
             for bound in bounds:
-                hcb = sum(1 for slot in range(b.start, b.start+b.length) if bound[0] <= slot <= bound[1])
+                hcb = sum(
+                    1
+                    for slot in range(b.start, b.start + b.length)
+                    if bound[0] <= slot <= bound[1]
+                )
                 cost += hcb**2 * PENALTY_WEIGHTS.HIGH_COST_BOUND
 
             if b.day not in activity.preferred_days:
-                preferred_day_count+=1
+                preferred_day_count += 1
 
             # cost for minimum start
             if b.start < activity.min_start_slot:
-                cost += (b.start-activity.min_start_slot)**2
+                cost += (b.start - activity.min_start_slot) ** 2
 
-        cost += preferred_day_count ** 2 * PENALTY_WEIGHTS.PREFERRED_DAYS
+        cost += preferred_day_count**2 * PENALTY_WEIGHTS.PREFERRED_DAYS
 
         # fragmentation (minimise # of blocks)
         if len(block_list) > activity.frequency:
-            cost += (len(block_list)-activity.frequency) * PENALTY_WEIGHTS.FRAGMENT
+            cost += (len(block_list) - activity.frequency) * PENALTY_WEIGHTS.FRAGMENT
 
         return cost
 
@@ -111,9 +133,9 @@ class CostEvaluator:
         # cost for not using time
         empty = sum(day.count(None) for day in self.table)
         idle_prev = self.idle
-        idle_current = (empty * PENALTY_WEIGHTS.IDLE)/self.schedule.SLOTS_PER_DAY
+        idle_current = (empty * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
         self.idle = idle_current
-        return idle_current - idle_prev 
+        return idle_current - idle_prev
 
     def _balance_penalty(self):
         # penalise for heaping everything into one day
@@ -121,10 +143,12 @@ class CostEvaluator:
         total = sum(blocks_per_day)
         balance_current = 0
         for count in blocks_per_day:
-            balance_current += (count-(total/self.schedule.SIZE))**2 * PENALTY_WEIGHTS.BALANCE
+            balance_current += (
+                count - (total / self.schedule.SIZE)
+            ) ** 2 * PENALTY_WEIGHTS.BALANCE
         balance_prev = self.balance
         self.balance = balance_current
-        return balance_current-balance_prev
+        return balance_current - balance_prev
 
     def update_activities(self, activity_ids):
         delta = 0
@@ -132,7 +156,7 @@ class CostEvaluator:
             old = self.activity_cost[a_id]
             new = self.calculate_cost(a_id)
             self.activity_cost[a_id] = new
-            delta += (new - old)
+            delta += new - old
 
         ## whole table penalties
         delta += self._idle_penalty()
@@ -142,19 +166,19 @@ class CostEvaluator:
         return delta
 
 
-
 # different changes
 def shift_move(
-            table: Table,
-            activities:list[_Activity],
-            atb:ATB,
-            blocks:dict[int,_Block],
-            day_load: list[int],
-            evaluator:CostEvaluator)->ChangeResult:
+    table: Table,
+    activities: list[_Activity],
+    atb: ATB,
+    blocks: dict[int, _Block],
+    day_load: list[int],
+    evaluator: CostEvaluator,
+) -> ChangeResult:
     # shift a block one day before or after, and shift it by k hours (random)
     movable = [b for b in blocks.values() if not b.fixed]
     if not movable:
-        return ChangeResult(LIMIT.HARD,undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     block = random.choice(movable)
     activity = activities[block.activity_id]
@@ -163,30 +187,32 @@ def shift_move(
     old_start = block.start
     affected = {activity.id}
 
-    day_offset = random.choice([-1,0,1])
-    start_offset = random.choice(range(-int(activity.schedule.SLOTS_PER_DAY//12),int(activity.schedule.SLOTS_PER_DAY//12)))
-    
-    new_day = clamp(old_day+day_offset, 0,activity.schedule.SIZE-1)
-    new_start = clamp(old_start+start_offset, 0, activity.schedule.SLOTS_PER_DAY-1)
+    day_offset = random.choice([-1, 0, 1])
+    start_offset = random.choice(
+        range(
+            -int(activity.schedule.SLOTS_PER_DAY // 12),
+            int(activity.schedule.SLOTS_PER_DAY // 12),
+        )
+    )
+
+    new_day = clamp(old_day + day_offset, 0, activity.schedule.SIZE - 1)
+    new_start = clamp(old_start + start_offset, 0, activity.schedule.SLOTS_PER_DAY - 1)
 
     # if new_start < activity.min_start_slot:
     #     return ChangeResult(LIMIT.HARD, undo=lambda: None) # maybe make the penalty scale with prio? or use the soft hard hybrid
 
     test_block = _Block(
-        activity_id=activity.id,
-        day=new_day,
-        start=new_start,
-        length=block.length
+        activity_id=activity.id, day=new_day, start=new_start, length=block.length
     )
-    if not can_place(activity.schedule,table, test_block):
+    if not can_place(activity.schedule, table, test_block):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
-    clear_block(table,block)
-    day_load[old_day]-=1
+    clear_block(table, block)
+    day_load[old_day] -= 1
     block.day = new_day
     block.start = new_start
     place_block(table, block)
-    day_load[new_day]+=1
+    day_load[new_day] += 1
     delta_cost = evaluator.update_activities(affected)
 
     delta_cost += 0.5 * activity.priority * PENALTY_WEIGHTS.PRIORITY
@@ -202,13 +228,15 @@ def shift_move(
 
     return ChangeResult(delta=delta_cost, undo=undo)
 
+
 def swap_blocks(
-            table: Table,
-            activities:list[_Activity],
-            atb:ATB,
-            blocks:dict[int,_Block],
-            day_load: list[int],
-            evaluator:CostEvaluator)->ChangeResult:
+    table: Table,
+    activities: list[_Activity],
+    atb: ATB,
+    blocks: dict[int, _Block],
+    day_load: list[int],
+    evaluator: CostEvaluator,
+) -> ChangeResult:
     # swap two blocks of different activities
     delta_cost = 0
 
@@ -224,19 +252,33 @@ def swap_blocks(
     if a1 == a2:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
-    if any((b1.day, b1.start, b1.length)==fixed for fixed in a1.fixed_blocks):
+    if any((b1.day, b1.start, b1.length) == fixed for fixed in a1.fixed_blocks):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
-    if any((b2.day, b2.start, b2.length)==fixed for fixed in a2.fixed_blocks):
+    if any((b2.day, b2.start, b2.length) == fixed for fixed in a2.fixed_blocks):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
-    
+
     old1 = (b1.day, b1.start)
     old2 = (b2.day, b2.start)
     affected = {a1.id, a2.id}
 
-    test1 = _Block(id=b1.id, activity_id=b2.activity_id, day=b2.day, start=b2.start, length=b1.length)
-    test2 = _Block(id=b2.id, activity_id=b1.activity_id, day=b1.day, start=b1.start, length=b2.length)
+    test1 = _Block(
+        id=b1.id,
+        activity_id=b2.activity_id,
+        day=b2.day,
+        start=b2.start,
+        length=b1.length,
+    )
+    test2 = _Block(
+        id=b2.id,
+        activity_id=b1.activity_id,
+        day=b1.day,
+        start=b1.start,
+        length=b2.length,
+    )
 
-    if not (can_place(a1.schedule,table, test1) and can_place(a2.schedule,table, test2)):
+    if not (
+        can_place(a1.schedule, table, test1) and can_place(a2.schedule, table, test2)
+    ):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     clear_block(table, b1)
@@ -275,16 +317,17 @@ def swap_blocks(
 
         evaluator.update_activities(affected)
 
-
     return ChangeResult(delta_cost, undo=undo)
 
+
 def resize_block(
-            table: Table,
-            activities:list[_Activity],
-            atb:ATB,
-            blocks:dict[int,_Block],
-            day_load: list[int],
-            evaluator:CostEvaluator)->ChangeResult:
+    table: Table,
+    activities: list[_Activity],
+    atb: ATB,
+    blocks: dict[int, _Block],
+    day_load: list[int],
+    evaluator: CostEvaluator,
+) -> ChangeResult:
     # change the length of a block by 1 slot
 
     movable = [b for b in blocks.values() if not b.fixed]
@@ -297,12 +340,12 @@ def resize_block(
     old_length = block.length
     affected = {activity.id}
 
-    direction = random.choice([-1,1])
+    direction = random.choice([-1, 1])
 
     if direction == -1:
         if block.length == 1:
             return ChangeResult(LIMIT.HARD, undo=lambda: None)
-        clear_block(table,block)
+        clear_block(table, block)
         block.length -= 1
         place_block(table, block)
         delta_cost = evaluator.update_activities(affected)
@@ -317,7 +360,7 @@ def resize_block(
     if table[block.day][next_slot] is not None:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
-    clear_block(table,block)
+    clear_block(table, block)
     block.length += 1
     place_block(table, block)
     delta_cost = evaluator.update_activities(affected)
@@ -327,20 +370,25 @@ def resize_block(
         block.length = old_length
         place_block(table, block)
         evaluator.update_activities(affected)
-    
+
     return ChangeResult(delta=delta_cost, undo=undo)
 
 
 def split_block(
-            table: Table,
-            activities:list[_Activity],
-            atb:ATB,
-            blocks:dict[int,_Block],
-            day_load: list[int],
-            evaluator:CostEvaluator)->ChangeResult:
+    table: Table,
+    activities: list[_Activity],
+    atb: ATB,
+    blocks: dict[int, _Block],
+    day_load: list[int],
+    evaluator: CostEvaluator,
+) -> ChangeResult:
     # if length>max length, split block
-    
-    oversized = [b for b in blocks.values() if b.length > activities[b.activity_id].max_block_slots]
+
+    oversized = [
+        b
+        for b in blocks.values()
+        if b.length > activities[b.activity_id].max_block_slots
+    ]
 
     if not oversized:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
@@ -353,20 +401,30 @@ def split_block(
         activity_id=parent.activity_id,
         day=parent.day,
         start=parent.start,
-        length=parent.length
+        length=parent.length,
     )
 
-    split_point = random.randint(1,parent.length-1)
+    split_point = random.randint(1, parent.length - 1)
 
-    child1 = _Block(activity_id=parent.activity_id, day=parent.day, start=parent.start, length=split_point)
-    child2 = _Block(activity_id=parent.activity_id, day=parent.day, start=parent.start+split_point, length=parent.length-split_point)
+    child1 = _Block(
+        activity_id=parent.activity_id,
+        day=parent.day,
+        start=parent.start,
+        length=split_point,
+    )
+    child2 = _Block(
+        activity_id=parent.activity_id,
+        day=parent.day,
+        start=parent.start + split_point,
+        length=parent.length - split_point,
+    )
 
     clear_block(table, parent)
     day_load[parent.day] -= 1
     schedule = activities[parent.activity_id].schedule
     # check placement
     # restore
-    if not (can_place(schedule,table, child1) and can_place(schedule,table, child2)):
+    if not (can_place(schedule, table, child1) and can_place(schedule, table, child2)):
         place_block(table, parent)
         day_load[parent.day] += 1
         return ChangeResult(delta=LIMIT.HARD, undo=lambda: None)
@@ -403,27 +461,28 @@ def split_block(
 
 
 def merge_blocks(
-            table: Table,
-            activities:list[_Activity],
-            atb:ATB,
-            blocks:dict[int,_Block],
-            day_load: list[int],
-            evaluator:CostEvaluator)->ChangeResult:
+    table: Table,
+    activities: list[_Activity],
+    atb: ATB,
+    blocks: dict[int, _Block],
+    day_load: list[int],
+    evaluator: CostEvaluator,
+) -> ChangeResult:
 
     candidates: list[tuple[_Activity, _Block, _Block]] = []
 
     for a in activities:
         if len(atb[a.id]) <= a.frequency:
             continue
-        blocks_in_day:dict[int, list[_Block]] = {}
+        blocks_in_day: dict[int, list[_Block]] = {}
         for bid in atb[a.id]:
             b = blocks[bid]
             blocks_in_day.setdefault(b.day, []).append(b)
 
         for block_list in blocks_in_day.values():
             block_list.sort(key=lambda b: b.start)
-            for i in range(len(block_list)-1):
-                b1, b2 = block_list[i], block_list[i+1]
+            for i in range(len(block_list) - 1):
+                b1, b2 = block_list[i], block_list[i + 1]
 
                 if b1.start + b1.length == b2.start:
                     candidates.append((a, b1, b2))
@@ -433,22 +492,21 @@ def merge_blocks(
 
     activity, b1, b2 = random.choice(candidates)
 
-
     old_b1 = _Block(
-                    id=b1.id,
-                    activity_id=b1.activity_id,
-                    day=b1.day,
-                    start=b1.start,
-                    length=b1.length
-                    )
+        id=b1.id,
+        activity_id=b1.activity_id,
+        day=b1.day,
+        start=b1.start,
+        length=b1.length,
+    )
 
     old_b2 = _Block(
-                    id=b2.id,
-                    activity_id=b2.activity_id,
-                    day=b2.day,
-                    start=b2.start,
-                    length=b2.length
-                    )
+        id=b2.id,
+        activity_id=b2.activity_id,
+        day=b2.day,
+        start=b2.start,
+        length=b2.length,
+    )
 
     clear_block(table, b1)
     clear_block(table, b2)
@@ -464,10 +522,9 @@ def merge_blocks(
     del blocks[b2.id]
     atb[activity.id].remove(b2.id)
 
-    affected={activity.id}
+    affected = {activity.id}
 
     delta_cost = evaluator.update_activities(affected)
-
 
     def undo():
         clear_block(table, b1)
@@ -491,24 +548,26 @@ def merge_blocks(
 
 
 def random_reschedule(
-            table: Table,
-            activities:list[_Activity],
-            atb:ATB,
-            blocks:dict[int,_Block],
-            day_load: list[int],
-            evaluator:CostEvaluator,
-            scheduler:Callable,
-            max_priority_allowed:int=5)->ChangeResult:
+    table: Table,
+    activities: list[_Activity],
+    atb: ATB,
+    blocks: dict[int, _Block],
+    day_load: list[int],
+    evaluator: CostEvaluator,
+    scheduler: Callable,
+    max_priority_allowed: int = 5,
+) -> ChangeResult:
     # completely delete an activity's blocks and re-insert using greedy (lowest priority)
 
-    low_prio_activities = [a for a in activities if a.priority <= max_priority_allowed and not a.fixed_blocks]
+    low_prio_activities = [
+        a
+        for a in activities
+        if a.priority <= max_priority_allowed and not a.fixed_blocks
+    ]
     if not low_prio_activities:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
-
-
     activity = random.choice(low_prio_activities)
-
 
     removed: list[tuple[int, _Block]] = []
     for block_id in list(atb[activity.id]):
@@ -524,14 +583,13 @@ def random_reschedule(
     try:
         scheduler(activity, table, blocks, atb, day_load)
     except RuntimeError:
-
         for block_id, block in removed:
             place_block(table, block)
             blocks[block_id] = block
             atb[activity.id].add(block_id)
             day_load[block.day] += 1
         evaluator.activity_cost[activity.id] = old_cost
-        return ChangeResult(LIMIT.HARD, undo=lambda:None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     new_cost = evaluator.calculate_cost(activity.id)
     evaluator.activity_cost[activity.id] = new_cost
@@ -542,7 +600,7 @@ def random_reschedule(
         for block_id in list(atb[activity.id]):
             block = blocks[block_id]
             clear_block(table, block)
-            day_load[block.day]-=1
+            day_load[block.day] -= 1
             del blocks[block_id]
         atb[activity.id].clear()
 
@@ -556,36 +614,31 @@ def random_reschedule(
 
     return ChangeResult(delta_cost, undo=undo)
 
-class Annealer:
 
-    def __init__(self,
-                schedule:_Schedule,
-                table: Table,
-                activities:list[_Activity],
-                atb:ATB,
-                blocks:dict[int,_Block],
-                day_load: list[int],
-                scheduler:Callable[[ _Activity, Table,
-                                            dict[int, _Block],
-                                            ATB,
-                                            list[int]], None],
-                ) -> None:
+class Annealer:
+    def __init__(
+        self,
+        schedule: _Schedule,
+        table: Table,
+        activities: list[_Activity],
+        atb: ATB,
+        blocks: dict[int, _Block],
+        day_load: list[int],
+        scheduler: Callable[
+            [_Activity, Table, dict[int, _Block], ATB, list[int]], None
+        ],
+    ) -> None:
         self.activities = {a.id: a for a in activities}
         self.scheduler = scheduler
-        
+
         self.table = table
         self.blocks = blocks
         self.atb = atb
         self.day_load = day_load
 
         self.evaluator = CostEvaluator(
-                                    schedule,
-                                    self.activities,
-                                    self.blocks,
-                                    self.atb,
-                                    self.day_load,
-                                    self.table
-                                    )
+            schedule, self.activities, self.blocks, self.atb, self.day_load, self.table
+        )
 
         self.T = 100000
         self.T_MIN = 1e-4
@@ -593,17 +646,48 @@ class Annealer:
         self.cycles = 10000
 
         self.change_factories = [
-            lambda: shift_move(self.table, activities, self.atb,
-                            self.blocks, self.day_load, self.evaluator),
-            lambda: resize_block(self.table, activities, self.atb,
-                                self.blocks, self.day_load, self.evaluator),
-            lambda: merge_blocks(self.table, activities, self.atb,
-                            self.blocks, self.day_load, self.evaluator),
-            lambda: swap_blocks(self.table, activities, self.atb,
-                            self.blocks, self.day_load, self.evaluator),
-            lambda: random_reschedule(self.table, activities, self.atb,
-                                        self.blocks, self.day_load, self.evaluator,
-                                        self.scheduler, max_priority_allowed=5)
+            lambda: shift_move(
+                self.table,
+                activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+            ),
+            lambda: resize_block(
+                self.table,
+                activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+            ),
+            lambda: merge_blocks(
+                self.table,
+                activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+            ),
+            lambda: swap_blocks(
+                self.table,
+                activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+            ),
+            lambda: random_reschedule(
+                self.table,
+                activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+                self.scheduler,
+                max_priority_allowed=5,
+            ),
         ]
 
     def run(self):
@@ -623,16 +707,18 @@ class Annealer:
                     change.undo()
                     undo_counter += 1
                     continue
-    
+
                 delta_cost = change.delta
 
-                if delta_cost <= 0 or (random.random() < math.exp(-delta_cost/T)):
+                if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
                     accept_counter += 1
                     if self.evaluator.total_cost < best_cost:
                         best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
                         best_blocks = copy.deepcopy(self.blocks)
-                        sys.stdout.write(f'\r[{cost_updates!s:8s}] Updating cost: {best_cost}')
+                        sys.stdout.write(
+                            f"\r[{cost_updates!s:8s}] Updating cost: {best_cost}"
+                        )
                         sys.stdout.flush()
                         cost_updates += 1
                 else:
@@ -640,8 +726,8 @@ class Annealer:
                     change.undo()
             T *= self.cooling
 
-        print('\n Post Anneal Run Stats')
-        print(f'Cost Updates   : {cost_updates}')
-        print(f'Accept Counter : {accept_counter}')
-        print(f'Undo Counter   : {undo_counter}')
+        print("\n Post Anneal Run Stats")
+        print(f"Cost Updates   : {cost_updates}")
+        print(f"Accept Counter : {accept_counter}")
+        print(f"Undo Counter   : {undo_counter}")
         return best_table, best_blocks, best_cost

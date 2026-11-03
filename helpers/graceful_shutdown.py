@@ -6,7 +6,7 @@ import signal
 import threading
 from datetime import datetime
 
-server_logger = logging.getLogger('server')
+server_logger = logging.getLogger("server")
 
 _shutting_down = threading.Event()
 
@@ -18,10 +18,13 @@ def _log_shutdown(reason: str) -> None:
 
     pid = os.getpid()
     when = datetime.now().isoformat() + "Z"
-    server_logger.info("Flask server shutting down (pid=%s) - %s - %s", pid, reason, when)
+    server_logger.info(
+        "Flask server shutting down (pid=%s) - %s - %s", pid, reason, when
+    )
 
     for h in server_logger.handlers:
         h.flush()
+
 
 def _install_signal_handlers() -> None:
     def _handler(signum, frame):

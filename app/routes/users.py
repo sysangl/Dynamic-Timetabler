@@ -9,16 +9,18 @@ from flask import Blueprint, jsonify, request
 from app.models import User, db
 from helpers.server import _json_error, _json_success
 
-bp = Blueprint('users', __name__)
+bp = Blueprint("users", __name__)
 
-log = logging.getLogger('app')
+log = logging.getLogger("app")
 
-@bp.route('/', methods=['GET'])
+
+@bp.route("/", methods=["GET"])
 def get_users():
     users = User.query.all()
-    return jsonify({'users':[user.serialise() for user in users]}), 200
+    return jsonify({"users": [user.serialise() for user in users]}), 200
 
-@bp.route('/create', methods=['POST'])
+
+@bp.route("/create", methods=["POST"])
 def create_user():
     """
     Expected JSON (only "username" & "password" is required)
@@ -28,7 +30,7 @@ def create_user():
         "display_name": "Test User",
     }
     """
-    #return jsonify({'msg':'Deprecated'}), 404
+    # return jsonify({'msg':'Deprecated'}), 404
     log.info("Attempting to create user")
     log.info(f"Recieved - {request.data}")
     payload = request.get_json(silent=False)
@@ -48,12 +50,12 @@ def create_user():
     if User.query.filter_by(username=username).first():
         log.info("User creation failed - Username already taken")
         log.info("User creation failed - Username already taken")
-        return _json_error(f"Username '{username}' already taken",409)
+        return _json_error(f"Username '{username}' already taken", 409)
 
     log.info("Creating new user...")
     new_user = User(
-        username=username, # type: ignore
-        display_name=payload.get("display_name"), # type: ignore
+        username=username,  # type: ignore
+        display_name=payload.get("display_name"),  # type: ignore
     )
     new_user.password = password
 
@@ -64,5 +66,4 @@ def create_user():
     except Exception:
         db.session.rollback()
         log.exception("Database error while creating user")
-        return _json_error("Database error while creating user",500)
-
+        return _json_error("Database error while creating user", 500)

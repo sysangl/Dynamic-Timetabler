@@ -8,8 +8,10 @@ from .classes import (
 MAX_PRIORITY = 10
 
 
-def reset_ids(table: Table, atb:ATB, blocks:dict[int, _Block], start_from:int=1):
-    sorted_blocks: list[_Block] = sorted(blocks.values(), key=lambda b: (b.day, b.start))
+def reset_ids(table: Table, atb: ATB, blocks: dict[int, _Block], start_from: int = 1):
+    sorted_blocks: list[_Block] = sorted(
+        blocks.values(), key=lambda b: (b.day, b.start)
+    )
 
     old_to_new: dict[int, int] = {}
     new_blocks: dict[int, _Block] = {}
@@ -24,7 +26,6 @@ def reset_ids(table: Table, atb:ATB, blocks:dict[int, _Block], start_from:int=1)
         for slot_idx, slot in enumerate(day):
             if slot is not None:
                 table[day_idx][slot_idx] = old_to_new[slot]
-
 
     for activity_id, block_ids in atb.items():
         atb[activity_id] = {old_to_new[block_id] for block_id in block_ids}
@@ -48,11 +49,11 @@ def initial_table(db_schedule: Schedule):
     db_activities = db_schedule.activities
     activities = db_to_engine_activities(engine_schedule, db_activities)
 
-    dba_map = {a.id:a for a in db_activities}
+    dba_map = {a.id: a for a in db_activities}
 
     blocks, _, atb, _ = greedy_initial(engine_schedule, activities)
 
-    dbb_list = engine_to_db_blocks(engine_schedule,blocks,atb,activities)
+    dbb_list = engine_to_db_blocks(engine_schedule, blocks, atb, activities)
     for dbb in dbb_list:
         dbb.activity = dba_map[dbb.activity_id]
         dbb.group_name = dba_map[dbb.activity_id].group_name
@@ -61,7 +62,8 @@ def initial_table(db_schedule: Schedule):
 
     return dbb_list
 
-def anneal_table(db_schedule:Schedule):
+
+def anneal_table(db_schedule: Schedule):
     from .classes import (
         db_to_engine_activities,
         db_to_engine_schedule,
@@ -74,12 +76,12 @@ def anneal_table(db_schedule:Schedule):
     db_activities = db_schedule.activities
     activities = db_to_engine_activities(engine_schedule, db_activities)
 
-    dba_map = {a.id:a for a in db_activities}
+    dba_map = {a.id: a for a in db_activities}
     blocks, table, atb, day_load = greedy_initial(engine_schedule, activities)
 
-    print('\n\nINITIAL =======================================')
+    print("\n\nINITIAL =======================================")
     for day in range(engine_schedule.SIZE):
-        print(f'----- day {day}-------------------')
+        print(f"----- day {day}-------------------")
         day_blocks = [b for b in blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
@@ -97,9 +99,10 @@ def anneal_table(db_schedule:Schedule):
                 f"(len={block.length} slots)"
             )
 
-    print('\n\nOptimised ======================================')
+    print("\n\nOptimised ======================================")
 
     from app.engine.annealer import Annealer
+
     annealer = Annealer(
         engine_schedule,
         table=table,
@@ -107,22 +110,21 @@ def anneal_table(db_schedule:Schedule):
         blocks=blocks,
         atb=atb,
         day_load=day_load,
-        scheduler=greedy_schedule
+        scheduler=greedy_schedule,
     )
 
     initial_cost = annealer.evaluator.total_cost
 
     best_table, best_blocks, best_cost = annealer.run()
 
-    new_atb:dict[int, set[int]] = {}
+    new_atb: dict[int, set[int]] = {}
     for id, block in best_blocks.items():
         new_atb.setdefault(block.activity_id, set()).add(id)
 
     best_table, best_blocks = reset_ids(best_table, new_atb, best_blocks)
 
-
     for day in range(engine_schedule.SIZE):
-        print(f'----- day {day}-------------------')
+        print(f"----- day {day}-------------------")
         day_blocks = [b for b in best_blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
@@ -140,13 +142,11 @@ def anneal_table(db_schedule:Schedule):
                 f"(len={block.length} slots)"
             )
 
-    print('INFO ====================================')
-    print(f'Init Cost:  {initial_cost}')
-    print(f'Final Cost: {best_cost}')
+    print("INFO ====================================")
+    print(f"Init Cost:  {initial_cost}")
+    print(f"Final Cost: {best_cost}")
 
-
-
-    dbb_list = engine_to_db_blocks(engine_schedule,blocks,atb,activities)
+    dbb_list = engine_to_db_blocks(engine_schedule, blocks, atb, activities)
     for dbb in dbb_list:
         dbb.activity = dba_map[dbb.activity_id]
         dbb.group_name = dba_map[dbb.activity_id].group_name
@@ -155,7 +155,5 @@ def anneal_table(db_schedule:Schedule):
 
     return dbb_list
 
-__all__ = [
-    'anneal_table',
-    'initial_table'
-]
+
+__all__ = ["anneal_table", "initial_table"]

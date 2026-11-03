@@ -7,7 +7,9 @@ from typing import Any
 from flask import Response, jsonify
 
 
-def _json_success(payload: dict[str, Any] | None = None, status_code:int = 200) -> tuple[Response, int]:
+def _json_success(
+    payload: dict[str, Any] | None = None, status_code: int = 200
+) -> tuple[Response, int]:
     """Return a JSON payload with ``status: "success"``."""
     result: dict[str, Any] = {"status": "success"}
     if payload:

@@ -1,10 +1,12 @@
-
 class Edge:
-    def __init__(self, source: Node, dest: Node, weight: float | None=None, directed=False) -> None:  # noqa: F821
-        self.endpoints : set[Node] = {source, dest}
-        self.source : Node = source
-        self.destination : Node = dest
-        self.weight : int|float|None = weight
+    def __init__(
+        self, source: Node, dest: Node, weight: float | None = None, directed=False  # noqa: F821
+    ) -> None:
+        self.endpoints: set[Node] = {source, dest}
+        self.source: Node = source
+        self.destination: Node = dest
+        self.weight: int | float | None = weight
+
 
 class Node:
     def __init__(self) -> None:
@@ -31,7 +33,7 @@ class Graph:
     def add_node(self, node: Node):
         self.nodes.add(node)
 
-    def add_edge(self, source:Node, dest:Node, weight=None, directed=False) -> Edge:
+    def add_edge(self, source: Node, dest: Node, weight=None, directed=False) -> Edge:
         edge = Edge(source, dest, weight, directed)
         self.edges.add(edge)
         return edge
@@ -58,5 +60,5 @@ class Graph:
             n.union(edge.endpoints)
         return n
 
-    def endpoints(self, edge: Edge)->set[Node]:
+    def endpoints(self, edge: Edge) -> set[Node]:
         return edge.endpoints

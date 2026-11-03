@@ -12,13 +12,15 @@ import toml
 from helpers.paths import resource_path
 
 server_logger = logging.getLogger("server")
-PROJECT_NAME = 'canopy-suite'
-DATA_DIRECTORY = Path.home() / f'.{PROJECT_NAME}'
-_DEFAULT_CFG = Path(resource_path('config')) / 'default.toml'
-_TESTING_CFG = Path(resource_path('config')) / 'testing.toml'
-_USER_CFG = DATA_DIRECTORY / 'default.toml'
+PROJECT_NAME = "canopy-suite"
+DATA_DIRECTORY = Path.home() / f".{PROJECT_NAME}"
+_DEFAULT_CFG = Path(resource_path("config")) / "default.toml"
+_TESTING_CFG = Path(resource_path("config")) / "testing.toml"
+_USER_CFG = DATA_DIRECTORY / "default.toml"
 
 _lock = threading.RLock()
+
+
 def _read_config(path: Path) -> dict:
     try:
         with path.open("r") as f:
@@ -26,6 +28,7 @@ def _read_config(path: Path) -> dict:
     except Exception:
         server_logger.exception("Failed to read config")
         raise
+
 
 def _deep_merge(a: dict, b: dict) -> dict:
     r = dict(a)
@@ -36,7 +39,8 @@ def _deep_merge(a: dict, b: dict) -> dict:
             r[k] = v
     return r
 
-def _load_config()->dict:
+
+def _load_config() -> dict:
     server_logger.info("Loading config...")
     if not _USER_CFG.exists():
         server_logger.info(f"Copying default config to ~/.{PROJECT_NAME}/")
@@ -47,30 +51,36 @@ def _load_config()->dict:
     user_cfg = _read_config(_USER_CFG)
     return _deep_merge(default_cfg, user_cfg)
 
+
 CONFIG = _load_config()
 
-def get_config(default=False, testing=False)->dict:
+
+def get_config(default=False, testing=False) -> dict:
     if default:
         return _read_config(_DEFAULT_CFG)
     if testing:
         return _read_config(_TESTING_CFG)
     return CONFIG
 
+
 def reload_config():
     global CONFIG
     with _lock:
         CONFIG = _load_config()
 
-def write_config(config:dict)->None:
+
+def write_config(config: dict) -> None:
     _USER_CFG.parent.mkdir(parents=True, exist_ok=True)
-    with _USER_CFG.open("w",encoding="utf-8") as f:
+    with _USER_CFG.open("w", encoding="utf-8") as f:
         toml.dump(config, f)
     server_logger.info("Configuration created/updated")
 
-def _get_data_dir()->Path:
+
+def _get_data_dir() -> Path:
     return DATA_DIRECTORY
 
-def _set_data_dir(dir:Path|str)->None:
+
+def _set_data_dir(dir: Path | str) -> None:
     global DATA_DIRECTORY, _USER_CFG
     DATA_DIRECTORY = Path(dir)
-    _USER_CFG = DATA_DIRECTORY / 'default.toml'
+    _USER_CFG = DATA_DIRECTORY / "default.toml"

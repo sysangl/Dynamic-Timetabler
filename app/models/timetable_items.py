@@ -16,11 +16,12 @@ class ToDo(db.Model):
     """
     The most basic thing, essentially just a ToDo list.
     """
-    id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    title : Mapped[str] = mapped_column(nullable=False)
-    completed : Mapped[bool] = mapped_column(nullable=False, default=False)
 
-    def __init__(self, title : str) -> None:
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(nullable=False)
+    completed: Mapped[bool] = mapped_column(nullable=False, default=False)
+
+    def __init__(self, title: str) -> None:
         super().__init__()
         try:
             self.title = title
@@ -28,111 +29,112 @@ class ToDo(db.Model):
             db_logger.exception("Failed to create ToDo instance")
             raise
 
-    def serialise(self)->dict:
+    def serialise(self) -> dict:
         return {
-            'id' : str(self.id),
-            'title' : self.title,
-            'completed' : self.completed,
+            "id": str(self.id),
+            "title": self.title,
+            "completed": self.completed,
         }
+
 
 class Task(db.Model):
     """
     A ToDo with more information and can be set for a certain date and time
     """
-    id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    group_name : Mapped[str] = mapped_column(nullable=False, default='default')
 
-    title : Mapped[str] = mapped_column(nullable=False)
-    completed : Mapped[bool] = mapped_column(nullable=False, default=False)
-    description : Mapped[str] = mapped_column(default="")
-    start_datetime : Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
-    def __init__(self, 
-                title:str, 
-                start_datetime: dict,
-                description:str = "", 
-                ) -> None:
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_name: Mapped[str] = mapped_column(nullable=False, default="default")
+
+    title: Mapped[str] = mapped_column(nullable=False)
+    completed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    description: Mapped[str] = mapped_column(default="")
+    start_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    reschedule: Mapped[bool] = mapped_column(nullable=False, default=False)
+
+    def __init__(
+        self,
+        title: str,
+        start_datetime: dict,
+        description: str = "",
+    ) -> None:
         try:
             self.title = title
             self.description = description
-            self.start_datetime = datetime(**start_datetime,tzinfo=pytz.timezone('UTC'))
+            self.start_datetime = datetime(
+                **start_datetime, tzinfo=pytz.timezone("UTC")
+            )
         except Exception:
             db_logger.exception("Failed to create Task instance")
             raise
 
-    def serialise(self)->dict:
+    def serialise(self) -> dict:
         return {
-            'id' : str(self.id),
-            'title' : self.title,
-            'description' : str(self.description),
-            'completed' : self.completed,
-            'start_datetime' : self.start_datetime.isoformat(),
+            "id": str(self.id),
+            "title": self.title,
+            "description": str(self.description),
+            "completed": self.completed,
+            "start_datetime": self.start_datetime.isoformat(),
         }
+
+
 class Block(db.Model):
     """
     Occupies a span of time.
     """
-    id : Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    group_name : Mapped[str] = mapped_column(nullable=False, default='default')
 
-    title : Mapped[str] = mapped_column(nullable=False)
-    completed : Mapped[bool] = mapped_column(nullable=False, default=False)
-    description : Mapped[str] = mapped_column(default="")
-    start_datetime : Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    reschedule : Mapped[bool] = mapped_column(nullable=False, default=False)
-    end_datetime : Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    colour : Mapped[str] = mapped_column(nullable=False, default="#75547e")
-    owner_id : Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_name: Mapped[str] = mapped_column(nullable=False, default="default")
+
+    title: Mapped[str] = mapped_column(nullable=False)
+    completed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    description: Mapped[str] = mapped_column(default="")
+    start_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    reschedule: Mapped[bool] = mapped_column(nullable=False, default=False)
+    end_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    colour: Mapped[str] = mapped_column(nullable=False, default="#75547e")
+    owner_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    owner : Mapped[User] = relationship(
-        "User",
-        back_populates="blocks"
-    )
+    owner: Mapped[User] = relationship("User", back_populates="blocks")
 
-    start_date : Mapped[str] = mapped_column(default='')
-    start_time : Mapped[str] = mapped_column(default='')
-    end_date : Mapped[str] = mapped_column(default='')
-    end_time : Mapped[str] = mapped_column(default='')
+    start_date: Mapped[str] = mapped_column(default="")
+    start_time: Mapped[str] = mapped_column(default="")
+    end_date: Mapped[str] = mapped_column(default="")
+    end_time: Mapped[str] = mapped_column(default="")
 
-    activity_id : Mapped[uuid.UUID|None] = mapped_column(
+    activity_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid,
         ForeignKey("activities.id", ondelete="CASCADE"),
         index=True,
     )
 
-    activity : Mapped[Activity] = relationship(
-        "Activity",
-        back_populates="blocks"
-    )
+    activity: Mapped[Activity] = relationship("Activity", back_populates="blocks")
 
-    schedule_id : Mapped[uuid.UUID|None] = mapped_column(
+    schedule_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid,
         ForeignKey("schedules.id", ondelete="CASCADE"),
         index=True,
     )
 
-    schedule : Mapped[Schedule] = relationship(
-        "Schedule",
-        back_populates="blocks"
-    )
+    schedule: Mapped[Schedule] = relationship("Schedule", back_populates="blocks")
 
-    def __init__(self, 
-                title:str, 
-                start_datetime: datetime,
-                owner: User,
-                end_datetime: datetime,
-                description:str = "", 
-                colour:str = "",
-                start_date:str="",
-                start_time:str="",
-                end_date:str="",
-                end_time:str="",
-                **extra
-                ) -> None:
+    def __init__(
+        self,
+        title: str,
+        start_datetime: datetime,
+        owner: User,
+        end_datetime: datetime,
+        description: str = "",
+        colour: str = "",
+        start_date: str = "",
+        start_time: str = "",
+        end_date: str = "",
+        end_time: str = "",
+        **extra,
+    ) -> None:
         try:
             self.title = title
             self.description = description
@@ -149,53 +151,48 @@ class Block(db.Model):
             db_logger.exception("Failed to create Block instance")
             raise
 
-    def overlaps(self, block: Block)->bool:
-        return max(self.start_datetime, block.start_datetime) < min(self.end_datetime, block.end_datetime)
+    def overlaps(self, block: Block) -> bool:
+        return max(self.start_datetime, block.start_datetime) < min(
+            self.end_datetime, block.end_datetime
+        )
 
-    
-    def serialise(self)->dict:
+    def serialise(self) -> dict:
         return {
-            'id' : str(self.id),
-            'title' : self.title,
-            'completed' : self.completed,
-            'description' : str(self.description),
-            'start_datetime' : self.start_datetime.isoformat(),
-            'end_datetime' : self.end_datetime.isoformat(),
-            'start_date': self.start_date,
-            'start_time': self.start_time,
-            'end_date' : self.end_date,
-            'end_time' : self.end_time,
-            'colour' : self.colour,
-            'owner' : self.owner.id
+            "id": str(self.id),
+            "title": self.title,
+            "completed": self.completed,
+            "description": str(self.description),
+            "start_datetime": self.start_datetime.isoformat(),
+            "end_datetime": self.end_datetime.isoformat(),
+            "start_date": self.start_date,
+            "start_time": self.start_time,
+            "end_date": self.end_date,
+            "end_time": self.end_time,
+            "colour": self.colour,
+            "owner": self.owner.id,
         }
-
 
 
 class Routine(db.Model):
     __tablename__ = "routines"
-    id : Mapped[uuid.UUID] = mapped_column(Uuid, primary_key = True, default=uuid.uuid4)
-    name : Mapped[str] = mapped_column(nullable=False, default="New Routine")
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(nullable=False, default="New Routine")
 
-    start_date : Mapped[datetime] = mapped_column(nullable=False)
-    end_date : Mapped[datetime | None] = mapped_column()
+    start_date: Mapped[datetime] = mapped_column(nullable=False)
+    end_date: Mapped[datetime | None] = mapped_column()
 
     # length of time the routine encompases and when it repeats. defaukt : a 7day routine that repeats every week
-    routine_length : Mapped[int] = mapped_column(nullable=False, default=7)
-    repeats_every : Mapped[int] = mapped_column(nullable=False, default=7)
+    routine_length: Mapped[int] = mapped_column(nullable=False, default=7)
+    repeats_every: Mapped[int] = mapped_column(nullable=False, default=7)
 
-    blocks : Mapped[list[Block]] = mapped_column(JSON, nullable=False)
+    blocks: Mapped[list[Block]] = mapped_column(JSON, nullable=False)
 
-    def __init__(self, 
-                name,
-                start_date,
-                end_date = None,
-                routine_length = 7,
-                repeats_every = 7
-                ) -> None:
+    def __init__(
+        self, name, start_date, end_date=None, routine_length=7, repeats_every=7
+    ) -> None:
         self.name = name
         self.start_date = start_date
         self.end_date = end_date
         self.routine_length = routine_length
         self.repeats_every = repeats_every
         self.blocks = []
-        

@@ -8,9 +8,9 @@ def test():
 
     blocks, table, atb, day_load = greedy_initial(activities)
 
-    print('\n\nINITIAL =======================================')
+    print("\n\nINITIAL =======================================")
     for day in range(_Schedule.SIZE):
-        print(f'----- day {day}-------------------')
+        print(f"----- day {day}-------------------")
         day_blocks = [b for b in blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
@@ -28,31 +28,31 @@ def test():
                 f"(len={block.length} slots)"
             )
 
-    print('\n\nOptimised ======================================')
+    print("\n\nOptimised ======================================")
 
     from app.engine.annealer import Annealer
+
     annealer = Annealer(
         table=table,
         activities=activities,
         blocks=blocks,
         atb=atb,
         day_load=day_load,
-        scheduler=greedy_schedule
+        scheduler=greedy_schedule,
     )
 
     initial_cost = annealer.evaluator.total_cost
 
     best_table, best_blocks, best_cost = annealer.run()
 
-    new_atb:dict[int, set[int]] = {}
+    new_atb: dict[int, set[int]] = {}
     for id, block in best_blocks.items():
         new_atb.setdefault(block.activity_id, set()).add(id)
 
     best_table, best_blocks = reset_ids(best_table, new_atb, best_blocks)
 
-
     for day in range(_Schedule.SIZE):
-        print(f'----- day {day}-------------------')
+        print(f"----- day {day}-------------------")
         day_blocks = [b for b in best_blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
 
@@ -70,6 +70,6 @@ def test():
                 f"(len={block.length} slots)"
             )
 
-    print('INFO ====================================')
-    print(f'Init Cost:  {initial_cost}')
-    print(f'Final Cost: {best_cost}')
+    print("INFO ====================================")
+    print(f"Init Cost:  {initial_cost}")
+    print(f"Final Cost: {best_cost}")

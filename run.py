@@ -1,8 +1,9 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mode', required=False)
+parser.add_argument("--mode", required=False)
 args = parser.parse_args()
+
 
 def run_server(debug=False) -> None:
     import atexit
@@ -19,7 +20,7 @@ def run_server(debug=False) -> None:
     config = get_config(testing=debug)
     app = create_app()
 
-    print( "==========================================================================")
+    print("==========================================================================")
     print(r"               _____                                                      ")
     print(r"              /  __ \                                                     ")
     print(r"              | /  \/ __ _ _ __   ___  _ __  _   _                        ")
@@ -31,37 +32,51 @@ def run_server(debug=False) -> None:
     print(r"                                                                          ")
     print(r"        Productivity Suite                                                ")
     print(r"                                         Server View                      ")
-    print( "==========================================================================")
+    print("==========================================================================")
     print()
-    print( "================================== INFO ==================================")
-    print(f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app' ")
-    print( "==========================================================================")
-    if config['server']['debug']:
+    print("================================== INFO ==================================")
+    print(
+        f" To open the web interface go to 'http://{config['server']['host']}:{config['server']['port']}/app' "
+    )
+    print("==========================================================================")
+    if config["server"]["debug"]:
         print()
-        print("================================= URL MAP =================================")
+        print(
+            "================================= URL MAP ================================="
+        )
         for rule in app.url_map.iter_rules():
             print(f"{rule.endpoint:35s} {rule}")
-        print("===========================================================================\n")
-    server_logger = logging.getLogger('server')
-    app.run(debug=config['server']['debug'], host=config['server']['host'], port=config['server']['port'])
+        print(
+            "===========================================================================\n"
+        )
+    server_logger = logging.getLogger("server")
+    app.run(
+        debug=config["server"]["debug"],
+        host=config["server"]["host"],
+        port=config["server"]["port"],
+    )
 
     def server_stop():
         server_logger.info("Shutting down server")
 
     atexit.register(server_stop)
 
+
 if __name__ == "__main__":
     match args.mode:
-        case 'engine':
+        case "engine":
             from app.engine.testing import test
+
             test()
-        case 'debug':
+        case "debug":
             run_server(debug=True)
         case _:
             import webbrowser
 
             from helpers.config import get_config
-            
+
             config = get_config()
-            webbrowser.open(f"http://{config['server']['host']}:{config['server']['port']}/app")
+            webbrowser.open(
+                f"http://{config['server']['host']}:{config['server']['port']}/app"
+            )
             run_server()
