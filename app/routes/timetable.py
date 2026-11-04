@@ -69,15 +69,17 @@ def get_upcoming_items():
 
     tz = zoneinfo.ZoneInfo(get_config()["general"]["timezone"])
     try:
-        now = datetime.now(tz)
+        now = datetime.now(tz).date()
 
         # todos = ToDo.query.filter().all()
         # tasks = Task.query.all()
         blocks:list[Block] = Block.query.filter(
             Block.owner_id == current_user.id,
-            Block.start_datetime <= now,
-            Block.end_datetime >= (now+timedelta(weeks=1)),
+            Block.start_datetime >= now,
+            Block.end_datetime <= (now+timedelta(weeks=1)),
         ).all()
+
+        print(blocks)
 
         search_count = 0
         while len(blocks) < 10:
@@ -85,8 +87,8 @@ def get_upcoming_items():
                 break
             blocks += Block.query.filter(
                     Block.owner_id == current_user.id,
-                    Block.start_datetime <= now+timedelta(days=search_count,weeks=1),
-                    Block.end_datetime >=  (now+timedelta(days=search_count+1,weeks=1)),
+                    Block.start_datetime >= now+timedelta(days=search_count,weeks=1),
+                    Block.end_datetime <=  (now+timedelta(days=search_count+1,weeks=1)),
                 ).all()
             search_count += 1
 
