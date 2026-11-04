@@ -27,7 +27,7 @@ async function fetchSettings() {
     if (window.settings == null) {
         try {
             const response = await fetch(
-                `http://localhost:58362/api/users/settings`,
+                `/api/users/settings`,
                 {
                     method: "GET",
                     headers: {

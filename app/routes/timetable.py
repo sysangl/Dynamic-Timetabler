@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime, time
+import zoneinfo
+from datetime import datetime, time, timedelta
 from typing import Any
 
 from flask import Blueprint, request
@@ -58,6 +59,48 @@ def get_items():
     except Exception:
         log.exception("Failed to fetch timetable items.")
         return _json_error("Failed to retrieve timetable items.", 500)
+
+@bp.route("/upcoming/", methods=["GET"])
+@login_required
+def get_upcoming_items():
+    log.info(
+        f"Fetching upcoming timetable items for User:{current_user.username} (id:{current_user.id})"
+    )
+
+    tz = zoneinfo.ZoneInfo(get_config()["general"]["timezone"])
+    try:
+        now = datetime.now(tz)
+
+        # todos = ToDo.query.filter().all()
+        # tasks = Task.query.all()
+        blocks:list[Block] = Block.query.filter(
+            Block.owner_id == current_user.id,
+            Block.start_datetime <= now,
+            Block.end_datetime >= (now+timedelta(weeks=1)),
+        ).all()
+
+        search_count = 0
+        while len(blocks) < 10:
+            if search_count >= 14: # stop searching if no new events are found after two weeks
+                break
+            blocks += Block.query.filter(
+                    Block.owner_id == current_user.id,
+                    Block.start_datetime <= now+timedelta(days=search_count,weeks=1),
+                    Block.end_datetime >=  (now+timedelta(days=search_count+1,weeks=1)),
+                ).all()
+            search_count += 1
+
+        payload:dict[str, list[dict]] = {}
+
+        for b in blocks:
+            payload.setdefault(b.start_datetime.date().isoformat(),[])
+            payload[b.start_datetime.date().isoformat()].append(b.serialise())
+        print(payload)
+        return _json_success(payload)
+    except Exception:
+        log.exception("Failed to fetch upcoming timetable items.")
+        return _json_error("Failed to retrieve upcoming timetable items.", 500)
+
 
 
 @bp.route("/range/", methods=["GET"])

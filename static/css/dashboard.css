@@ -25,3 +25,7 @@
     width: -moz-available;
     width: -webkit-fill-available;
 }
+
+.upcoming-block {
+    background-color: var(--bg-colour);
+}

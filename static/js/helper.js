@@ -40,3 +40,12 @@ function getPressedKeys() {
 function clamp(value, min, max) {
     return Math.max(Math.min(value, max), min);
 }
+
+
+/**
+ * Formats a number so it is always 2 digits (7 -> 07, 12 -> 12)
+ * @param {number} number
+ */
+function formatTime(number) {
+    return number < 10 ? "0" + number : number;
+}

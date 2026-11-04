@@ -180,13 +180,6 @@ function alignTimetimetableView() {
     }
 }
 
-/**
- * Formats a number so it is always 2 digits (7 -> 07, 12 -> 12)
- * @param {number} number
- */
-function formatTime(number) {
-    return number < 10 ? "0" + number : number;
-}
 
 /**
  * Update the clock on the top left corner of the timetable
