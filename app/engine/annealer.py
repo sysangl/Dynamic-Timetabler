@@ -643,7 +643,7 @@ class Annealer:
         self.T = 100000
         self.T_MIN = 1e-4
         self.cooling = 0.95
-        self.cycles = 10000
+        self.cycles = 10 # default 100000
 
         self.change_factories = [
             lambda: shift_move(

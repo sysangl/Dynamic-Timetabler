@@ -76,6 +76,7 @@ class _Schedule:
         self.HIGH_COST_BOUNDS: dict[int, list[tuple[int, int]]] = {
             6: [(9 * 60 // self.SLOT_SIZE, 12 * 60 // self.SLOT_SIZE)]
         }
+        self.OVERLAP_PRIORITIES = {6,7,8,9,10}
 
     def __call__(self, *args: Any, **kwds: Any) -> OverlapTable:
         return self.table

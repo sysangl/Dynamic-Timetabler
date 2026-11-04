@@ -1,14 +1,14 @@
 from ..models import Schedule
 from .classes import (
     ATB,
-    Table,
+    OverlapTable,
     _Block,
 )
 
 MAX_PRIORITY = 10
 
 
-def reset_ids(table: Table, atb: ATB, blocks: dict[int, _Block], start_from: int = 1):
+def reset_ids(table: OverlapTable, atb: ATB, blocks: dict[int, _Block], start_from: int = 1):
     sorted_blocks: list[_Block] = sorted(
         blocks.values(), key=lambda b: (b.day, b.start)
     )
@@ -22,10 +22,13 @@ def reset_ids(table: Table, atb: ATB, blocks: dict[int, _Block], start_from: int
         old_to_new[old_id] = new_id
         new_blocks[new_id] = block
 
-    for day_idx, day in enumerate(table):
-        for slot_idx, slot in enumerate(day):
-            if slot is not None:
-                table[day_idx][slot_idx] = old_to_new[slot]
+    for day in table:
+        for slot in day:
+            old_ids = slot.copy()
+            for id in old_ids:
+                slot.remove(id)
+                slot.add(old_to_new[id])
+
 
     for activity_id, block_ids in atb.items():
         atb[activity_id] = {old_to_new[block_id] for block_id in block_ids}
