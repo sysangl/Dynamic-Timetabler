@@ -11,7 +11,7 @@ bp = Blueprint("app", __name__)
 
 log = logging.getLogger("app")
 
-ALLOWED_PAGES = ["timetable", "management", "settings", "scheduler", "info"]
+ALLOWED_PAGES = ["dashboard","timetable", "management", "settings", "scheduler", "info"]
 
 
 # helper func
@@ -45,7 +45,7 @@ def serve_info():
 @login_required
 def dashboard():
     return _render(
-        "timetable",
+        "dashboard",
         display_name=current_user.display_name,
         view=current_user.settings.timetable_view,
     )
