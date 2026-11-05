@@ -17,7 +17,7 @@ async function fetchUpcoming() {
 }
 
 async function generateUpcomingTable() {
-    const upcomingTable = document.getElementById('upcoming-table')
+    const upcomingTable = document.getElementById('upcoming-table-body')
     const upcoming = await fetchUpcoming();
     for (const [key, items] of Object.entries(upcoming)) {
         if (key=='status') {continue};
@@ -44,7 +44,8 @@ async function generateUpcomingTable() {
             const timeSpan = document.createElement('span')
             timeSpan.classList.add('time')
             timeSpan.textContent = displayTime
-            row.append(titleSpan, timeSpan)
+            div.append(titleSpan,document.createElement('br'),timeSpan)
+            row.append(div)
             upcomingTable.append(row)
 
         }
