@@ -1,0 +1,2 @@
+Instead of generating initial table, get the user to fill in the table with blocks they already know have to be there, (maybe get them to fill to 30%?)
+then run the annealer? or generate the greedy on top of it, than annealer.
