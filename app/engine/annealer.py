@@ -75,19 +75,19 @@ class CostEvaluator:
         target = math.ceil(activity.frequency / self.schedule.SIZE)
         for count in blocks_per_day.values():
             if count > target:
-                cost += (count - target) ** 2 * PENALTY_WEIGHTS.OVERLOAD
+                cost += (count - target) * PENALTY_WEIGHTS.OVERLOAD
 
         preferred_day_count = 0
 
         for b in block_list:
             # cost for block size
             if b.length > activity.max_block_slots:
-                cost += LIMIT.HARD_SOFT * 2
+                cost += LIMIT.HARD_SOFT
 
             if b.length < activity.min_block_slots:
                 cost += (
                     activity.min_block_slots - b.length
-                ) * PENALTY_WEIGHTS.MIN_LENGTH
+                )**2 * PENALTY_WEIGHTS.MIN_LENGTH
 
             # cost for bounds
             early_oob = sum(
@@ -112,7 +112,7 @@ class CostEvaluator:
                     for slot in range(b.start, b.start + b.length)
                     if bound[0] <= slot <= bound[1]
                 )
-                cost += hcb**2 * PENALTY_WEIGHTS.HIGH_COST_BOUND
+                cost += hcb * PENALTY_WEIGHTS.HIGH_COST_BOUND
 
             if b.day not in activity.preferred_days:
                 preferred_day_count += 1
@@ -643,7 +643,7 @@ class Annealer:
         self.T = 100000
         self.T_MIN = 1e-4
         self.cooling = 0.95
-        self.cycles = 10 # default 100000
+        self.cycles = 1000 # default 100000
 
         self.change_factories = [
             lambda: shift_move(

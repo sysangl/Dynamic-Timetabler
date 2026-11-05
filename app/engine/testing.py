@@ -2,9 +2,8 @@ import datetime
 import random
 import uuid
 
-from models.user import User
-
 from ..engine import reset_ids
+from ..models.user import User
 from .classes import _Activity, _Schedule
 
 
@@ -335,7 +334,7 @@ def test():
             min_block_minutes=90,
             max_block_minutes=90,
             min_start_minutes=0,
-            fixed=[make_fixed_block(2, 20, 0, 1, 30)],   # Wed 20:00‑21:30
+            fixed=None,   # Wed 20:00‑21:30
             preferred_days=None,
             priority=3,
         ),
@@ -389,7 +388,7 @@ def test():
             min_block_minutes=60,
             max_block_minutes=60,
             min_start_minutes=0,
-            fixed=[make_fixed_block(0, 12, 0, 1, 0)],   # Monday 12:00‑13:00
+            fixed=[],   # Monday 12:00‑13:00
             preferred_days=None,
             priority=1,
         ),
@@ -479,7 +478,7 @@ def test():
             min_block_minutes=60,
             max_block_minutes=60,
             min_start_minutes=0,
-            fixed=[make_fixed_block(1, 14, 0, 1, 0)],   # Tuesday 14:00‑15:00
+            fixed=[make_fixed_block(1, 18, 0, 1, 0)],   # Tuesday 14:00‑15:00
             preferred_days=None,
             priority=1,
         ),
@@ -515,7 +514,7 @@ def test():
             min_block_minutes=90,
             max_block_minutes=90,
             min_start_minutes=0,
-            fixed=[make_fixed_block(3, 10, 0, 1, 30)],  # Thu 10:00‑11:30
+            fixed=[make_fixed_block(3, 20, 0, 1, 30)],  # Thu 10:00‑11:30
             preferred_days=None,
             priority=2,
         ),
@@ -551,7 +550,7 @@ def test():
             min_block_minutes=60,
             max_block_minutes=60,
             min_start_minutes=0,
-            fixed=[make_fixed_block(4, 13, 0, 1, 0)],   # Friday 13:00‑14:00
+            fixed=[make_fixed_block(4, 21, 0, 1, 0)],   # Friday 13:00‑14:00
             preferred_days=None,
             priority=1,
         ),

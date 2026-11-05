@@ -32,19 +32,23 @@ class LIMIT:
 
 @dataclass
 class PENALTY_WEIGHTS:
-    MIN_TIME = 20.0
-    FREQ = 2.0
-    EVEN_SPACING = 10.0
-    OVERLOAD = 3.0
-    PRIORITY = 3.0
-    IDLE = 3.0
-    BALANCE = 20.0
-    FRAGMENT = 8.0
-    EARLY_BOUND = 200.0
-    LATE_BOUND = 600.0
-    HIGH_COST_BOUND = 300.0
-    PREFERRED_DAYS = 30.0
-    MIN_LENGTH = 20.0
+    # User defined
+    LATE_BOUND      = 60.0
+    EARLY_BOUND     = 20.0
+    MIN_TIME        = 8.0
+    FREQ            = 7.0
+    EVEN_SPACING    = 9.0
+    OVERLOAD        = 4.0
+    PRIORITY        = 8.0
+    HIGH_COST_BOUND = 18.0
+    PREFERRED_DAYS  = 14.0
+    MIN_LENGTH      = 30.0
+
+
+    # Clean Timetable
+    IDLE            = 1.0
+    BALANCE         = 2.0
+    FRAGMENT        = 4.0
 
 
 class _Schedule:
