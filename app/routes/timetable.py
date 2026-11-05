@@ -79,8 +79,6 @@ def get_upcoming_items():
             Block.end_datetime <= (now+timedelta(weeks=1)),
         ).all()
 
-        print(blocks)
-
         search_count = 0
         while len(blocks) < 10:
             if search_count >= 14: # stop searching if no new events are found after two weeks
@@ -97,7 +95,7 @@ def get_upcoming_items():
         for b in blocks:
             payload.setdefault(b.start_datetime.date().isoformat(),[])
             payload[b.start_datetime.date().isoformat()].append(b.serialise())
-        print(payload)
+        
         return _json_success(payload)
     except Exception:
         log.exception("Failed to fetch upcoming timetable items.")

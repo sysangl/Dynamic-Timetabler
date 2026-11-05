@@ -15,6 +15,7 @@
     background-color: var(--bg-section);
     padding: 10px;
     overflow-y:scroll;
+    max-width: 70%;
 }
 #upcoming-container header {
     font-size: 1.5rem;
