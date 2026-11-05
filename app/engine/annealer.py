@@ -647,7 +647,7 @@ class Annealer:
             schedule, self.activities, self.blocks, self.atb, self.day_load, self.table
         )
 
-        self.T = 1e12
+        self.T = 1e26
         self.T_MIN = 1e-3
         self.cooling = 0.995
         self.cycles = 300
@@ -714,6 +714,12 @@ class Annealer:
             base[0] += 0.30
         return random.choices(self.change_factories, weights=base)[0]
 
+    def log_cool(self, T, iteration):
+        return T / math.log(1+iteration)
+
+    def exp_cool(self, T, iteration):
+        return self.T * (self.cooling ** iteration)
+
     def run(self):
         best_cost = self.evaluator.total_cost
         best_table = copy.deepcopy(self.table)
@@ -747,7 +753,7 @@ class Annealer:
 
                 if iteration_count % self.adjust_interval == 0:
                     accept_ratio = accepted/attempted
-                    if accept_ratio < self.target_acceptance:
+                    if accept_ratio > self.target_acceptance:
                         T *= self.adjust_factor
                     else:
                         T /= self.adjust_factor
@@ -755,6 +761,7 @@ class Annealer:
 
                 iteration_count += 1
 
+            # T = self.exp_cool(T,iteration_count)
                 T *= self.cooling
 
         return best_table, best_blocks, best_cost
