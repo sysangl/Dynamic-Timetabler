@@ -42,7 +42,7 @@ class PENALTY_WEIGHTS:
     HIGH_COST_BOUND = 18.0
     PREFERRED_DAYS  = 14.0
     MIN_LENGTH      = 30.0
-
+    MIN_START       = 25.0
 
     # Timetable
     IDLE            = 1.0

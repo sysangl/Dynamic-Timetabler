@@ -16,7 +16,7 @@ def make_fixed_block(day, starth, startm, lenh, lenm):
 def random_preferred_days(n):
     return random.choices([0,1,2,3,4,5,6],k=2)
 
-def test():
+def test(max_iter=None):
     from .scheduler import greedy_initial, greedy_schedule
 
     schedule = _Schedule(
@@ -648,7 +648,6 @@ def test():
     )
 
     initial_cost = annealer.evaluator.total_cost
-
     best_table, best_blocks, best_cost = annealer.run()
 
     new_atb: dict[int, set[int]] = {}

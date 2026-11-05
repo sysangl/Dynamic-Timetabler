@@ -66,7 +66,6 @@ if __name__ == "__main__":
     match args.mode:
         case "engine":
             from app.engine.testing import test
-
             test()
         case "debug":
             run_server(debug=True)

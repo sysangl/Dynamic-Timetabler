@@ -119,7 +119,7 @@ class CostEvaluator:
 
             # cost for minimum start
             if b.start < activity.min_start_slot:
-                cost += (b.start - activity.min_start_slot) ** 2
+                cost += (b.start - activity.min_start_slot) ** 2 * PENALTY_WEIGHTS.MIN_START
 
         cost += preferred_day_count**2 * PENALTY_WEIGHTS.PREFERRED_DAYS
 
@@ -131,7 +131,7 @@ class CostEvaluator:
 
     def _idle_penalty(self):
         # cost for not using time
-        empty = sum(day.count(set()) for day in self.table)
+        empty = sum(sum(len(blocks) for blocks in day) for day in self.table)
         idle_prev = self.idle
         idle_current = (empty * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
         self.idle = idle_current
@@ -611,6 +611,7 @@ def random_reschedule(
 
         evaluator.activity_cost[activity.id] = old_cost
         evaluator.total_cost -= delta_cost
+        evaluator.update_activities([a.id for a in activities])
 
     return ChangeResult(delta_cost, undo=undo)
 
@@ -640,13 +641,13 @@ class Annealer:
             schedule, self.activities, self.blocks, self.atb, self.day_load, self.table
         )
 
-        self.T = 1e9
-        self.T_MIN = 1e-4
-        self.cooling = 0.99999
-        self.cycles = 100000 # default 100000
+        self.T = 1e12
+        self.T_MIN = 1e-3
+        self.cooling = 0.995
+        self.cycles = 300
         self.adjust_interval = 100
-        self.target_acceptance = 0.05
-        self.adjust_factor = 0.9
+        self.target_acceptance = 0.2
+        self.adjust_factor = 0.95
 
         self.change_factories = [
             lambda: shift_move(
@@ -702,11 +703,10 @@ class Annealer:
         ]
 
     def _weighted_change_factory(self,T): # type: ignore
-        probabilities = [0.4,0.15,0.15,0.1,0.1,0.1]
-        if T < 1000:
-            probabilities = [0.71,0.08,0.07,0.06,0.05,0.03]
-
-        return random.choices(self.change_factories, weights=probabilities)[0]
+        base = [0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
+        if T < 1e3:
+            base[0] += 0.30
+        return random.choices(self.change_factories, weights=base)[0]
 
     def run(self):
         cost_updates = iteration_count = accepted = attempted = 0
@@ -716,11 +716,10 @@ class Annealer:
 
         T = self.T
 
-        while T > self.T_MIN and iteration_count < 1e12:
+        while T > self.T_MIN and iteration_count < 1e9:
             for _ in range(self.cycles):
                 attempted += 1
                 change = self._weighted_change_factory(T)()
-
                 delta_cost = change.delta                
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
                     accepted += 1
