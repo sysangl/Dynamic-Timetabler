@@ -141,6 +141,7 @@
     container-type: size;
     border-width: 1px;
     border-color: rgba(255, 255, 255, 0.6);
+    user-select: none;
 }
 
 .timetable-block:hover {

@@ -212,16 +212,31 @@ function showPopupMenu(target, e) {
         closePopupMenu();
         return;
     }
-    popupMenu.style.top = `${e.pageY}px`;
+
+    if (
+        e.pageY + popupMenu.clientHeight >=
+        document.documentElement.clientHeight
+    ) {
+        popupMenu.style.bottom = "10px";
+        popupMenu.style.top = "unset";
+    } else {
+        popupMenu.style.bottom = "unset";
+        popupMenu.style.top = `${e.pageY}px`;
+    }
+
     // popupMenu.style.left = `${bRect.left + window.scrollX}px`;
-    popupMenu.style.left = `${e.pageX}px`;
     if (
         e.pageX + popupMenu.clientWidth >=
         document.documentElement.clientWidth
     ) {
         popupMenu.style.right = "10px";
         popupMenu.style.left = "unset";
+    } else {
+        popupMenu.style.right = "unset";
+        popupMenu.style.left = `${e.pageX}px`;
     }
+
+
 
     popupBlockTitle.textContent = target.dataset.blockTitle;
     popupBlockTime.textContent = target.dataset.blockTime;
