@@ -142,7 +142,7 @@ class CostEvaluator:
         blocks_per_day = collections.Counter(b.day for b in self.blocks.values())
         total = sum(blocks_per_day)
         balance_current = 0
-        for count in blocks_per_day:
+        for count in blocks_per_day.values():
             balance_current += (
                 count - (total / self.schedule.SIZE)
             ) ** 2 * PENALTY_WEIGHTS.BALANCE
@@ -640,12 +640,12 @@ class Annealer:
             schedule, self.activities, self.blocks, self.atb, self.day_load, self.table
         )
 
-        self.T = 100000
+        self.T = 1e9
         self.T_MIN = 1e-4
-        self.cooling = 0.99
-        self.cycles = 1000 # default 100000
+        self.cooling = 0.99999
+        self.cycles = 100000 # default 100000
         self.adjust_interval = 100
-        self.target_acceptance = 0.45
+        self.target_acceptance = 0.05
         self.adjust_factor = 0.9
 
         self.change_factories = [
@@ -738,11 +738,11 @@ class Annealer:
                         best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
                         best_blocks = copy.deepcopy(self.blocks)
+                        cost_updates += 1
                         sys.stdout.write(
-                            f"\r[{cost_updates!s:8s}] Updating cost: {best_cost}"
+                            f"\r<{round(T,4)!s:10s}> [{cost_updates!s:8s}] Updating cost: {best_cost}"
                         )
                         sys.stdout.flush()
-                        cost_updates += 1
                 else:
                     undo_counter += 1
                     change.undo()
@@ -754,9 +754,13 @@ class Annealer:
                     else:
                         T /= self.adjust_factor
                     accepted = attempted = 0
+
+
+
                 iteration_count += 1
 
-            T *= self.cooling
+                T *= self.cooling
+
 
         print("\n Post Anneal Run Stats")
         print(f"Cost Updates   : {cost_updates}")

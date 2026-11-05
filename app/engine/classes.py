@@ -45,7 +45,7 @@ class PENALTY_WEIGHTS:
     MIN_LENGTH      = 30.0
 
 
-    # Clean Timetable
+    # Timetable
     IDLE            = 1.0
     BALANCE         = 2.0
     FRAGMENT        = 4.0
