@@ -704,17 +704,12 @@ class Annealer:
     def _weighted_change_factory(self,T): # type: ignore
         probabilities = [0.4,0.15,0.15,0.1,0.1,0.1]
         if T < 1000:
-            probabilities[0] *= 1.5
-            probabilities[1] *= 0.7
-            probabilities[2] *= 0.7
-            probabilities[3] *= 0.5
-            probabilities[4] *= 0.5
-            probabilities[5] *= 0.3
+            probabilities = [0.71,0.08,0.07,0.06,0.05,0.03]
 
         return random.choices(self.change_factories, weights=probabilities)[0]
 
     def run(self):
-        cost_updates = accept_counter = undo_counter = iteration_count = accepted = attempted = 0
+        cost_updates = iteration_count = accepted = attempted = 0
         best_cost = self.evaluator.total_cost
         best_table = copy.deepcopy(self.table)
         best_blocks = copy.deepcopy(self.blocks)
@@ -725,14 +720,9 @@ class Annealer:
             for _ in range(self.cycles):
                 attempted += 1
                 change = self._weighted_change_factory(T)()
-                if change.mark_undo:
-                    change.undo()
-                    undo_counter += 1
-                    continue
 
                 delta_cost = change.delta                
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
-                    accept_counter += 1
                     accepted += 1
                     if self.evaluator.total_cost < best_cost:
                         best_cost = self.evaluator.total_cost
@@ -744,7 +734,6 @@ class Annealer:
                         )
                         sys.stdout.flush()
                 else:
-                    undo_counter += 1
                     change.undo()
 
                 if iteration_count % self.adjust_interval == 0:
@@ -755,15 +744,8 @@ class Annealer:
                         T /= self.adjust_factor
                     accepted = attempted = 0
 
-
-
                 iteration_count += 1
 
                 T *= self.cooling
 
-
-        print("\n Post Anneal Run Stats")
-        print(f"Cost Updates   : {cost_updates}")
-        print(f"Accept Counter : {accept_counter}")
-        print(f"Undo Counter   : {undo_counter}")
         return best_table, best_blocks, best_cost

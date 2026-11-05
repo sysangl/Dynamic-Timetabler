@@ -19,7 +19,6 @@ type OverlapTable = list[list[set]]
 class ChangeResult:
     delta: float
     undo: Callable
-    mark_undo: bool = False
 
 
 @dataclass
