@@ -1,0 +1,65 @@
+<!-- base timetable css -->
+<link rel="stylesheet" href="{{url_for('static', filename='css/timetable.css')}}">
+</link>
+<!-- horizontal/vertical view -->
+{% if current_user.settings.timetable_view == 'horizontal' %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-timetable.css')}}">
+</link>
+{% else %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/vertical-timetable.css')}}">
+</link>
+{% endif %}
+<!-- what date to display -->
+{% if display_date %}
+<div id="displayDate" data-date="{{display_date}}"></div>
+{% endif %}
+
+<div id="toolbar">
+    <button class="timetable-date-btn" type="button" onclick="prevDate()"><span
+            class="fa-solid fa-chevron-left"></span></button>
+    <button class="timetable-date-btn" type="button" onclick="currentDate()"><span
+            class="fa-solid fa-calendar-week"></span></button>
+    <button class="timetable-date-btn" type="button" onclick="nextDate()"><span
+            class="fa-solid fa-chevron-right"></span></button>
+</div>
+
+<!-- main timetable screen -->
+<div id="timetable-container">
+    <div id="tt-legend">
+        <div id="tt-time">-</div>
+        <div class="tt-weekday">Mon</div>
+        <div class="tt-weekday">Tues</div>
+        <div class="tt-weekday">Wed</div>
+        <div class="tt-weekday">Thurs</div>
+        <div class="tt-weekday">Fri</div>
+        <div class="tt-weekday">Sat</div>
+        <div class="tt-weekday">Sun</div>
+    </div>
+
+    <div id="tt-schedule-container">
+        <div id="time-marker"></div>
+        <div id="tt-timeline"></div>
+        <div id="tt-schedule">
+            <div id="day-lines"></div>
+            <div id="hour-lines"></div>
+        </div>
+    </div>
+</div>
+
+<div id="popup-menu">
+    <div id="popup-block-info">
+        <span id="popup-block-title"></span>
+        <br>
+        <span id="popup-block-time"></span>
+        <br>
+    </div>
+    <button type="button" onclick="deleteBlock()">Delete</button>
+    <button type="button" onclick="editBlock()" disabled="true">Edit</button>
+    <button type="button" onclick="completeBlock()">Complete</button>
+    <button type="button" onclick="markRescheduleBlock()" disabled="true">Reschedule</button>
+</div>
+
+<div id="backdrop"></div>
+
+<!-- timetable functionality script -->
+<script src="{{url_for('static',filename='js/planner.js')}}"></script>

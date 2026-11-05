@@ -77,4 +77,11 @@ It uses the intiial greedy algorithm, and randomly applies changes to it. It has
 
 
 # Credits
-This project uses [FontAwesome](https://fontawesome.com) icons.
+
+A list of external resources this project uses.
+All licenses for all resources are included in their respective folders.
+
+| Resource | From                                |
+| -------- | ----------------------------------- |
+| Icons    | FontAwesome https://fontawesome.com |
+| jQueryUI | jQueryUI https://jqueryui.com       |
