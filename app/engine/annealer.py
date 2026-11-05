@@ -642,8 +642,11 @@ class Annealer:
 
         self.T = 100000
         self.T_MIN = 1e-4
-        self.cooling = 0.95
+        self.cooling = 0.99
         self.cycles = 1000 # default 100000
+        self.adjust_interval = 100
+        self.target_acceptance = 0.45
+        self.adjust_factor = 0.9
 
         self.change_factories = [
             lambda: shift_move(
@@ -663,6 +666,14 @@ class Annealer:
                 self.evaluator,
             ),
             lambda: merge_blocks(
+                self.table,
+                activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+            ),
+            lambda: split_block(
                 self.table,
                 activities,
                 self.atb,
@@ -690,28 +701,39 @@ class Annealer:
             ),
         ]
 
+    def _weighted_change_factory(self,T): # type: ignore
+        probabilities = [0.4,0.15,0.15,0.1,0.1,0.1]
+        if T < 1000:
+            probabilities[0] *= 1.5
+            probabilities[1] *= 0.7
+            probabilities[2] *= 0.7
+            probabilities[3] *= 0.5
+            probabilities[4] *= 0.5
+            probabilities[5] *= 0.3
+
+        return random.choices(self.change_factories, weights=probabilities)[0]
+
     def run(self):
-        cost_updates = 0
-        accept_counter = 0
-        undo_counter = 0
+        cost_updates = accept_counter = undo_counter = iteration_count = accepted = attempted = 0
         best_cost = self.evaluator.total_cost
         best_table = copy.deepcopy(self.table)
         best_blocks = copy.deepcopy(self.blocks)
 
         T = self.T
 
-        while T > self.T_MIN:
+        while T > self.T_MIN and iteration_count < 1e12:
             for _ in range(self.cycles):
-                change = random.choice(self.change_factories)()
+                attempted += 1
+                change = self._weighted_change_factory(T)()
                 if change.mark_undo:
                     change.undo()
                     undo_counter += 1
                     continue
 
-                delta_cost = change.delta
-
+                delta_cost = change.delta                
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
                     accept_counter += 1
+                    accepted += 1
                     if self.evaluator.total_cost < best_cost:
                         best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
@@ -724,6 +746,16 @@ class Annealer:
                 else:
                     undo_counter += 1
                     change.undo()
+
+                if iteration_count % self.adjust_interval == 0:
+                    accept_ratio = accepted/attempted
+                    if accept_ratio > self.target_acceptance:
+                        T *= self.adjust_factor
+                    else:
+                        T /= self.adjust_factor
+                    accepted = attempted = 0
+                iteration_count += 1
+
             T *= self.cooling
 
         print("\n Post Anneal Run Stats")
