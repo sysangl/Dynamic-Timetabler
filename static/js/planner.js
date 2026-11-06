@@ -387,6 +387,12 @@ function splitBlock(block) {
             const heightPx = (lengthMins / minsInDay) * schedule.scrollHeight;
             el.style.setProperty("--top", `${topPx}px`);
             el.style.setProperty("--height", `${heightPx}px`);
+
+            const leftPx = dayMapping[`${start.toDateString().slice(4)}`] * (schedule.scrollWidth / dpv);
+            const widthPx = (schedule.scrollWidth / dpv);
+            el.style.setProperty("--left", `${leftPx}px`);
+            el.style.setProperty("--width", `${widthPx}px`);
+
         }
         el.style.setProperty(
             "--bg-colour",
