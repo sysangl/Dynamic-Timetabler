@@ -10,8 +10,8 @@ dragging = false
 dragOffsetX = 0
 dragOffsetY = 0
 
-const snapY = 7
-const snapX = 144
+snapY = 7
+snapX = 144
 
 /**
  *  Fetches all timetable items (unfiltered)
@@ -22,7 +22,7 @@ async function fetchPayload() {
     const dpv = window.settings["days_per_view"];
     const response = await fetch(
         // `/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[dpv - 1].dataset.isoDate}`,
-        `/api/timetable/range/?start=${dayMapping['start']}&end=${dayMapping['end']}`,
+        `/api/timetable/range/?start=${dayMapping['0']}&end=${dayMapping[`${dpv-1}`]}`,
         {
             method: "GET",
         },
@@ -71,13 +71,13 @@ function generateDays() {
         dayName.textContent = `${day}`;
         dayName.className = "day-name";
         const dayDate = document.createElement("span");
-        dayDate.textContent = nextDay.toDateString().slice(3);
+        dayDate.textContent = nextDay.toDateString().slice(4);
         dayDate.className = "day-date";
         newDay.append(dayName, document.createElement("br"), dayDate);
 
-        dayMapping[`${nextDay.toISOString().slice(0, 10)}`] = inc
-        if (dayIdx==0){dayMapping['start']=`${nextDay.toISOString().slice(0, 10)}`}
-        if (dayIdx==dpv-1){dayMapping['end']=`${nextDay.toISOString().slice(0, 10)}`}
+        dayMapping[`${nextDay.toDateString().slice(4)}`] = inc
+        dayMapping[inc] = `${nextDay.toISOString().slice(0,10)}`
+
         // const newDayCont = document.createElement("div");
         // newDayCont.id = `day-container-${day}`;
         // newDayCont.classList.add("day-container");
@@ -375,7 +375,7 @@ function splitBlock(block) {
             el.style.setProperty("--left", `${leftPx}px`);
             el.style.setProperty("--width", `${widthPx}px`);
 
-            const topPx = dayMapping[`${start.toISOString().slice(0, 10)}`] * (schedule.scrollHeight / dpv);
+            const topPx = dayMapping[`${start.toDateString().slice(4)}`] * (schedule.scrollHeight / dpv);
             const heightPx = (schedule.scrollHeight / dpv);
             el.style.setProperty("--top", `${topPx}px`);
             el.style.setProperty("--height", `${heightPx}px`);
@@ -440,6 +440,8 @@ function splitBlock(block) {
     
                 el.style.setProperty('--left',`${snappedX}px`);
                 el.style.setProperty('--top',`${snappedY}px`);
+
+                el.dataset.blockTime = timeSpan.textContent
             }
             dragging = false
             shadow.style.visibility = 'hidden'
