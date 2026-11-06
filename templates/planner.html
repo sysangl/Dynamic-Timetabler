@@ -3,10 +3,10 @@
 </link>
 <!-- horizontal/vertical view -->
 {% if current_user.settings.timetable_view == 'horizontal' %}
-<link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-timetable.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-planner.css')}}">
 </link>
 {% else %}
-<link rel="stylesheet" href="{{url_for('static', filename='css/vertical-timetable.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='css/vertical-planner.css')}}">
 </link>
 {% endif %}
 <!-- what date to display -->

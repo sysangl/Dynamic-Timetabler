@@ -4,6 +4,8 @@ if (displayDateElement) {
     displayDate = new Date(displayDateElement.dataset.date);
 }
 
+dayMapping = {}
+
 dragging = false
 dragOffsetX = 0
 dragOffsetY = 0
@@ -19,7 +21,8 @@ async function fetchPayload() {
     const dates = document.getElementsByClassName("day-container");
     const dpv = window.settings["days_per_view"];
     const response = await fetch(
-        `/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[dpv - 1].dataset.isoDate}`,
+        // `/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[dpv - 1].dataset.isoDate}`,
+        `/api/timetable/range/?start=${dayMapping['start']}&end=${dayMapping['end']}`,
         {
             method: "GET",
         },
@@ -72,14 +75,17 @@ function generateDays() {
         dayDate.className = "day-date";
         newDay.append(dayName, document.createElement("br"), dayDate);
 
-        const newDayCont = document.createElement("div");
-        newDayCont.id = `day-container-${day}`;
-        newDayCont.classList.add("day-container");
-        newDayCont.dataset.date = nextDay.toDateString().slice(3);
-        newDayCont.dataset.isoDate = nextDay.toISOString().slice(0, 10);
+        dayMapping[`${nextDay.toISOString().slice(0, 10)}`] = inc
+        if (dayIdx==0){dayMapping['start']=`${nextDay.toISOString().slice(0, 10)}`}
+        if (dayIdx==dpv-1){dayMapping['end']=`${nextDay.toISOString().slice(0, 10)}`}
+        // const newDayCont = document.createElement("div");
+        // newDayCont.id = `day-container-${day}`;
+        // newDayCont.classList.add("day-container");
+        // newDayCont.dataset.date = nextDay.toDateString().slice(3);
+        // newDayCont.dataset.isoDate = nextDay.toISOString().slice(0, 10);
+        // schedule.appendChild(newDayCont);
+        // window.dayContainers.push(newDayCont);
         legend.appendChild(newDay);
-        schedule.appendChild(newDayCont);
-        window.dayContainers.push(newDayCont);
     }
 }
 
@@ -305,6 +311,13 @@ function markRescheduleBlock() {
     console.log("mark resc");
 }
 
+function spawnShadowBlock() {
+    const shadow = document.createElement('div');
+    shadow.id = 'shadow-block'
+    shadow.style.visibility = 'hidden';
+    document.getElementById('tt-schedule').append(shadow)
+}
+
 /**
  * Creates a block and splits it if it goes over visible time.
  * Returns an array of HTMLDivElements
@@ -316,6 +329,8 @@ function splitBlock(block) {
     const schedule = document.getElementById("tt-schedule");
     const pieces = [];
     const minsInDay = 24 * 60;
+    const dpv = window.settings["days_per_view"];
+    const shadow = document.getElementById('shadow-block')
 
     function splitBlockRecursive(currentBlock, wasSplit = false) {
         const start = new Date(currentBlock.start_datetime);
@@ -357,6 +372,12 @@ function splitBlock(block) {
                 const widthPx = (lengthMins / minsInDay) * schedule.scrollWidth;
             el.style.setProperty("--left", `${leftPx}px`);
             el.style.setProperty("--width", `${widthPx}px`);
+
+            const topPx = dayMapping[`${start.toISOString().slice(0, 10)}`] * (schedule.scrollHeight / dpv);
+            const heightPx = (schedule.scrollHeight / dpv);
+            el.style.setProperty("--top", `${topPx}px`);
+            el.style.setProperty("--height", `${heightPx}px`);
+
         } else {
             const topPx =
             ((startMins - scheduleStartMins) / minsInDay) *
@@ -392,31 +413,48 @@ function splitBlock(block) {
             dragOffsetX = e.clientX - elRect.left;
             dragOffsetY = e.clientY - elRect.top;
 
+            shadow.style.visibility = 'visible';
+
+            shadow.style.setProperty('--width', el.style.getPropertyValue('--width'))
+            shadow.style.setProperty('--height', el.style.getPropertyValue('--height'))
+
             dragging = true;
             console.log('start dragging')
         };
 
         el.onmouseup = (e) => {
-            if (dragging) {
-                var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
-                var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
+            var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
+            var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
 
-                var snapXpx = (1/snapX) * schedule.scrollWidth
-                var snapYpx = (1/snapY) * schedule.scrollHeight
+            var snapXpx = (1/snapX) * schedule.scrollWidth
+            var snapYpx = (1/snapY) * schedule.scrollHeight
 
-                var snappedX = x - (x % snapXpx)
-                var snappedY = y - (y % snapYpx)
+            var snappedX = x - (x % snapXpx)
+            var snappedY = y - (y % snapYpx)
 
 
-                el.style.setProperty('--left',`${snappedX}px`);
-                el.style.setProperty('--top',`${snappedY}px`);
-            }
+            el.style.setProperty('--left',`${snappedX}px`);
+            el.style.setProperty('--top',`${snappedY}px`);
             dragging = false
+            shadow.style.visibility = 'hidden'
             el.style.zIndex = 1;
             console.log('not dragging')
         };
 
+
         el.onmouseleave = (e) => {
+            var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
+            var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
+
+            var snapXpx = (1/snapX) * schedule.scrollWidth
+            var snapYpx = (1/snapY) * schedule.scrollHeight
+
+            var snappedX = x - (x % snapXpx)
+            var snappedY = y - (y % snapYpx)
+
+
+            el.style.setProperty('--left',`${snappedX}px`);
+            el.style.setProperty('--top',`${snappedY}px`);
             dragging = false
         }
 
@@ -430,6 +468,17 @@ function splitBlock(block) {
                 el.style.zIndex = 5;
 
                 console.log('dragging')
+
+                var snapXpx = (1/snapX) * schedule.scrollWidth
+                var snapYpx = (1/snapY) * schedule.scrollHeight
+
+                var snappedX = x - (x % snapXpx)
+                var snappedY = y - (y % snapYpx)
+
+
+                shadow.style.setProperty('--left',`${snappedX}px`);
+                shadow.style.setProperty('--top',`${snappedY}px`);
+
             }
         }
 
@@ -451,28 +500,31 @@ function splitBlock(block) {
 async function renderTimetable() {
     const payload = await fetchPayload();
     const blocks = payload.blocks;
-    const getDayContainer = (date) =>
-        document.querySelector(`[data-date="${date}"]`);
+    // const getDayContainer = (date) =>
+    //     document.querySelector(`[data-date="${date}"]`);
+    const schedule = document.getElementById('tt-schedule')
+    // const fragmentMap = new Map();
 
-    const fragmentMap = new Map();
+    spawnShadowBlock();
 
     for (const block of blocks) {
         const pieces = splitBlock(block);
         for (const el of pieces) {
-            const date = el.dataset.date;
-            if (!fragmentMap.has(date)) {
-                fragmentMap.set(date, document.createDocumentFragment());
-            }
-            fragmentMap.get(date).appendChild(el);
+            // const date = el.dataset.date;
+            // if (!fragmentMap.has(date)) {
+            //     fragmentMap.set(date, document.createDocumentFragment());
+            // }
+            // fragmentMap.get(date).appendChild(el);
+            schedule.append(el)
         }
     }
 
-    fragmentMap.forEach((frag, date) => {
-        const dayContainer = getDayContainer(date);
-        if (dayContainer) {
-            dayContainer.appendChild(frag);
-        }
-    });
+    // fragmentMap.forEach((frag, date) => {
+    //     const dayContainer = getDayContainer(date);
+    //     if (dayContainer) {
+    //         dayContainer.appendChild(frag);
+    //     }
+    // });
 }
 
 async function clearTimetable() {
