@@ -331,6 +331,8 @@ function splitBlock(block) {
     const minsInDay = 24 * 60;
     const dpv = window.settings["days_per_view"];
     const shadow = document.getElementById('shadow-block')
+    const timelineHeight = document.getElementById('tt-timeline').scrollHeight
+    const timelineWidth = document.getElementById('tt-timeline').scrollWidth
 
     function splitBlockRecursive(currentBlock, wasSplit = false) {
         const start = new Date(currentBlock.start_datetime);
@@ -406,7 +408,8 @@ function splitBlock(block) {
         
 
         const scheduleContainer = document.getElementById('tt-schedule-container')
-        el.onmousedown = (e) => {
+
+        el.ondblclick = (e) => {
             e.preventDefault();
 
             const elRect = el.getBoundingClientRect();
@@ -417,46 +420,35 @@ function splitBlock(block) {
 
             shadow.style.setProperty('--width', el.style.getPropertyValue('--width'))
             shadow.style.setProperty('--height', el.style.getPropertyValue('--height'))
+            shadow.style.setProperty('--bg-colour', el.style.getPropertyValue('--bg-colour'))
 
             dragging = true;
-            console.log('start dragging')
         };
 
-        el.onmouseup = (e) => {
-            var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
-            var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
+        const stopDrag = (e) => {
+            if (dragging) {
 
-            var snapXpx = (1/snapX) * schedule.scrollWidth
-            var snapYpx = (1/snapY) * schedule.scrollHeight
-
-            var snappedX = x - (x % snapXpx)
-            var snappedY = y - (y % snapYpx)
-
-
-            el.style.setProperty('--left',`${snappedX}px`);
-            el.style.setProperty('--top',`${snappedY}px`);
+                var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
+                var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
+    
+                var snapXpx = (1/snapX) * schedule.scrollWidth
+                var snapYpx = (1/snapY) * schedule.scrollHeight
+    
+                var snappedX = x - (x % snapXpx)
+                var snappedY = y - (y % snapYpx)
+    
+    
+                el.style.setProperty('--left',`${snappedX}px`);
+                el.style.setProperty('--top',`${snappedY}px`);
+            }
             dragging = false
             shadow.style.visibility = 'hidden'
             el.style.zIndex = 1;
-            console.log('not dragging')
-        };
-
-
-        el.onmouseleave = (e) => {
-            var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
-            var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
-
-            var snapXpx = (1/snapX) * schedule.scrollWidth
-            var snapYpx = (1/snapY) * schedule.scrollHeight
-
-            var snappedX = x - (x % snapXpx)
-            var snappedY = y - (y % snapYpx)
-
-
-            el.style.setProperty('--left',`${snappedX}px`);
-            el.style.setProperty('--top',`${snappedY}px`);
-            dragging = false
         }
+
+        el.onclick = stopDrag
+        el.onmouseleave = stopDrag
+
 
         el.onmousemove = (e) => {
             if (dragging) {
@@ -464,17 +456,14 @@ function splitBlock(block) {
                 var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
 
                 el.style.setProperty('--left',`${x}px`);
-                el.style.setProperty('--top',`${y}px`);
+                el.style.setProperty('--top',`${y - timelineHeight}px`);
                 el.style.zIndex = 5;
-
-                console.log('dragging')
 
                 var snapXpx = (1/snapX) * schedule.scrollWidth
                 var snapYpx = (1/snapY) * schedule.scrollHeight
 
                 var snappedX = x - (x % snapXpx)
                 var snappedY = y - (y % snapYpx)
-
 
                 shadow.style.setProperty('--left',`${snappedX}px`);
                 shadow.style.setProperty('--top',`${snappedY}px`);
