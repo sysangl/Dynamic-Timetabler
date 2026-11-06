@@ -51,9 +51,10 @@ More information is located in `docs/Quickstart.md`
 | WORKING | Timetable functionality (event creation and display)                                                                          |
 | WORKING | Block Management                                                                                                              |
 | WORKING | User management                                                                                                               |
-| WORKING | (MINIMAL) Dynamic Table Engine - Auto generating timetables                                                                   |
+| WORKING | Dynamic Table Engine - Auto generate a timetable, and optionally optimise it (optimisation sucks, but it works at least?)     |
+| WIP     | Timetable planning, GUI (movable timetable blocks)                                                                            |
 | FUTURE  | Dynamic Table Engine - Dynamic routines                                                                                       |
-| WORKING | Web Interface (Basic timetable view, settings page and a basic block creation page)                                           |
+| WORKING | Web Interface                                                                                                                 |
 | WORKING | Timetable layouts/views (horizontal & vertical)                                                                               |
 | WORKING | Portable (Currently works as an .exe or python project. The source code *should* work on most platforms that support python.) |
 | FUTURE  | Pomodoro Timer                                                                                                                |
@@ -61,6 +62,7 @@ More information is located in `docs/Quickstart.md`
 | PLANNED | Wakatime (and other time keeping software) integration                                                                        |
 | PLANNED | Internet calendar integration                                                                                                 |
 | PLANNED | Calendar/'Timetable Items' import/export                                                                                      |
+
 
 
 # Algorithm stuff
@@ -85,3 +87,4 @@ All licenses for all resources are included in their respective folders.
 | -------- | ----------------------------------- |
 | Icons    | FontAwesome https://fontawesome.com |
 | jQueryUI | jQueryUI https://jqueryui.com       |
+| Fonts    | Google https://fonts.google.com/    |

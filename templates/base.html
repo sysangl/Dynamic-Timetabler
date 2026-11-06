@@ -1,78 +1,121 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Canopy Suite</title>
+        <link rel="icon" href="{{url_for('static', filename='favicon.ico')}}" />
+        <script src="{{url_for('static',filename='js/jquery-4.0.0.min.js')}}"></script>
+        <script src="{{url_for('static',filename='js/jquery-ui-1.14.2/jquery-ui.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/helper.js')}}"></script>
+        <link
+            rel="stylesheet"
+            href="{{url_for('static', filename='fontawesome-free-7.3.1-web/css/all.min.css')}}"
+        />
+        <link
+            rel="stylesheet"
+            href="{{url_for('static', filename='css/base.css')}}"
+        />
+        <link
+            rel="stylesheet"
+            href="{{url_for('static', filename='js/jquery-ui-1.14.2/jquery-ui.min.css')}}"
+        />
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canopy Suite</title>
-    <link rel="icon" href="{{url_for('static', filename='favicon.ico')}}" />
-    <script src="{{url_for('static',filename='js/jquery-4.0.0.min.js')}}"></script>
-    <script src="{{url_for('static',filename='js/jquery-ui-1.14.2/jquery-ui.min.js')}}"></script>
-    <script src="{{url_for('static', filename='js/helper.js')}}"></script>
-    <link rel="stylesheet" href="{{url_for('static', filename='fontawesome-free-7.3.1-web/css/all.min.css')}}" />
-    <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}" />
-    <link rel="stylesheet" href="{{url_for('static', filename='js/jquery-ui-1.14.2/jquery-ui.min.css')}}" />
-</head>
+    <body>
+        <!-- font imports -->
+        <style>
+            @font-face {
+                font-family: Aleo;
+                src: url("{{url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf')}}");
+            }
+        </style>
 
-<body>
-    <!-- font imports -->
-    <style>
-        @font-face {
-            font-family: Aleo;
-            src: url("{{url_for('static', filename='fonts/Aleo/Aleo-VariableFont_wght.ttf')}}");
-        }
-    </style>
+        <!-- common script w/ helper funcs -->
+        <script src="{{url_for('static',filename='js/base.js')}}"></script>
 
-    <!-- common script w/ helper funcs -->
-    <script src="{{url_for('static',filename='js/base.js')}}"></script>
-
-    <div id="topbar">
-        <div>
-            <svg class="ham hamRotate ham4" viewBox="0 0 100 100" width="3rem" onclick="toggleSidebar()">
-                <path class="line top"
-                    d="m 70,33 h -40 c 0,0 -8.5,-0.149796 -8.5,8.5 0,8.649796 8.5,8.5 8.5,8.5 h 20 v -20" />
-                <path class="line middle" d="m 70,50 h -40" />
-                <path class="line bottom"
-                    d="m 30,67 h 40 c 0,0 8.5,0.149796 8.5,-8.5 0,-8.649796 -8.5,-8.5 -8.5,-8.5 h -20 v 20" />
-            </svg>
+        <div id="topbar">
+            <div>
+                <svg
+                    class="ham hamRotate ham4"
+                    viewBox="0 0 100 100"
+                    width="3rem"
+                    onclick="toggleSidebar()"
+                >
+                    <path
+                        class="line top"
+                        d="m 70,33 h -40 c 0,0 -8.5,-0.149796 -8.5,8.5 0,8.649796 8.5,8.5 8.5,8.5 h 20 v -20"
+                    />
+                    <path class="line middle" d="m 70,50 h -40" />
+                    <path
+                        class="line bottom"
+                        d="m 30,67 h 40 c 0,0 8.5,0.149796 8.5,-8.5 0,-8.649796 -8.5,-8.5 -8.5,-8.5 h -20 v 20"
+                    />
+                </svg>
+            </div>
+            <div id="topbar-title">Canopy</div>
+            <div class="topbar-spacer"></div>
+            <div
+                id="topbar-user"
+                onclick="
+                    document
+                        .getElementById('logout-btn-container')
+                        .classList.toggle('open')
+                "
+            >
+                <span id="display-name-wrapper"></span>
+                <span class="fa-solid fa-circle-user"></span>
+            </div>
+            <div id="logout-btn-container" data-tooltip="Logout">
+                |
+                <a href="/auth/logout"
+                    ><span class="fa-solid fa-right-from-bracket"></span
+                ></a>
+            </div>
         </div>
-        <div id="topbar-title">Canopy</div>
-        <div class="topbar-spacer"></div>
-        <div id="topbar-user" onclick="document.getElementById('logout-btn-container').classList.toggle('open')"><span
-                id="display-name-wrapper"></span> <span class="fa-solid fa-circle-user"></span></div>
-        <div id="logout-btn-container" data-tooltip="Logout"> | <a href="/auth/logout"><span
-                    class="fa-solid fa-right-from-bracket"></span></a></div>
-    </div>
 
-    <nav id="sidebar">
-        <button class="sidebar-btn" data-page="dashboard"><span class="fa fa-dashboard"></span> Dashboard</button>
-        <button class="sidebar-btn" data-page="timetable"><span class="fa fa-calendar"></span> Timetable</button>
-        <button class="sidebar-btn" data-page="management"><span class="fa fa-calendar-plus"></span> Management</button>
-        <button class="sidebar-btn" data-page="planner"><span class="fa fa-grid-horizontal"></span> Planner</button>
-        <button class="sidebar-btn" data-page="scheduler"><span class="fa fa-calendar-alt"></span> Scheduler</button>
-        <button class="sidebar-btn" data-page="settings"><span class="fa fa-cog"></span> Settings</button>
+        <nav id="sidebar">
+            <button class="sidebar-btn" data-page="dashboard">
+                <span class="fa fa-dashboard"></span> Dashboard
+            </button>
+            <button class="sidebar-btn" data-page="timetable">
+                <span class="fa fa-calendar"></span> Timetable
+            </button>
+            <button class="sidebar-btn" data-page="management">
+                <span class="fa fa-calendar-plus"></span> Management
+            </button>
+            <button class="sidebar-btn" data-page="planner">
+                <span class="fa fa-grid-horizontal"></span> Planner
+            </button>
+            <button class="sidebar-btn" data-page="scheduler">
+                <span class="fa fa-calendar-alt"></span> Scheduler
+            </button>
+            <button class="sidebar-btn" data-page="settings">
+                <span class="fa fa-cog"></span> Settings
+            </button>
 
-        <div id="sidebar-spacer"></div>
-        <button class="sidebar-btn" data-page="info"><span class="fa fa-info-circle"></span> Info</button>
-    </nav>
+            <div id="sidebar-spacer"></div>
+            <button class="sidebar-btn" data-page="info">
+                <span class="fa fa-info-circle"></span> Info
+            </button>
+        </nav>
 
-    <div id="content">
-        {% include page ~ ".html" %}
-    </div>
+        <div id="content">{% include page ~ ".html" %}</div>
 
-    <!-- client side router script -->
-    <script src="{{url_for('static',filename='js/router.js')}}"></script>
-    <script>
-        const initialPage = "{{ page }}";
-        let displayName = "{{ display_name }}";
-        var currentPage = initialPage;
-        document.getElementById('content')
-            .dispatchEvent(new CustomEvent('fragmentloaded', {
-                bubbles: true,
-                detail: { page: initialPage }
-            }));
-        document.getElementById('display-name-wrapper').innerHTML = displayName;
-    </script>
-</body>
-
+        <!-- client side router script -->
+        <script src="{{url_for('static',filename='js/router.js')}}"></script>
+        <script>
+            const initialPage = "{{ page }}";
+            let displayName = "{{ display_name }}";
+            var currentPage = initialPage;
+            document.getElementById("content").dispatchEvent(
+                new CustomEvent("fragmentloaded", {
+                    bubbles: true,
+                    detail: { page: initialPage },
+                }),
+            );
+            document.getElementById("display-name-wrapper").innerHTML =
+                displayName;
+        </script>
+    </body>
 </html>

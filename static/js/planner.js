@@ -4,13 +4,11 @@ if (displayDateElement) {
     displayDate = new Date(displayDateElement.dataset.date);
 }
 
-dayMapping = {}
+dayMapping = {};
 
-dragging = false
-dragOffsetX = 0
-dragOffsetY = 0
-
-
+dragging = false;
+dragOffsetX = 0;
+dragOffsetY = 0;
 
 /**
  *  Fetches all timetable items (unfiltered)
@@ -21,7 +19,7 @@ async function fetchPayload() {
     const dpv = window.settings["days_per_view"];
     const response = await fetch(
         // `/api/timetable/range/?start=${dates[0].dataset.isoDate}&end=${dates[dpv - 1].dataset.isoDate}`,
-        `/api/timetable/range/?start=${dayMapping['0']}&end=${dayMapping[`${dpv-1}`]}`,
+        `/api/timetable/range/?start=${dayMapping["0"]}&end=${dayMapping[`${dpv - 1}`]}`,
         {
             method: "GET",
         },
@@ -74,8 +72,8 @@ function generateDays() {
         dayDate.className = "day-date";
         newDay.append(dayName, document.createElement("br"), dayDate);
 
-        dayMapping[`${nextDay.toDateString().slice(4)}`] = inc
-        dayMapping[inc] = `${nextDay.toISOString().slice(0,10)}`
+        dayMapping[`${nextDay.toDateString().slice(4)}`] = inc;
+        dayMapping[inc] = `${nextDay.toISOString().slice(0, 10)}`;
 
         // const newDayCont = document.createElement("div");
         // newDayCont.id = `day-container-${day}`;
@@ -192,7 +190,6 @@ function alignTimetimetableView() {
     }
 }
 
-
 /**
  * Update the clock on the top left corner of the timetable
  */
@@ -247,8 +244,6 @@ function showPopupMenu(target, e) {
         popupMenu.style.right = "unset";
         popupMenu.style.left = `${e.pageX}px`;
     }
-
-
 
     popupBlockTitle.textContent = target.dataset.blockTitle;
     popupBlockTime.textContent = target.dataset.blockTime;
@@ -311,10 +306,10 @@ function markRescheduleBlock() {
 }
 
 function spawnShadowBlock() {
-    const shadow = document.createElement('div');
-    shadow.id = 'shadow-block'
-    shadow.style.visibility = 'hidden';
-    document.getElementById('tt-schedule').append(shadow)
+    const shadow = document.createElement("div");
+    shadow.id = "shadow-block";
+    shadow.style.visibility = "hidden";
+    document.getElementById("tt-schedule").append(shadow);
 }
 
 /**
@@ -329,9 +324,9 @@ function splitBlock(block) {
     const pieces = [];
     const minsInDay = 24 * 60;
     const dpv = window.settings["days_per_view"];
-    const shadow = document.getElementById('shadow-block')
-    const timelineHeight = document.getElementById('tt-timeline').scrollHeight
-    const timelineWidth = document.getElementById('tt-timeline').scrollWidth
+    const shadow = document.getElementById("shadow-block");
+    const timelineHeight = document.getElementById("tt-timeline").scrollHeight;
+    const timelineWidth = document.getElementById("tt-timeline").scrollWidth;
 
     function splitBlockRecursive(currentBlock, wasSplit = false) {
         const start = new Date(currentBlock.start_datetime);
@@ -358,49 +353,50 @@ function splitBlock(block) {
         var displayTime = `${sTime}-${eTime}`;
 
         const el = document.createElement("div");
-        el.classList.add("timetable-block")
+        el.classList.add("timetable-block");
         el.dataset.blockTitle = block.title;
         el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
         el.dataset.blockColour = block.colour;
         el.id = `timetable-block-${block.id}`;
 
-        
         if (window.settings.timetable_view == "horizontal") {
             const leftPx =
-            ((startMins - scheduleStartMins) / minsInDay) *
+                ((startMins - scheduleStartMins) / minsInDay) *
                 schedule.scrollWidth;
-                const widthPx = (lengthMins / minsInDay) * schedule.scrollWidth;
+            const widthPx = (lengthMins / minsInDay) * schedule.scrollWidth;
             el.style.setProperty("--left", `${leftPx}px`);
             el.style.setProperty("--width", `${widthPx}px`);
 
-            const topPx = dayMapping[`${start.toDateString().slice(4)}`] * (schedule.scrollHeight / dpv);
-            const heightPx = (schedule.scrollHeight / dpv);
+            const topPx =
+                dayMapping[`${start.toDateString().slice(4)}`] *
+                (schedule.scrollHeight / dpv);
+            const heightPx = schedule.scrollHeight / dpv;
             el.style.setProperty("--top", `${topPx}px`);
             el.style.setProperty("--height", `${heightPx}px`);
-
         } else {
             const topPx =
-            ((startMins - scheduleStartMins) / minsInDay) *
-            schedule.scrollHeight;
+                ((startMins - scheduleStartMins) / minsInDay) *
+                schedule.scrollHeight;
             const heightPx = (lengthMins / minsInDay) * schedule.scrollHeight;
             el.style.setProperty("--top", `${topPx}px`);
             el.style.setProperty("--height", `${heightPx}px`);
 
-            const leftPx = dayMapping[`${start.toDateString().slice(4)}`] * (schedule.scrollWidth / dpv);
-            const widthPx = (schedule.scrollWidth / dpv);
+            const leftPx =
+                dayMapping[`${start.toDateString().slice(4)}`] *
+                (schedule.scrollWidth / dpv);
+            const widthPx = schedule.scrollWidth / dpv;
             el.style.setProperty("--left", `${leftPx}px`);
             el.style.setProperty("--width", `${widthPx}px`);
-
         }
         el.style.setProperty(
             "--bg-colour",
             block.colour ?? window.settings?.default_block_colour ?? "#3b3d68",
         );
-        
+
         const infoDiv = document.createElement("div");
         infoDiv.classList.add("block-info", "sticky");
-        
+
         const titleSpan = document.createElement("span");
         titleSpan.className = "block-title";
         titleSpan.textContent = block.title;
@@ -410,9 +406,10 @@ function splitBlock(block) {
         infoDiv.append(titleSpan, document.createElement("br"), timeSpan);
         el.appendChild(infoDiv);
         el.dataset.date = start.toDateString().slice(3);
-        
 
-        const scheduleContainer = document.getElementById('tt-schedule-container')
+        const scheduleContainer = document.getElementById(
+            "tt-schedule-container",
+        );
 
         el.ondblclick = (e) => {
             e.preventDefault();
@@ -421,79 +418,99 @@ function splitBlock(block) {
             dragOffsetX = e.clientX - elRect.left;
             dragOffsetY = e.clientY - elRect.top;
 
-            shadow.style.visibility = 'visible';
+            shadow.style.visibility = "visible";
 
-            shadow.style.setProperty('--width', el.style.getPropertyValue('--width'))
-            shadow.style.setProperty('--height', el.style.getPropertyValue('--height'))
-            shadow.style.setProperty('--bg-colour', el.style.getPropertyValue('--bg-colour'))
+            shadow.style.setProperty(
+                "--width",
+                el.style.getPropertyValue("--width"),
+            );
+            shadow.style.setProperty(
+                "--height",
+                el.style.getPropertyValue("--height"),
+            );
+            shadow.style.setProperty(
+                "--bg-colour",
+                el.style.getPropertyValue("--bg-colour"),
+            );
 
             dragging = true;
         };
 
         const stopDrag = (e) => {
             if (dragging) {
+                var x =
+                    e.clientX +
+                    scheduleContainer.scrollLeft -
+                    scheduleContainer.offsetLeft -
+                    dragOffsetX;
+                var y =
+                    e.clientY +
+                    scheduleContainer.scrollTop -
+                    scheduleContainer.offsetTop -
+                    dragOffsetY;
 
-                var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
-                var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
-    
-                var snapXpx = (1/snapX) * schedule.scrollWidth
-                var snapYpx = (1/snapY) * schedule.scrollHeight
-    
-                var snappedX = x - (x % snapXpx)
-                var snappedY = y - (y % snapYpx)
-    
-    
-                el.style.setProperty('--left',`${snappedX}px`);
-                el.style.setProperty('--top',`${snappedY}px`);
+                var snapXpx = (1 / snapX) * schedule.scrollWidth;
+                var snapYpx = (1 / snapY) * schedule.scrollHeight;
 
-                el.dataset.blockTime = timeSpan.textContent
+                var snappedX = x - (x % snapXpx);
+                var snappedY = y - (y % snapYpx);
+
+                el.style.setProperty("--left", `${snappedX}px`);
+                el.style.setProperty("--top", `${snappedY}px`);
+
+                el.dataset.blockTime = timeSpan.textContent;
             }
-            dragging = false
-            shadow.style.visibility = 'hidden'
+            dragging = false;
+            shadow.style.visibility = "hidden";
             el.style.zIndex = 1;
-        }
+        };
 
-        el.onclick = stopDrag
-        el.onmouseleave = stopDrag
-
+        el.onclick = stopDrag;
+        el.onmouseleave = stopDrag;
 
         el.onmousemove = (e) => {
             if (dragging) {
-                var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft -dragOffsetX;
-                var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
+                var x =
+                    e.clientX +
+                    scheduleContainer.scrollLeft -
+                    scheduleContainer.offsetLeft -
+                    dragOffsetX;
+                var y =
+                    e.clientY +
+                    scheduleContainer.scrollTop -
+                    scheduleContainer.offsetTop -
+                    dragOffsetY;
 
                 if (window.settings.timetable_view == "horizontal") {
-                    el.style.setProperty('--left',`${x}px`);
-                    el.style.setProperty('--top',`${y - timelineHeight}px`);
+                    el.style.setProperty("--left", `${x}px`);
+                    el.style.setProperty("--top", `${y - timelineHeight}px`);
                 } else {
-                    el.style.setProperty('--left',`${x - timelineWidth}px`);
-                    el.style.setProperty('--top',`${y}px`);
+                    el.style.setProperty("--left", `${x - timelineWidth}px`);
+                    el.style.setProperty("--top", `${y}px`);
                 }
 
                 el.style.zIndex = 5;
 
-                var snapXpx = (1/snapX) * schedule.scrollWidth
-                var snapYpx = (1/snapY) * schedule.scrollHeight
+                var snapXpx = (1 / snapX) * schedule.scrollWidth;
+                var snapYpx = (1 / snapY) * schedule.scrollHeight;
 
-                var snappedX = x - (x % snapXpx)
-                var snappedY = y - (y % snapYpx)
+                var snappedX = x - (x % snapXpx);
+                var snappedY = y - (y % snapYpx);
 
-                shadow.style.setProperty('--left',`${snappedX}px`);
-                shadow.style.setProperty('--top',`${snappedY}px`);
+                shadow.style.setProperty("--left", `${snappedX}px`);
+                shadow.style.setProperty("--top", `${snappedY}px`);
 
-                let startFullMins = 0
+                let startFullMins = 0;
                 if (window.settings.timetable_view == "horizontal") {
-                    startFullMins = Math.round(snappedX/snapXpx)*10 // slot size
+                    startFullMins = Math.round(snappedX / snapXpx) * 10; // slot size
                 } else {
-                    startFullMins = Math.round(snappedY/snapYpx)*10 // slot size
+                    startFullMins = Math.round(snappedY / snapYpx) * 10; // slot size
                 }
 
-
-
-                const startHour = Math.round(startFullMins/60)
-                const startMin = startFullMins%60
-                const endHour = Math.round((startFullMins+lengthMins)/60)
-                const endMin = (startFullMins+lengthMins)%60
+                const startHour = Math.round(startFullMins / 60);
+                const startMin = startFullMins % 60;
+                const endHour = Math.round((startFullMins + lengthMins) / 60);
+                const endMin = (startFullMins + lengthMins) % 60;
 
                 var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
                 var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
@@ -508,7 +525,7 @@ function splitBlock(block) {
 
                 timeSpan.textContent = displayTime;
             }
-        }
+        };
 
         pieces.push(el);
 
@@ -530,7 +547,7 @@ async function renderTimetable() {
     const blocks = payload.blocks;
     // const getDayContainer = (date) =>
     //     document.querySelector(`[data-date="${date}"]`);
-    const schedule = document.getElementById('tt-schedule')
+    const schedule = document.getElementById("tt-schedule");
     // const fragmentMap = new Map();
 
     spawnShadowBlock();
@@ -543,7 +560,7 @@ async function renderTimetable() {
             //     fragmentMap.set(date, document.createDocumentFragment());
             // }
             // fragmentMap.get(date).appendChild(el);
-            schedule.append(el)
+            schedule.append(el);
         }
     }
 
@@ -628,11 +645,11 @@ async function initTimetable() {
     displayDate = displayDate || null;
 
     if (window.settings.timetable_view == "horizontal") {
-        snapY = window.settings["days_per_view"]
-        snapX = 144
+        snapY = window.settings["days_per_view"];
+        snapX = 144;
     } else {
-        snapY = 144
-        snapX = window.settings["days_per_view"]
+        snapY = 144;
+        snapX = window.settings["days_per_view"];
     }
 
     buildTimetable();
@@ -652,12 +669,12 @@ async function initTimetable() {
 
     const scheduleContainer = document.getElementById("tt-schedule-container");
     scheduleContainer.addEventListener("contextmenu", (e) => {
-        e.preventDefault()
+        e.preventDefault();
         const block = e.target.closest(".timetable-block");
         if (!block) return;
         e.stopPropagation();
         showPopupMenu(block, e);
-        return false
+        return false;
     });
 
     document
