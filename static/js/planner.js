@@ -480,8 +480,16 @@ function splitBlock(block) {
 
                 shadow.style.setProperty('--left',`${snappedX}px`);
                 shadow.style.setProperty('--top',`${snappedY}px`);
-                
-                const startFullMins = Math.round(snappedX/snapXpx)*10 // slot size
+
+                let startFullMins = 0
+                if (window.settings.timetable_view == "horizontal") {
+                    startFullMins = Math.round(snappedX/snapXpx)*10 // slot size
+                } else {
+                    startFullMins = Math.round(snappedY/snapYpx)*10 // slot size
+                }
+
+
+
                 const startHour = Math.round(startFullMins/60)
                 const startMin = startFullMins%60
                 const endHour = Math.round((startFullMins+lengthMins)/60)
