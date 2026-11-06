@@ -10,8 +10,7 @@ dragging = false
 dragOffsetX = 0
 dragOffsetY = 0
 
-snapY = 7
-snapX = 144
+
 
 /**
  *  Fetches all timetable items (unfiltered)
@@ -463,8 +462,14 @@ function splitBlock(block) {
                 var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft -dragOffsetX;
                 var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
 
-                el.style.setProperty('--left',`${x}px`);
-                el.style.setProperty('--top',`${y - timelineHeight}px`);
+                if (window.settings.timetable_view == "horizontal") {
+                    el.style.setProperty('--left',`${x}px`);
+                    el.style.setProperty('--top',`${y - timelineHeight}px`);
+                } else {
+                    el.style.setProperty('--left',`${x - timelineWidth}px`);
+                    el.style.setProperty('--top',`${y}px`);
+                }
+
                 el.style.zIndex = 5;
 
                 var snapXpx = (1/snapX) * schedule.scrollWidth
@@ -613,6 +618,15 @@ async function initTimetable() {
     // Build timetable (actual html and timetable divs)
     window.settings = await fetchSettings();
     displayDate = displayDate || null;
+
+    if (window.settings.timetable_view == "horizontal") {
+        snapY = window.settings["days_per_view"]
+        snapX = 144
+    } else {
+        snapY = 144
+        snapX = window.settings["days_per_view"]
+    }
+
     buildTimetable();
 
     window.pageIntervals.temporary.push(

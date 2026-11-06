@@ -124,20 +124,6 @@
     border-right: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.timetable-block {
-    display: block;
-    position: absolute;
-    margin-top: var(--top, 0%);
-    height: var(--height, 0%);
-    max-height: var(--height, 0%);
-    background: var(--bg-colour, #3b3d68);
-    width: 100%;
-    word-wrap: normal;
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-}
-
 .timetable-block:hover {
     filter: brightness(1.1);
 }
