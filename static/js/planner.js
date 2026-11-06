@@ -467,7 +467,25 @@ function splitBlock(block) {
 
                 shadow.style.setProperty('--left',`${snappedX}px`);
                 shadow.style.setProperty('--top',`${snappedY}px`);
+                
+                const startFullMins = Math.round(snappedX/snapXpx)*10 // slot size
+                const startHour = Math.round(startFullMins/60)
+                const startMin = startFullMins%60
+                const endHour = Math.round((startFullMins+lengthMins)/60)
+                const endMin = (startFullMins+lengthMins)%60
 
+                var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
+                var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
+                if (wasSplit) {
+                    sTime = `<`;
+                }
+                if (end > endOfDay) {
+                    lengthMins = (endOfDay - start) / (60 * 1000);
+                    eTime = `>`;
+                }
+                var displayTime = `${sTime}-${eTime}`;
+
+                timeSpan.textContent = displayTime;
             }
         }
 
