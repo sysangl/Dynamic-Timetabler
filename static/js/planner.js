@@ -4,6 +4,13 @@ if (displayDateElement) {
     displayDate = new Date(displayDateElement.dataset.date);
 }
 
+dragging = false
+dragOffsetX = 0
+dragOffsetY = 0
+
+const snapY = 7
+const snapX = 144
+
 /**
  *  Fetches all timetable items (unfiltered)
  *  @returns {JSON}
@@ -342,19 +349,18 @@ function splitBlock(block) {
         el.dataset.blockColour = block.colour;
         el.id = `timetable-block-${block.id}`;
 
-        $(`#${el.id}`).draggable({grid:[5,24]})
-
+        
         if (window.settings.timetable_view == "horizontal") {
             const leftPx =
-                ((startMins - scheduleStartMins) / minsInDay) *
+            ((startMins - scheduleStartMins) / minsInDay) *
                 schedule.scrollWidth;
-            const widthPx = (lengthMins / minsInDay) * schedule.scrollWidth;
+                const widthPx = (lengthMins / minsInDay) * schedule.scrollWidth;
             el.style.setProperty("--left", `${leftPx}px`);
             el.style.setProperty("--width", `${widthPx}px`);
         } else {
             const topPx =
-                ((startMins - scheduleStartMins) / minsInDay) *
-                schedule.scrollHeight;
+            ((startMins - scheduleStartMins) / minsInDay) *
+            schedule.scrollHeight;
             const heightPx = (lengthMins / minsInDay) * schedule.scrollHeight;
             el.style.setProperty("--top", `${topPx}px`);
             el.style.setProperty("--height", `${heightPx}px`);
@@ -363,10 +369,10 @@ function splitBlock(block) {
             "--bg-colour",
             block.colour ?? window.settings?.default_block_colour ?? "#3b3d68",
         );
-
+        
         const infoDiv = document.createElement("div");
         infoDiv.classList.add("block-info", "sticky");
-
+        
         const titleSpan = document.createElement("span");
         titleSpan.className = "block-title";
         titleSpan.textContent = block.title;
@@ -376,6 +382,57 @@ function splitBlock(block) {
         infoDiv.append(titleSpan, document.createElement("br"), timeSpan);
         el.appendChild(infoDiv);
         el.dataset.date = start.toDateString().slice(3);
+        
+
+        const scheduleContainer = document.getElementById('tt-schedule-container')
+        el.onmousedown = (e) => {
+            e.preventDefault();
+
+            const elRect = el.getBoundingClientRect();
+            dragOffsetX = e.clientX - elRect.left;
+            dragOffsetY = e.clientY - elRect.top;
+
+            dragging = true;
+            console.log('start dragging')
+        };
+
+        el.onmouseup = (e) => {
+            if (dragging) {
+                var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft - dragOffsetX;
+                var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
+
+                var snapXpx = (1/snapX) * schedule.scrollWidth
+                var snapYpx = (1/snapY) * schedule.scrollHeight
+
+                var snappedX = x - (x % snapXpx)
+                var snappedY = y - (y % snapYpx)
+
+
+                el.style.setProperty('--left',`${snappedX}px`);
+                el.style.setProperty('--top',`${snappedY}px`);
+            }
+            dragging = false
+            el.style.zIndex = 1;
+            console.log('not dragging')
+        };
+
+        el.onmouseleave = (e) => {
+            dragging = false
+        }
+
+        el.onmousemove = (e) => {
+            if (dragging) {
+                var x = e.clientX + scheduleContainer.scrollLeft - scheduleContainer.offsetLeft -dragOffsetX;
+                var y = e.clientY + scheduleContainer.scrollTop - scheduleContainer.offsetTop - dragOffsetY;
+
+                el.style.setProperty('--left',`${x}px`);
+                el.style.setProperty('--top',`${y}px`);
+                el.style.zIndex = 5;
+
+                console.log('dragging')
+            }
+        }
+
         pieces.push(el);
 
         if (end > endOfDay) {
@@ -505,11 +562,13 @@ async function initTimetable() {
     window.addEventListener("scroll", closePopupMenu);
 
     const scheduleContainer = document.getElementById("tt-schedule-container");
-    scheduleContainer.addEventListener("click", (e) => {
+    scheduleContainer.addEventListener("contextmenu", (e) => {
+        e.preventDefault()
         const block = e.target.closest(".timetable-block");
         if (!block) return;
         e.stopPropagation();
         showPopupMenu(block, e);
+        return false
     });
 
     document
