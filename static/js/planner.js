@@ -321,10 +321,14 @@ function spawnBlockHandles() {
     const endHandle = document.createElement("div");
     startHandle.id = 'start-handle';
     endHandle.id = 'end-handle';
+    startHandle.dataset.resize = 'start';
+    endHandle.dataset.resize = 'end';
     startHandle.classList.add('block-handle');
     endHandle.classList.add('block-handle');
     startHandle.style.visibility = 'hidden';
     endHandle.style.visibility = 'hidden';
+    startHandle.draggable = true;
+    endHandle.draggable = true;
     document.getElementById('tt-schedule').append(startHandle, endHandle)
 
     const handleWidthPx = 15
@@ -332,91 +336,212 @@ function spawnBlockHandles() {
     const scheduleContainer = document.getElementById('tt-schedule-container')
     const schedule = document.getElementById('tt-schedule')
 
-    const startDrag = (e) => {
-        const elRect = startHandle.getBoundingClientRect();
-        dragOffsetX = e.clientX - elRect.left;
-        dragOffsetY = e.clientY - elRect.top;
+    let currentHandle = '';
+    let startDims = {};
+    let startX = 0
+    let startY = 0
+    let startW = 0
+    let startH = 0
+    let startL = 0
+    let startT = 0
 
-        startHandleDragging = true;
+
+    const onPointerDown = (e) => {
+        if (e.button !== undefined && e.button !== 0 ) return;
+
+        const handle = e.target.closest('.block-handle');
+        if (!handle) return;
+
+        currentHandle = handle.dataset.resize;
+
+        const blockRect = selectedBlock.getBoundingClientRect();
+        startX = e.clientX
+        startY = e.clientY
+        startW = parseFloat(selectedBlock.style.getPropertyValue('--width'))
+        startH = parseFloat(selectedBlock.style.getPropertyValue('--height'))
+        startL = parseFloat(selectedBlock.style.getPropertyValue('--left'))
+        startT = parseFloat(selectedBlock.style.getPropertyValue('--top'))
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        e.preventDefault()
     }
 
-    const stopDrag = (e) => {
-        if (startHandleDragging) {
-            var x =
-                e.clientX +
-                scheduleContainer.scrollLeft -
-                scheduleContainer.offsetLeft -
-                dragOffsetX;
+    const onPointerMove = (e) => {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        let newW = startW;
+        let newH = startH;
+        let newL = startL;
+        let newT = startT;
 
-            var snapXpx = (1 / snapX) * schedule.scrollWidth;
+        if (window.settings.timetable_view == "horizontal") {
 
-            var snappedX = x - (x % snapXpx);
+            if (currentHandle == 'start') {
+                newW = startW - dx
+                newL = startL + dx
+                startHandle.style.setProperty('--left',`${newL - handleWidthPx}px`)
+                // let snapL = newL
+                // let snapLpx = (1 / snapX) * schedule.scrollWidth;
+                // let snappedL = snapL - (snapL % snapLpx);
+                // startHandle.style.setProperty('--left',`${snappedL-handleWidthPx}px`)
+            }
+            if (currentHandle == 'end') {
+                newW = startW + dx
+                endHandle.style.setProperty('--left',`${newW + startL}px`)
+                // let snapL = newW+startL
+                // let snapLpx = (1 / snapX) * schedule.scrollWidth;
+                // let snappedL = snapL - (snapL % snapLpx);
+                // endHandle.style.setProperty('--left',`${snappedL}px`)
+            }
 
-            startHandle.style.setProperty("--left", `${snappedX}px`);
-            const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
-            timeSpan.textContent = selectedBlock.dataset.blockTime
-            // selectedBlock.dataset.blockTime = selectedBlocktimeSpan.textContent;
+            // let snapWpx = (1 / snapX) * schedule.scrollWidth;
+            // let snappedW = newW - (newW % snapWpx);
+
+            // let snapLpx = (1 / snapX) * schedule.scrollWidth;
+            // let snappedL = newL - (newL % snapLpx);
+
+            // selectedBlock.style.setProperty('--width',`${snappedW}px`)
+            // selectedBlock.style.setProperty('--left',`${snappedL}px`)
+
+            selectedBlock.style.setProperty('--width',`${newW}px`)
+            selectedBlock.style.setProperty('--left',`${newL}px`)
+
+
+        } else {
+            // vert view
         }
-        startHandleDragging = false;
-    };
 
 
-    startHandle.onmousedown = (e) => {
-        e.preventDefault();
-        startDrag(e)
-    };
 
-    startHandle.onmouseup = (e) => {
-        stopDrag(e)
+
     }
 
+    const onPointerUp = (e) => {
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp)
 
-    startHandle.onmousemove = (e) => {
-        if (startHandleDragging) {
-            const el = selectedBlock
-            var x =
-                e.clientX +
-                scheduleContainer.scrollLeft -
-                scheduleContainer.offsetLeft -
-                dragOffsetX;
+        if (window.settings.timetable_view == "horizontal") {
 
-            var snapXpx = (1 / snapX) * schedule.scrollWidth;
+            if (currentHandle == 'start') {
+                let snapL = parseFloat(startHandle.style.getPropertyValue('--left'))+handleWidthPx
+                let snapLpx = (1 / snapX) * schedule.scrollWidth;
+                let snappedL = snapL - (snapL % snapLpx);
+                startHandle.style.setProperty('--left',`${snappedL-handleWidthPx}px`)
+            }
+            if (currentHandle == 'end') {
+                let snapL = parseFloat(endHandle.style.getPropertyValue('--left'))
+                let snapLpx = (1 / snapX) * schedule.scrollWidth;
+                let snappedL = snapL - (snapL % snapLpx);
+                endHandle.style.setProperty('--left',`${snappedL}px`)
+            }
 
-            var snappedX = x - (x % snapXpx);
 
-            startHandle.style.setProperty("--left", `${x}px`);
-            el.style.setProperty("--left",`${x+handleWidthPx}px`)
-
-            el.style.setProperty('--width', `${parseFloat(endHandle.style.getPropertyValue('--left'))-x}px`)
-
-            const elBound = el.getBoundingClientRect()
-
-            const startFullMins = Math.round(snappedX / snapXpx) * 10
-            const endFullMins = Math.round((snappedX / snapXpx) + elBound.width) * 10; // slot size
-
+            let snapW = parseFloat(selectedBlock.style.getPropertyValue('--width'))
+            let snapWpx = (1 / snapX) * schedule.scrollWidth;
+            let snappedW = snapW - (snapW % snapWpx);
             
-            const startHour = Math.floor(startFullMins / 60);
-            const startMin = startFullMins % 60;
-            const endHour = Math.floor(endFullMins / 60);
-            const endMin = endFullMins % 60;
+            let snapL = parseFloat(selectedBlock.style.getPropertyValue('--left'))
+            let snapLpx = (1 / snapX) * schedule.scrollWidth;
+            let snappedL = snapL - (snapL % snapLpx);
 
-            const lengthFullMins = endFullMins - startFullMins
-            
-            var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
-            var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
-            var displayTime = `${sTime}-${eTime}`;
-
-            const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
+            selectedBlock.style.setProperty('--width',`${snappedW}px`)
+            selectedBlock.style.setProperty('--left',`${snappedL}px`)
 
 
 
-            el.dataset.blockLength = lengthFullMins;
-            timeSpan.textContent = displayTime
-
-
-
+        } else {
+            // vert view
         }
+
+        currentHandle = '';
     };
+
+
+
+    startHandle.addEventListener('pointerdown', onPointerDown)
+    endHandle.addEventListener('pointerdown', onPointerDown)
+
+
+
+    // const startDrag = (e) => {
+    //     const elRect = startHandle.getBoundingClientRect();
+    //     dragOffsetX = e.clientX - elRect.left;
+    //     dragOffsetY = e.clientY - elRect.top;
+
+    //     startHandleDragging = true;
+    // }
+
+    // const stopDrag = (e) => {
+    //         var x =
+    //             e.clientX +
+    //             scheduleContainer.scrollLeft -
+    //             scheduleContainer.offsetLeft -
+    //             dragOffsetX;
+
+    //         var snapXpx = (1 / snapX) * schedule.scrollWidth;
+
+    //         var snappedX = x - (x % snapXpx);
+
+    //         startHandle.style.setProperty("--left", `${snappedX-handleWidthPx}px`);
+    //         const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
+    //         timeSpan.textContent = selectedBlock.dataset.blockTime
+    //         // selectedBlock.dataset.blockTime = selectedBlocktimeSpan.textContent;
+    // };
+
+
+    // startHandle.ondragstart = (e) => {
+    //     e.preventDefault();
+    //     startDrag(e)
+    // };
+
+    // startHandle.onmouseup = (e) => {
+    //     stopDrag(e)
+    // }
+
+
+    // startHandle.ondrag = (e) => {
+    //         const el = selectedBlock
+    //         var x =
+    //             e.clientX +
+    //             scheduleContainer.scrollLeft -
+    //             scheduleContainer.offsetLeft -
+    //             dragOffsetX;
+
+    //         var snapXpx = (1 / snapX) * schedule.scrollWidth;
+
+    //         var snappedX = x - (x % snapXpx);
+
+    //         startHandle.style.setProperty("--left", `${x}px`);
+    //         el.style.setProperty("--left",`${x+handleWidthPx}px`)
+
+    //         el.style.setProperty('--width', `${parseFloat(endHandle.style.getPropertyValue('--left'))-x}px`)
+
+    //         const elBound = el.getBoundingClientRect()
+
+    //         const startFullMins = Math.round(snappedX / snapXpx) * 10
+    //         const endFullMins = Math.round((snappedX+ elBound.width / snapXpx) ) * 10; // slot size
+
+            
+    //         const startHour = Math.floor(startFullMins / 60);
+    //         const startMin = startFullMins % 60;
+    //         const endHour = Math.floor(endFullMins / 60);
+    //         const endMin = endFullMins % 60;
+
+    //         const lengthFullMins = endFullMins - startFullMins
+            
+    //         var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
+    //         var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
+    //         var displayTime = `${sTime}-${eTime}`;
+
+    //         const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
+
+
+
+    //         el.dataset.blockLength = lengthFullMins;
+    //         timeSpan.textContent = displayTime
+
+    // };
 
 
 
