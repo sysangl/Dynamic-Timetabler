@@ -6,6 +6,8 @@ if (displayDateElement) {
 
 dayMapping = {};
 
+selectedBlock = null;
+
 dragging = false;
 dragOffsetX = 0;
 dragOffsetY = 0;
@@ -312,6 +314,18 @@ function spawnShadowBlock() {
     document.getElementById("tt-schedule").append(shadow);
 }
 
+function spawnBlockHandles() {
+    const startHandle = document.createElement("div");
+    const endHandle = document.createElement("div");
+    startHandle.id = 'start-handle';
+    endHandle.id = 'end-handle';
+    startHandle.classList.add('block-handle');
+    endHandle.classList.add('block-handle');
+    startHandle.style.visibility = 'hidden';
+    endHandle.style.visibility = 'hidden';
+    document.getElementById('tt-schedule').append(startHandle, endHandle)
+}
+
 /**
  * Creates a block and splits it if it goes over visible time.
  * Returns an array of HTMLDivElements
@@ -320,6 +334,8 @@ function spawnShadowBlock() {
  * @returns {Array[HTMLDivElement]}
  */
 function splitBlock(block) {
+    const startHandle = document.getElementById('start-handle');
+    const endHandle = document.getElementById('end-handle');
     const schedule = document.getElementById("tt-schedule");
     const pieces = [];
     const minsInDay = 24 * 60;
@@ -411,9 +427,9 @@ function splitBlock(block) {
             "tt-schedule-container",
         );
 
-        el.ondblclick = (e) => {
-            e.preventDefault();
 
+
+        const startDrag = (e) => {
             const elRect = el.getBoundingClientRect();
             dragOffsetX = e.clientX - elRect.left;
             dragOffsetY = e.clientY - elRect.top;
@@ -433,8 +449,14 @@ function splitBlock(block) {
                 el.style.getPropertyValue("--bg-colour"),
             );
 
+            startHandle.style.visibility = 'visible';
+            endHandle.style.visibility = 'visible';
+
+
+
             dragging = true;
-        };
+        }
+        
 
         const stopDrag = (e) => {
             if (dragging) {
@@ -462,10 +484,82 @@ function splitBlock(block) {
             }
             dragging = false;
             shadow.style.visibility = "hidden";
+
             el.style.zIndex = 1;
         };
 
-        el.onclick = stopDrag;
+        function showHandles() {
+                const leftPx = parseFloat(el.style.getPropertyValue("--left"))
+                const topPx = parseFloat(el.style.getPropertyValue("--top"))
+                if (window.settings.timetable_view == "horizontal") {
+                    const heightPx = el.style.getPropertyValue("--height")
+                    const widthPx = parseFloat(el.style.getPropertyValue("--width"))
+                    const handleWidthPx = 15
+                    startHandle.style.setProperty("--left", `${leftPx - handleWidthPx}px`);
+                    startHandle.style.setProperty("--top", `${topPx}px`);
+                    
+                    endHandle.style.setProperty("--left", `${leftPx + widthPx}px`);
+                    endHandle.style.setProperty("--top", `${topPx}px`);
+    
+                    startHandle.style.setProperty("--height", heightPx)
+                    startHandle.style.setProperty("--width", `${handleWidthPx}px`)
+    
+                    endHandle.style.setProperty("--height", heightPx)
+                    endHandle.style.setProperty("--width", `${handleWidthPx}px`)
+    
+                } else {
+                    const heightPx = el.style.getPropertyValue("--height")
+                    const widthPx = parseFloat(el.style.getPropertyValue("--width"))
+                    const handleHeightPx = 15
+                    startHandle.style.setProperty("--left", `${leftPx}px`);
+                    startHandle.style.setProperty("--top", `${topPx - handleHeightPx}px`);
+                    
+                    endHandle.style.setProperty("--left", `${leftPx}px`);
+                    endHandle.style.setProperty("--top", `${topPx + heightPx}px`);
+                
+                    startHandle.style.setProperty("--height", `${handleHeightPx}px`)
+                    startHandle.style.setProperty("--width", widthPx)
+    
+                    endHandle.style.setProperty("--height", `${handleHeightPx}px`)
+                    endHandle.style.setProperty("--width", widthPx)
+                }
+    
+                startHandle.style.visibility = 'visible';
+                endHandle.style.visibility = 'visible';
+        }
+
+        el.onmousedown = (e) => {
+            if (!el.classList.contains('selected')) {return}
+            e.preventDefault();
+            startDrag(e)
+        };
+
+        el.ondblclick = (e) => {
+            el.classList.add('selected')
+            startDrag(e)
+        }
+
+
+        el.onclick = (e) => {
+            if (dragging) {
+                stopDrag(e)
+                // el.classList.remove('selected')
+
+                showHandles();
+            } else {
+                if (selectedBlock) {
+                    selectedBlock.classList.remove('selected')
+                    selectedBlock = null
+                }
+                el.classList.add('selected')
+                selectedBlock = el
+
+                showHandles();
+
+            }
+
+
+        };
         el.onmouseleave = stopDrag;
 
         el.onmousemove = (e) => {
@@ -500,6 +594,26 @@ function splitBlock(block) {
                 shadow.style.setProperty("--left", `${snappedX}px`);
                 shadow.style.setProperty("--top", `${snappedY}px`);
 
+
+                if (window.settings.timetable_view == "horizontal") {
+                    const heightPx = el.style.getPropertyValue("--height")
+
+                    shadow.style.setProperty(
+                        "--height",
+                        heightPx
+                    );
+
+
+                } else {
+                    const widthPx = parseFloat(el.style.getPropertyValue("--width"))
+
+                    shadow.style.setProperty(
+                        "--width",
+                        widthPx
+                    );
+                }
+
+
                 let startFullMins = 0;
                 if (window.settings.timetable_view == "horizontal") {
                     startFullMins = Math.round(snappedX / snapXpx) * 10; // slot size
@@ -524,8 +638,13 @@ function splitBlock(block) {
                 var displayTime = `${sTime}-${eTime}`;
 
                 timeSpan.textContent = displayTime;
+
+                startHandle.style.visibility = 'hidden';
+                endHandle.style.visibility = 'hidden';
+
             }
         };
+
 
         pieces.push(el);
 
@@ -551,6 +670,7 @@ async function renderTimetable() {
     // const fragmentMap = new Map();
 
     spawnShadowBlock();
+    spawnBlockHandles();
 
     for (const block of blocks) {
         const pieces = splitBlock(block);
