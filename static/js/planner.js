@@ -8,7 +8,8 @@ dayMapping = {};
 
 selectedBlock = null;
 
-dragging = false;
+blockDragging = false;
+startHandleDragging = false;
 dragOffsetX = 0;
 dragOffsetY = 0;
 
@@ -324,6 +325,124 @@ function spawnBlockHandles() {
     startHandle.style.visibility = 'hidden';
     endHandle.style.visibility = 'hidden';
     document.getElementById('tt-schedule').append(startHandle, endHandle)
+
+    const handleWidthPx = 15
+
+    const scheduleContainer = document.getElementById('tt-schedule-container')
+    const schedule = document.getElementById('tt-schedule')
+
+    const startDrag = (e) => {
+        const elRect = startHandle.getBoundingClientRect();
+        dragOffsetX = e.clientX - elRect.left;
+        dragOffsetY = e.clientY - elRect.top;
+
+        startHandleDragging = true;
+    }
+
+    const stopDrag = (e) => {
+        if (startHandleDragging) {
+            var x =
+                e.clientX +
+                scheduleContainer.scrollLeft -
+                scheduleContainer.offsetLeft -
+                dragOffsetX;
+
+            var snapXpx = (1 / snapX) * schedule.scrollWidth;
+
+            var snappedX = x - (x % snapXpx);
+
+            startHandle.style.setProperty("--left", `${snappedX}px`);
+            const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
+            timeSpan.textContent = selectedBlock.dataset.blockTime
+            // selectedBlock.dataset.blockTime = selectedBlocktimeSpan.textContent;
+        }
+        startHandleDragging = false;
+    };
+
+
+    startHandle.onmousedown = (e) => {
+        e.preventDefault();
+        startDrag(e)
+    };
+
+    startHandle.onmouseup = (e) => {
+        stopDrag(e)
+    }
+
+    // startHandle.ondblclick = (e) => {
+    //     startDrag(e)
+    // }
+
+    // startHandle.onclick = (e) => {
+    //     if (startHandleDragging) {
+    //         stopDrag(e)
+    //     } else {
+
+    //     }
+
+
+    // };
+
+    // startHandle.onmouseleave = stopDrag;
+
+    startHandle.onmousemove = (e) => {
+        if (startHandleDragging) {
+            const el = selectedBlock
+            var x =
+                e.clientX +
+                scheduleContainer.scrollLeft -
+                scheduleContainer.offsetLeft -
+                dragOffsetX;
+
+            var snapXpx = (1 / snapX) * schedule.scrollWidth;
+
+            var snappedX = x - (x % snapXpx);
+
+            if (window.settings.timetable_view == "horizontal") {
+                startHandle.style.setProperty("--left", `${x}px`);
+                el.style.setProperty("--left",`${x}px`)
+            } else {
+                startHandle.style.setProperty("--left", `${y - timelineWidth}px`);
+            }
+
+            const elBound = el.getBoundingClientRect()
+
+            let startFullMins = 0;
+            if (window.settings.timetable_view == "horizontal") {
+                startFullMins = Math.round(snappedX / snapXpx) * 10; // slot size
+            } else {
+                startFullMins = Math.round(snappedY / snapYpx) * 10; // slot size
+            }
+            let endFullMins = 0;
+            if (window.settings.timetable_view == "horizontal") {
+                endFullMins = Math.round(elBound.right / snapXpx) * 10; // slot size
+            } else {
+                endFullMins = Math.round(elBound.bottom / snapYpx) * 10; // slot size
+            }
+            
+            const startHour = Math.floor(startFullMins / 60);
+            const startMin = startFullMins % 60;
+            const endHour = Math.floor((endFullMins) / 60);
+            const endMin = (endFullMins) % 60;
+
+            const lengthFullMins = endFullMins - startFullMins
+            
+            var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
+            var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
+            var displayTime = `${sTime}-${eTime}`;
+
+            const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
+
+            el.dataset.blockLength = lengthFullMins;
+            timeSpan.textContent = displayTime
+
+
+
+        }
+    };
+
+
+
 }
 
 /**
@@ -374,6 +493,7 @@ function splitBlock(block) {
         el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
         el.dataset.blockColour = block.colour;
+        el.dataset.blockLength = lengthMins
         el.id = `timetable-block-${block.id}`;
 
         if (window.settings.timetable_view == "horizontal") {
@@ -454,12 +574,12 @@ function splitBlock(block) {
 
 
 
-            dragging = true;
+            blockDragging = true;
         }
         
 
         const stopDrag = (e) => {
-            if (dragging) {
+            if (blockDragging) {
                 var x =
                     e.clientX +
                     scheduleContainer.scrollLeft -
@@ -482,7 +602,7 @@ function splitBlock(block) {
 
                 el.dataset.blockTime = timeSpan.textContent;
             }
-            dragging = false;
+            blockDragging = false;
             shadow.style.visibility = "hidden";
 
             el.style.zIndex = 1;
@@ -541,7 +661,7 @@ function splitBlock(block) {
 
 
         el.onclick = (e) => {
-            if (dragging) {
+            if (blockDragging) {
                 stopDrag(e)
                 // el.classList.remove('selected')
 
@@ -563,7 +683,7 @@ function splitBlock(block) {
         el.onmouseleave = stopDrag;
 
         el.onmousemove = (e) => {
-            if (dragging) {
+            if (blockDragging) {
                 var x =
                     e.clientX +
                     scheduleContainer.scrollLeft -
@@ -620,21 +740,15 @@ function splitBlock(block) {
                 } else {
                     startFullMins = Math.round(snappedY / snapYpx) * 10; // slot size
                 }
-
-                const startHour = Math.round(startFullMins / 60);
+                
+                const lengthMins = parseInt(el.dataset.blockLength);
+                const startHour = Math.floor(startFullMins / 60);
                 const startMin = startFullMins % 60;
-                const endHour = Math.round((startFullMins + lengthMins) / 60);
+                const endHour = Math.floor((startFullMins + lengthMins) / 60);
                 const endMin = (startFullMins + lengthMins) % 60;
-
+                
                 var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
                 var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
-                if (wasSplit) {
-                    sTime = `<`;
-                }
-                if (end > endOfDay) {
-                    lengthMins = (endOfDay - start) / (60 * 1000);
-                    eTime = `>`;
-                }
                 var displayTime = `${sTime}-${eTime}`;
 
                 timeSpan.textContent = displayTime;
