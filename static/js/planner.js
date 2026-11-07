@@ -316,6 +316,7 @@ function spawnShadowBlock() {
 }
 
 function spawnBlockHandles() {
+    const minsInDay = 24 * 60;
     const startHandle = document.createElement("div");
     const endHandle = document.createElement("div");
     startHandle.id = 'start-handle';
@@ -369,21 +370,6 @@ function spawnBlockHandles() {
         stopDrag(e)
     }
 
-    // startHandle.ondblclick = (e) => {
-    //     startDrag(e)
-    // }
-
-    // startHandle.onclick = (e) => {
-    //     if (startHandleDragging) {
-    //         stopDrag(e)
-    //     } else {
-
-    //     }
-
-
-    // };
-
-    // startHandle.onmouseleave = stopDrag;
 
     startHandle.onmousemove = (e) => {
         if (startHandleDragging) {
@@ -398,32 +384,21 @@ function spawnBlockHandles() {
 
             var snappedX = x - (x % snapXpx);
 
-            if (window.settings.timetable_view == "horizontal") {
-                startHandle.style.setProperty("--left", `${x}px`);
-                el.style.setProperty("--left",`${x}px`)
-            } else {
-                startHandle.style.setProperty("--left", `${y - timelineWidth}px`);
-            }
+            startHandle.style.setProperty("--left", `${x}px`);
+            el.style.setProperty("--left",`${x+handleWidthPx}px`)
+
+            el.style.setProperty('--width', `${parseFloat(endHandle.style.getPropertyValue('--left'))-x}px`)
 
             const elBound = el.getBoundingClientRect()
 
-            let startFullMins = 0;
-            if (window.settings.timetable_view == "horizontal") {
-                startFullMins = Math.round(snappedX / snapXpx) * 10; // slot size
-            } else {
-                startFullMins = Math.round(snappedY / snapYpx) * 10; // slot size
-            }
-            let endFullMins = 0;
-            if (window.settings.timetable_view == "horizontal") {
-                endFullMins = Math.round(elBound.right / snapXpx) * 10; // slot size
-            } else {
-                endFullMins = Math.round(elBound.bottom / snapYpx) * 10; // slot size
-            }
+            const startFullMins = Math.round(snappedX / snapXpx) * 10
+            const endFullMins = Math.round((snappedX / snapXpx) + elBound.width) * 10; // slot size
+
             
             const startHour = Math.floor(startFullMins / 60);
             const startMin = startFullMins % 60;
-            const endHour = Math.floor((endFullMins) / 60);
-            const endMin = (endFullMins) % 60;
+            const endHour = Math.floor(endFullMins / 60);
+            const endMin = endFullMins % 60;
 
             const lengthFullMins = endFullMins - startFullMins
             
@@ -432,6 +407,8 @@ function spawnBlockHandles() {
             var displayTime = `${sTime}-${eTime}`;
 
             const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
+
+
 
             el.dataset.blockLength = lengthFullMins;
             timeSpan.textContent = displayTime
