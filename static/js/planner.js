@@ -376,37 +376,27 @@ function spawnBlockHandles() {
         let newT = startT;
 
         if (window.settings.timetable_view == "horizontal") {
-
+            let snapXpx = (1 / snapX) * schedule.scrollWidth;
             if (currentHandle == 'start') {
-                newW = startW - dx
+                
+                newW = startW - dx + snapXpx
                 newL = startL + dx
-                startHandle.style.setProperty('--left',`${newL - handleWidthPx}px`)
-                // let snapL = newL
-                // let snapLpx = (1 / snapX) * schedule.scrollWidth;
-                // let snappedL = snapL - (snapL % snapLpx);
-                // startHandle.style.setProperty('--left',`${snappedL-handleWidthPx}px`)
+                let snapL = newL
+                let snappedL = snapL - (snapL % snapXpx);
+                startHandle.style.setProperty('--left',`${snappedL-handleWidthPx}px`)
             }
             if (currentHandle == 'end') {
                 newW = startW + dx
-                endHandle.style.setProperty('--left',`${newW + startL}px`)
-                // let snapL = newW+startL
-                // let snapLpx = (1 / snapX) * schedule.scrollWidth;
-                // let snappedL = snapL - (snapL % snapLpx);
-                // endHandle.style.setProperty('--left',`${snappedL}px`)
+                let snapL = newW+startL
+
+                let snappedL = snapL - (snapL % snapXpx);
+                endHandle.style.setProperty('--left',`${snappedL}px`)
             }
 
-            // let snapWpx = (1 / snapX) * schedule.scrollWidth;
-            // let snappedW = newW - (newW % snapWpx);
-
-            // let snapLpx = (1 / snapX) * schedule.scrollWidth;
-            // let snappedL = newL - (newL % snapLpx);
-
-            // selectedBlock.style.setProperty('--width',`${snappedW}px`)
-            // selectedBlock.style.setProperty('--left',`${snappedL}px`)
-
-            selectedBlock.style.setProperty('--width',`${newW}px`)
-            selectedBlock.style.setProperty('--left',`${newL}px`)
-
+            let snappedW = newW - (newW % snapXpx);
+            let snappedL = newL - (newL % snapXpx);
+            selectedBlock.style.setProperty('--width',`${snappedW}px`)
+            selectedBlock.style.setProperty('--left',`${snappedL}px`)
 
         } else {
             // vert view
@@ -420,40 +410,6 @@ function spawnBlockHandles() {
     const onPointerUp = (e) => {
         window.removeEventListener('pointermove', onPointerMove);
         window.removeEventListener('pointerup', onPointerUp)
-
-        if (window.settings.timetable_view == "horizontal") {
-
-            if (currentHandle == 'start') {
-                let snapL = parseFloat(startHandle.style.getPropertyValue('--left'))+handleWidthPx
-                let snapLpx = (1 / snapX) * schedule.scrollWidth;
-                let snappedL = snapL - (snapL % snapLpx);
-                startHandle.style.setProperty('--left',`${snappedL-handleWidthPx}px`)
-            }
-            if (currentHandle == 'end') {
-                let snapL = parseFloat(endHandle.style.getPropertyValue('--left'))
-                let snapLpx = (1 / snapX) * schedule.scrollWidth;
-                let snappedL = snapL - (snapL % snapLpx);
-                endHandle.style.setProperty('--left',`${snappedL}px`)
-            }
-
-
-            let snapW = parseFloat(selectedBlock.style.getPropertyValue('--width'))
-            let snapWpx = (1 / snapX) * schedule.scrollWidth;
-            let snappedW = snapW - (snapW % snapWpx);
-            
-            let snapL = parseFloat(selectedBlock.style.getPropertyValue('--left'))
-            let snapLpx = (1 / snapX) * schedule.scrollWidth;
-            let snappedL = snapL - (snapL % snapLpx);
-
-            selectedBlock.style.setProperty('--width',`${snappedW}px`)
-            selectedBlock.style.setProperty('--left',`${snappedL}px`)
-
-
-
-        } else {
-            // vert view
-        }
-
         currentHandle = '';
     };
 
