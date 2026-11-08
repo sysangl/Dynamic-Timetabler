@@ -408,7 +408,28 @@ function spawnBlockHandles() {
             snappedPos = snappedL
             snapUnitpx = snapXpx
         } else {
-            // vert view
+            if (currentHandle == 'start') {
+                
+                newH = startH - dx + snapYpx
+                newT = startT + dx
+                let snapT = newT
+                let snappedT = snapT - (snapT % snapYpx);
+                startHandle.style.setProperty('--top',`${snappedT-handleWidthPx}px`)
+            }
+            if (currentHandle == 'end') {
+                newH = startH + dx
+                let snapT = newH+startT
+                let snappedT = snapT - (snapT % snapYpx);
+                endHandle.style.setProperty('--top',`${snappedT}px`)
+            }
+
+            let snappedH = newH - (newH % snapXpx);
+            let snappedT = newT - (newT % snapXpx);
+            selectedBlock.style.setProperty('--height',`${snappedH}px`)
+            selectedBlock.style.setProperty('--top',`${snappedT}px`)
+
+            snappedLength = snappedH
+            snappedPos = snappedT
             snapUnitpx = snapYpx
         }
 
@@ -431,7 +452,7 @@ function spawnBlockHandles() {
         const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
 
         selectedBlock.dataset.blockLength = lengthFullMins;
-        selectedBlock.data.blockTime = displayTime;
+        selectedBlock.dataset.blockTime = displayTime;
         timeSpan.textContent = displayTime;
 
 
