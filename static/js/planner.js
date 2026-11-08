@@ -776,10 +776,7 @@ function splitBlock(block) {
 async function renderTimetable() {
     const payload = await fetchPayload();
     const blocks = payload.blocks;
-    // const getDayContainer = (date) =>
-    //     document.querySelector(`[data-date="${date}"]`);
     const schedule = document.getElementById("tt-schedule");
-    // const fragmentMap = new Map();
 
     spawnShadowBlock();
     spawnBlockHandles();
@@ -787,34 +784,14 @@ async function renderTimetable() {
     for (const block of blocks) {
         const pieces = splitBlock(block);
         for (const el of pieces) {
-            // const date = el.dataset.date;
-            // if (!fragmentMap.has(date)) {
-            //     fragmentMap.set(date, document.createDocumentFragment());
-            // }
-            // fragmentMap.get(date).appendChild(el);
             schedule.append(el);
         }
     }
 
-    // fragmentMap.forEach((frag, date) => {
-    //     const dayContainer = getDayContainer(date);
-    //     if (dayContainer) {
-    //         dayContainer.appendChild(frag);
-    //     }
-    // });
 }
 
 async function clearTimetable() {
-    const dayContainers = Array.from({ length: 7 }, (_, i) => {
-        // The DOM has: <section id="day-container-Mon"><div class="day-inner"></div></section>
-        const container = document.getElementById(
-            `day-container-${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}`,
-        );
-        return container;
-    });
-    dayContainers.forEach((container) => {
-        container.children.forEach((child) => child.remove());
-    });
+    // TODO : Add clear timetable functionality. Target all .timetable-block elements?
 }
 
 function prevDate() {
