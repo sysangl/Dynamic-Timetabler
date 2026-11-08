@@ -13,6 +13,8 @@ startHandleDragging = false;
 dragOffsetX = 0;
 dragOffsetY = 0;
 
+editing = false
+
 /**
  *  Fetches all timetable items (unfiltered)
  *  @returns {JSON}
@@ -570,6 +572,8 @@ function splitBlock(block) {
         const onPointerDown = (e) => {
             if (e.button !== undefined && e.button !== 0) return;
 
+            editing = true
+
             if (selectedBlock) {
                 if (selectedBlock != el) {                    
                     selectedBlock.classList.remove('selected')
@@ -894,6 +898,19 @@ async function initTimetable() {
             closePopupMenu();
         }
     });
+
+    const closeTabConfirmation = (e) => {
+        if (editing) {
+            if (confirm(message='Timetable has been edited. Are you sure you want to exit?')) {
+                editing = false
+                window.removeEventListener('beforeunload', closeTabConfirmation)
+            } else {
+                e.preventDefault()
+            }
+        }
+    }
+
+    window.addEventListener('beforeunload',closeTabConfirmation)
 }
 
 initTimetable();
