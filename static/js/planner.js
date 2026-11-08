@@ -374,9 +374,13 @@ function spawnBlockHandles() {
         let newH = startH;
         let newL = startL;
         let newT = startT;
-
+        let snapXpx = (1 / snapX) * schedule.scrollWidth;
+        let snapYpx = (1 / snapY) * schedule.scrollHeight;
+        let snappedPos = 0;
+        let snappedLength = 0;
+        let snapUnitpx = 0;
+        
         if (window.settings.timetable_view == "horizontal") {
-            let snapXpx = (1 / snapX) * schedule.scrollWidth;
             if (currentHandle == 'start') {
                 
                 newW = startW - dx + snapXpx
@@ -398,11 +402,34 @@ function spawnBlockHandles() {
             selectedBlock.style.setProperty('--width',`${snappedW}px`)
             selectedBlock.style.setProperty('--left',`${snappedL}px`)
 
+            snappedLength = snappedW
+            snappedPos = snappedL
+            snapUnitpx = snapXpx
         } else {
             // vert view
+            snapUnitpx = snapYpx
         }
 
+            
 
+        const startFullMins = Math.ceil(snappedPos / snapUnitpx) * 10
+        const endFullMins = Math.ceil(((snappedPos + snappedLength) / snapUnitpx) ) * 10; // slot size
+        
+        const startHour = Math.floor(startFullMins / 60);
+        const startMin = startFullMins % 60;
+        const endHour = Math.floor(endFullMins / 60);
+        const endMin = endFullMins % 60;
+
+        const lengthFullMins = endFullMins - startFullMins
+        
+        var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
+        var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
+        var displayTime = `${sTime}-${eTime}`;
+
+        const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
+
+        selectedBlock.dataset.blockLength = lengthFullMins;
+        timeSpan.textContent = displayTime
 
 
     }
@@ -471,31 +498,7 @@ function spawnBlockHandles() {
     //         startHandle.style.setProperty("--left", `${x}px`);
     //         el.style.setProperty("--left",`${x+handleWidthPx}px`)
 
-    //         el.style.setProperty('--width', `${parseFloat(endHandle.style.getPropertyValue('--left'))-x}px`)
 
-    //         const elBound = el.getBoundingClientRect()
-
-    //         const startFullMins = Math.round(snappedX / snapXpx) * 10
-    //         const endFullMins = Math.round((snappedX+ elBound.width / snapXpx) ) * 10; // slot size
-
-            
-    //         const startHour = Math.floor(startFullMins / 60);
-    //         const startMin = startFullMins % 60;
-    //         const endHour = Math.floor(endFullMins / 60);
-    //         const endMin = endFullMins % 60;
-
-    //         const lengthFullMins = endFullMins - startFullMins
-            
-    //         var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
-    //         var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
-    //         var displayTime = `${sTime}-${eTime}`;
-
-    //         const timeSpan = selectedBlock.getElementsByClassName('block-time').item(0)
-
-
-
-    //         el.dataset.blockLength = lengthFullMins;
-    //         timeSpan.textContent = displayTime
 
     // };
 
