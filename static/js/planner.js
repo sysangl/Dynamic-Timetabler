@@ -650,13 +650,31 @@ function splitBlock(block) {
         );
 
 
+        let startX = 0
+        let startY = 0
+        let startW = 0
+        let startH = 0
+        let startL = 0
+        let startT = 0
 
-        const startDrag = (e) => {
-            const elRect = el.getBoundingClientRect();
-            dragOffsetX = e.clientX - elRect.left;
-            dragOffsetY = e.clientY - elRect.top;
+        const onPointerDown = (e) => {
+            if (e.button !== undefined && e.button !== 0) return;
 
-            shadow.style.visibility = "visible";
+            if (selectedBlock) {
+                if (selectedBlock != el) {                    
+                    selectedBlock.classList.remove('selected')
+                    selectedBlock = el
+                    el.classList.add('selected')
+                }
+                startHandle.style.visibility = 'hidden';
+                endHandle.style.visibility = 'hidden';
+                
+            } else {
+                el.classList.add('selected')
+                selectedBlock = el
+                showHandles();
+                return
+            }
 
             shadow.style.setProperty(
                 "--width",
@@ -671,44 +689,68 @@ function splitBlock(block) {
                 el.style.getPropertyValue("--bg-colour"),
             );
 
-            startHandle.style.visibility = 'visible';
-            endHandle.style.visibility = 'visible';
 
+            el.style.zIndex = 5
 
+            startX = e.clientX
+            startY = e.clientY
+            startW = parseFloat(el.style.getPropertyValue('--width'))
+            startH = parseFloat(el.style.getPropertyValue('--height'))
+            startL = parseFloat(el.style.getPropertyValue('--left'))
+            startT = parseFloat(el.style.getPropertyValue('--top'))
 
-            blockDragging = true;
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+            e.preventDefault()
         }
-        
 
-        const stopDrag = (e) => {
-            if (blockDragging) {
-                var x =
-                    e.clientX +
-                    scheduleContainer.scrollLeft -
-                    scheduleContainer.offsetLeft -
-                    dragOffsetX;
-                var y =
-                    e.clientY +
-                    scheduleContainer.scrollTop -
-                    scheduleContainer.offsetTop -
-                    dragOffsetY;
+        const onPointerMove = (e) => {
+            shadow.style.visibility = "visible";
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            let newL = startL;
+            let newT = startT;
 
-                var snapXpx = (1 / snapX) * schedule.scrollWidth;
-                var snapYpx = (1 / snapY) * schedule.scrollHeight;
+            newL = startL + dx
+            newT = startT + dy
+            el.style.setProperty('--left',`${newL}px`)
+            el.style.setProperty('--top',`${newT}px`)
 
-                var snappedX = x - (x % snapXpx);
-                var snappedY = y - (y % snapYpx);
+            let snapLpx = (1 / snapX) * schedule.scrollWidth;
+            let snappedL = newL - (newL % snapLpx);
+            shadow.style.setProperty('--left',`${snappedL}px`)
 
-                el.style.setProperty("--left", `${snappedX}px`);
-                el.style.setProperty("--top", `${snappedY}px`);
+            let snapTpx = (1 / snapY) * schedule.scrollHeight;
+            let snappedT = newT - (newT % snapTpx);
+            shadow.style.setProperty('--top',`${snappedT}px`)
 
-                el.dataset.blockTime = timeSpan.textContent;
-            }
-            blockDragging = false;
+        }
+
+        const onPointerUp = (e) => {
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp)
+
+            let snapL = parseFloat(el.style.getPropertyValue('--left'));
+            let snapLpx = (1 / snapX) * schedule.scrollWidth;
+            let snappedL = snapL - (snapL % snapLpx);
+            el.style.setProperty('--left',`${snappedL}px`)
+
+            let snapT = parseFloat(el.style.getPropertyValue('--top'));
+            let snapTpx = (1 / snapY) * schedule.scrollHeight;
+            let snappedT = snapT - (snapT % snapTpx);
+            el.style.setProperty('--top',`${snappedT}px`)
+
+            el.dataset.blockTime = timeSpan.textContent;
             shadow.style.visibility = "hidden";
 
             el.style.zIndex = 1;
-        };
+            showHandles();
+
+        }
+
+        el.addEventListener('pointerdown', onPointerDown)
+
+
 
         function showHandles() {
                 const leftPx = parseFloat(el.style.getPropertyValue("--left"))
@@ -750,117 +792,7 @@ function splitBlock(block) {
                 endHandle.style.visibility = 'visible';
         }
 
-        el.onmousedown = (e) => {
-            if (!el.classList.contains('selected')) {return}
-            e.preventDefault();
-            startDrag(e)
-        };
-
-        el.ondblclick = (e) => {
-            el.classList.add('selected')
-            startDrag(e)
-        }
-
-
-        el.onclick = (e) => {
-            if (blockDragging) {
-                stopDrag(e)
-                // el.classList.remove('selected')
-
-                showHandles();
-            } else {
-                if (selectedBlock) {
-                    selectedBlock.classList.remove('selected')
-                    selectedBlock = null
-                }
-                el.classList.add('selected')
-                selectedBlock = el
-
-                showHandles();
-
-            }
-
-
-        };
-        el.onmouseleave = stopDrag;
-
-        el.onmousemove = (e) => {
-            if (blockDragging) {
-                var x =
-                    e.clientX +
-                    scheduleContainer.scrollLeft -
-                    scheduleContainer.offsetLeft -
-                    dragOffsetX;
-                var y =
-                    e.clientY +
-                    scheduleContainer.scrollTop -
-                    scheduleContainer.offsetTop -
-                    dragOffsetY;
-
-                if (window.settings.timetable_view == "horizontal") {
-                    el.style.setProperty("--left", `${x}px`);
-                    el.style.setProperty("--top", `${y - timelineHeight}px`);
-                } else {
-                    el.style.setProperty("--left", `${x - timelineWidth}px`);
-                    el.style.setProperty("--top", `${y}px`);
-                }
-
-                el.style.zIndex = 5;
-
-                var snapXpx = (1 / snapX) * schedule.scrollWidth;
-                var snapYpx = (1 / snapY) * schedule.scrollHeight;
-
-                var snappedX = x - (x % snapXpx);
-                var snappedY = y - (y % snapYpx);
-
-                shadow.style.setProperty("--left", `${snappedX}px`);
-                shadow.style.setProperty("--top", `${snappedY}px`);
-
-
-                if (window.settings.timetable_view == "horizontal") {
-                    const heightPx = el.style.getPropertyValue("--height")
-
-                    shadow.style.setProperty(
-                        "--height",
-                        heightPx
-                    );
-
-
-                } else {
-                    const widthPx = parseFloat(el.style.getPropertyValue("--width"))
-
-                    shadow.style.setProperty(
-                        "--width",
-                        widthPx
-                    );
-                }
-
-
-                let startFullMins = 0;
-                if (window.settings.timetable_view == "horizontal") {
-                    startFullMins = Math.round(snappedX / snapXpx) * 10; // slot size
-                } else {
-                    startFullMins = Math.round(snappedY / snapYpx) * 10; // slot size
-                }
-                
-                const lengthMins = parseInt(el.dataset.blockLength);
-                const startHour = Math.floor(startFullMins / 60);
-                const startMin = startFullMins % 60;
-                const endHour = Math.floor((startFullMins + lengthMins) / 60);
-                const endMin = (startFullMins + lengthMins) % 60;
-                
-                var sTime = `${formatTime(startHour)}:${formatTime(startMin)} `;
-                var eTime = ` ${formatTime(endHour)}:${formatTime(endMin)}`;
-                var displayTime = `${sTime}-${eTime}`;
-
-                timeSpan.textContent = displayTime;
-
-                startHandle.style.visibility = 'hidden';
-                endHandle.style.visibility = 'hidden';
-
-            }
-        };
-
+        
 
         pieces.push(el);
 
