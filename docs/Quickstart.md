@@ -50,6 +50,12 @@ Opening the link above will bring up a login screen.
 3. Enter te activity details
 4. Click Create.
 
+## Using the Planner Tab
+1. Open the sidebar and click on the **Planner tab**
+2. Click on any block you want to edit.
+3. Once it is highlighted by a green border, you can drag it around to change it's current day or allocated time slots.
+4. You can drag the handles on either the left/right or the top/bottom to change the start or end times respectively.
+
 ## Generating timetables
 There are two modes for timetable generation. GREEDY and ANNEALED
 #### Greedy
