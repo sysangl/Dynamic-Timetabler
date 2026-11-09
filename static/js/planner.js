@@ -383,8 +383,8 @@ function spawnBlockHandles() {
 
         if (window.settings.timetable_view == "horizontal") {
             if (currentHandle == "start") {
-                newW = Math.min(0, startW - dx + snapXpx);
-                newL = Math.min(0, startL + dx);
+                newW = Math.max(0, startW - dx + snapXpx);
+                newL = Math.max(0, startL + dx);
                 let snapL = newL;
                 let snappedL = snapL - (snapL % snapXpx);
                 startHandle.style.setProperty(
@@ -393,7 +393,7 @@ function spawnBlockHandles() {
                 );
             }
             if (currentHandle == "end") {
-                newW = Math.min(0, startW + dx);
+                newW = Math.max(0, startW + dx);
                 let snapL = newW + startL;
                 let snappedL = snapL - (snapL % snapXpx);
                 endHandle.style.setProperty("--left", `${snappedL}px`);
@@ -409,8 +409,8 @@ function spawnBlockHandles() {
             snapUnitpx = snapXpx;
         } else {
             if (currentHandle == "start") {
-                newH = Math.min(0, startH - dx + snapYpx);
-                newT = Math.min(0, startT + dx);
+                newH = Math.max(0, startH - dx + snapYpx);
+                newT = Math.max(0, startT + dx);
                 let snapT = newT;
                 let snappedT = snapT - (snapT % snapYpx);
                 startHandle.style.setProperty(
@@ -419,7 +419,7 @@ function spawnBlockHandles() {
                 );
             }
             if (currentHandle == "end") {
-                newH = Math.min(0, startH + dx);
+                newH = Math.max(0, startH + dx);
                 let snapT = newH + startT;
                 let snappedT = snapT - (snapT % snapYpx);
                 endHandle.style.setProperty("--top", `${snappedT}px`);
@@ -639,8 +639,8 @@ function splitBlock(block) {
             let newL = startL;
             let newT = startT;
 
-            newL = Math.min(0, startL + dx);
-            newT = Math.min(0, startT + dy);
+            newL = Math.max(0, startL + dx);
+            newT = Math.max(0, startT + dy);
             el.style.setProperty("--left", `${newL}px`);
             el.style.setProperty("--top", `${newT}px`);
 
@@ -649,7 +649,7 @@ function splitBlock(block) {
             shadow.style.setProperty("--left", `${snappedL}px`);
 
             let snapTpx = (1 / snapY) * schedule.scrollHeight;
-            let snappedT = Math.min(0, newT - (newT % snapTpx));
+            let snappedT = Math.max(0, newT - (newT % snapTpx));
             shadow.style.setProperty("--top", `${snappedT}px`);
 
             if (window.settings["timetable_view"] == "horizontal") {
