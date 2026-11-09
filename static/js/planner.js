@@ -225,15 +225,17 @@ function showPopupMenu(target, e) {
         return;
     }
 
+    const elBound = target.getBoundingClientRect()
+
     if (
-        e.pageY + popupMenu.clientHeight >=
+        elBound.top + elBound.height + popupMenu.clientHeight >=
         document.documentElement.clientHeight
     ) {
         popupMenu.style.bottom = "10px";
         popupMenu.style.top = "unset";
     } else {
         popupMenu.style.bottom = "unset";
-        popupMenu.style.top = `${e.pageY}px`;
+        popupMenu.style.top = `${elBound.top + elBound.height}px`;
     }
 
 
@@ -641,7 +643,7 @@ function splitBlock(block) {
             let newT = startT;
 
             newL = Math.max(0, Math.min(startL + dx, schedule.scrollWidth - startW));
-            newT = Math.max(0, Math.min(startT + dy, schedule.scrollHeight - startH)) + timelineHeight;
+            newT = Math.max(0, Math.min(startT + dy, schedule.scrollHeight - startH));
             el.style.setProperty("--left", `${newL}px`);
             el.style.setProperty("--top", `${newT}px`);
 
@@ -650,7 +652,7 @@ function splitBlock(block) {
             shadow.style.setProperty("--left", `${snappedL}px`);
 
             let snapTpx = (1 / snapY) * schedule.scrollHeight;
-            let snappedT = Math.max(0, newT - (newT % snapTpx));
+            let snappedT = Math.max(0, newT + startH/2 - ((newT + startH/2) % snapTpx));
             shadow.style.setProperty("--top", `${snappedT}px`);
 
             if (window.settings["timetable_view"] == "horizontal") {
@@ -699,7 +701,7 @@ function splitBlock(block) {
 
             let snapT = parseFloat(el.style.getPropertyValue("--top"));
             let snapTpx = (1 / snapY) * schedule.scrollHeight;
-            let snappedT = snapT - (snapT % snapTpx);
+            let snappedT = Math.max(0, snapT + startH/2 - ((snapT + startH/2) % snapTpx));
             el.style.setProperty("--top", `${snappedT}px`);
 
             el.dataset.blockTime = timeSpan.textContent;
