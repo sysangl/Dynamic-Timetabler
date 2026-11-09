@@ -121,9 +121,6 @@
     padding: 0.7rem;
 }
 
-.timetable-block:hover {
-    filter: brightness(1.1);
-}
 
 .block-title {
     display: inline-block;

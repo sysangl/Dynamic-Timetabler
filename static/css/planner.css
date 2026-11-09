@@ -145,6 +145,7 @@
     max-height: var(--height, 0%);
 
     background: var(--bg-colour, #3b3d68);
+    fill-opacity: 0.5;
     position: absolute;
     text-overflow: clip;
     box-sizing: border-box;
@@ -154,8 +155,12 @@
     border-width: 1px;
     border-color: rgba(255, 255, 255, 0.6);
     user-select: none;
+
 }
 
+.timetable-block:hover {
+    filter: brightness(1.1);
+}
 .timetable-block.selected {
     border-style: solid;
     border-width: 5px;
@@ -200,9 +205,6 @@
 
 }
 
-.timetable-block:hover {
-    filter: brightness(1.1);
-}
 
 @container (max-height: 2rem) {
     .block-info {
