@@ -139,42 +139,6 @@
     font-size: 0.9rem;
 }
 
-#popup-menu {
-    position: absolute;
-    min-width: 150px;
-    background-color: #f5f5f5;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    padding: 0.7rem;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-        opacity 0.2s,
-        visibility 0.2s;
-}
-#popup-menu.open {
-    opacity: 1;
-    visibility: visible;
-}
-#popup-menu button {
-    width: 100%;
-    border: none;
-    background: none;
-    text-align: left;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 16px;
-    color: #252525;
-}
-
-#popup-menu button:hover {
-    background: #f5f5f5;
-}
-
-#popup-menu button:disabled {
-    color: #c0c0c0;
-}
-
 #backdrop {
     display: none;
 }

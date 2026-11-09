@@ -213,15 +213,13 @@ function updateTime() {
  * @returns
  */
 function showPopupMenu(target, e) {
-    const backdrop = document.getElementById("backdrop");
     const popupMenu = document.getElementById("popup-menu");
-    const popupBlockTitle = document.getElementById("popup-block-title");
-    const popupBlockTime = document.getElementById("popup-block-time");
-    const popupBlockInfo = document.getElementById("popup-block-info");
 
     const alreadyOpen =
         popupMenu.classList.contains("open") &&
         target === popupMenu._currentTarget;
+
+    console.log(alreadyOpen)
     if (alreadyOpen) {
         closePopupMenu();
         return;
@@ -238,7 +236,7 @@ function showPopupMenu(target, e) {
         popupMenu.style.top = `${e.pageY}px`;
     }
 
-    // popupMenu.style.left = `${bRect.left + window.scrollX}px`;
+
     if (
         e.pageX + popupMenu.clientWidth >=
         document.documentElement.clientWidth
@@ -250,13 +248,9 @@ function showPopupMenu(target, e) {
         popupMenu.style.left = `${e.pageX}px`;
     }
 
-    popupBlockTitle.textContent = target.dataset.blockTitle;
-    popupBlockTime.textContent = target.dataset.blockTime;
-    popupBlockInfo.style.background = target.dataset.blockColour;
 
     popupMenu._currentTarget = target;
     popupMenu.classList.add("open");
-    backdrop.classList.add("active");
 }
 
 function closePopupMenu() {
@@ -360,7 +354,6 @@ function spawnBlockHandles() {
 
         currentHandle = handle.dataset.resize;
 
-        const blockRect = selectedBlock.getBoundingClientRect();
         startX = e.clientX;
         startY = e.clientY;
         startW = parseFloat(selectedBlock.style.getPropertyValue("--width"));
@@ -598,13 +591,16 @@ function splitBlock(block) {
                     selectedBlock.classList.remove("selected");
                     selectedBlock = el;
                     el.classList.add("selected");
+                    showPopupMenu(el, e)
                 }
                 startHandle.style.visibility = "hidden";
                 endHandle.style.visibility = "hidden";
+                closePopupMenu()
             } else {
                 el.classList.add("selected");
                 selectedBlock = el;
                 showHandles();
+                showPopupMenu(el, e);
                 return;
             }
 
@@ -709,6 +705,7 @@ function splitBlock(block) {
 
             el.style.zIndex = 1;
             showHandles();
+            showPopupMenu(el, e);
         };
 
         el.addEventListener("pointerdown", onPointerDown);
