@@ -518,7 +518,7 @@ function splitBlock(block) {
         var displayTime = `${sTime}-${eTime}`;
 
         const el = document.createElement("div");
-        el.classList.add("timetable-block",`timetable-block-${blockId}`);
+        el.classList.add("timetable-block",`timetable-block-${block.id}`);
         el.dataset.blockTitle = block.title;
         el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
