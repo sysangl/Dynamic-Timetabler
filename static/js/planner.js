@@ -639,8 +639,8 @@ function splitBlock(block) {
             let newL = startL;
             let newT = startT;
 
-            newL = Math.max(0, startL + dx);
-            newT = Math.max(0, startT + dy);
+            newL = Math.max(0, Math.min(startL + dx, schedule.scrollWidth - startW));
+            newT = Math.max(0, Math.min(startT + dy, schedule.scrollHeight - startH));
             el.style.setProperty("--left", `${newL}px`);
             el.style.setProperty("--top", `${newT}px`);
 
