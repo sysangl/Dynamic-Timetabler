@@ -265,6 +265,8 @@ function closePopupMenu() {
 }
 
 async function deleteBlock() {
+    if (!confirm(message='Are you sure you want to delete this block?')) return;
+
     const popupMenu = document.getElementById("popup-menu");
     const blockId = popupMenu._currentTarget.dataset.blockId;
     const response = await fetch(`/api/timetable/block/${blockId}`, {
@@ -639,7 +641,7 @@ function splitBlock(block) {
             let newT = startT;
 
             newL = Math.max(0, Math.min(startL + dx, schedule.scrollWidth - startW));
-            newT = Math.max(0, Math.min(startT + dy, schedule.scrollHeight - startH));
+            newT = Math.max(0, Math.min(startT + dy, schedule.scrollHeight - startH)) + timelineHeight;
             el.style.setProperty("--left", `${newL}px`);
             el.style.setProperty("--top", `${newT}px`);
 
