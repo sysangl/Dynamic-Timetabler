@@ -266,6 +266,10 @@ function closePopupMenu() {
     }
 }
 
+function holdBlock() {
+    
+}
+
 async function deleteBlock() {
     if (!confirm(message='Are you sure you want to delete this block?')) return;
 
@@ -275,7 +279,7 @@ async function deleteBlock() {
         method: "DELETE",
     });
     document
-        .querySelectorAll(`#timetable-block-${blockId}`)
+        .getElementsByName(`timetable-block-${blockId}`)
         .forEach((block) => block.remove());
     closePopupMenu();
 }
@@ -514,7 +518,7 @@ function splitBlock(block) {
         var displayTime = `${sTime}-${eTime}`;
 
         const el = document.createElement("div");
-        el.classList.add("timetable-block");
+        el.classList.add("timetable-block",`timetable-block-${blockId}`);
         el.dataset.blockTitle = block.title;
         el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
