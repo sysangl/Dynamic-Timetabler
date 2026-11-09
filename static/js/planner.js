@@ -383,8 +383,11 @@ function spawnBlockHandles() {
 
         if (window.settings.timetable_view == "horizontal") {
             if (currentHandle == "start") {
-                newW = Math.max(0, startW - dx + snapXpx);
-                newL = Math.max(0, startL + dx);
+                newL = startL + dx
+                if (newL >= snapXpx) {
+                    newW = Math.max(0, startW - dx + snapXpx);
+                }
+                newL = Math.max(0, Math.min(newL, schedule.scrollWidth - newW));
                 let snapL = newL;
                 let snappedL = snapL - (snapL % snapXpx);
                 startHandle.style.setProperty(
@@ -393,7 +396,7 @@ function spawnBlockHandles() {
                 );
             }
             if (currentHandle == "end") {
-                newW = Math.max(0, startW + dx);
+                newW = Math.max(0, Math.min(startW + dx, schedule.scrollWidth - newL));
                 let snapL = newW + startL;
                 let snappedL = snapL - (snapL % snapXpx);
                 endHandle.style.setProperty("--left", `${snappedL}px`);
