@@ -5,6 +5,7 @@
     --bg-main: #1e1e1e;
     --bg-section: #252525;
     --bg-input: #2a2a2a;
+    --bg-alt-main: #e4e4e4;
     --border-radius: 4px;
     --text-primary: #e0e0e0;
     --text-muted: #c0c0c0;
@@ -28,7 +29,6 @@ body {
 
 #content {
     background: var(--bg-main);
-    padding: 50px;
     display: flex;
     flex-direction: column;
     gap: 1rem;

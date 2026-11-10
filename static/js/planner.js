@@ -257,17 +257,29 @@ function showPopupMenu(target, e) {
 
 function closePopupMenu() {
     const popupMenu = document.getElementById("popup-menu");
-    const backdrop = document.getElementById("backdrop");
-    if (!popupMenu || !backdrop) return;
+    if (!popupMenu) return;
     popupMenu.classList.remove("open");
-    backdrop.classList.remove("active");
     if (popupMenu._currentTarget) {
         delete popupMenu._currentTarget;
     }
 }
 
 function holdBlock() {
+    const popupMenu = document.getElementById("popup-menu");
+    const schedule = document.getElementById("tt-schedule")
+    const holdingPen = document.getElementById("block-holding")
+    schedule.removeChild(popupMenu._currentTarget)
+    holdingPen.append(popupMenu._currentTarget)
+    popupMenu._currentTarget.classList.remove('selected')
     
+
+    const startHandle = document.getElementById("start-handle");
+    const endHandle = document.getElementById("end-handle");
+
+    startHandle.style.visibility = 'hidden'
+    endHandle.style.visibility = 'hidden'
+
+    closePopupMenu();
 }
 
 async function deleteBlock() {
@@ -294,6 +306,7 @@ async function editBlock(target) {
  * @returns {JSON}
  */
 async function completeBlock() {
+    const popupMenu = document.getElementById("popup-menu");
     const response = await fetch(
         `/api/timetable/block/${popupMenu._currentTarget.dataset.blockId}`,
         {
@@ -594,12 +607,14 @@ function splitBlock(block) {
 
             editing = true;
 
+            console.log(e.button)
+
             if (selectedBlock) {
                 if (selectedBlock != el) {
                     selectedBlock.classList.remove("selected");
                     selectedBlock = el;
                     el.classList.add("selected");
-                    showPopupMenu(el, e)
+
                 }
                 startHandle.style.visibility = "hidden";
                 endHandle.style.visibility = "hidden";
@@ -608,7 +623,7 @@ function splitBlock(block) {
                 el.classList.add("selected");
                 selectedBlock = el;
                 showHandles();
-                showPopupMenu(el, e);
+
                 return;
             }
 
@@ -646,10 +661,13 @@ function splitBlock(block) {
             let newL = startL;
             let newT = startT;
 
-            newL = Math.max(0, Math.min(startL + dx, schedule.scrollWidth - startW));
-            newT = Math.max(0, Math.min(startT + dy, schedule.scrollHeight - startH));
+            newL = startL + dx
+            newT = startT + dy
             el.style.setProperty("--left", `${newL}px`);
             el.style.setProperty("--top", `${newT}px`);
+
+            newL = Math.max(0, Math.min(newL, schedule.scrollWidth - startW));
+            newT = Math.max(0, Math.min(newT, schedule.scrollHeight - startH));
 
             let snapLpx = (1 / snapX) * schedule.scrollWidth;
             let snappedL = newL - (newL % snapLpx);
@@ -711,9 +729,8 @@ function splitBlock(block) {
             el.dataset.blockTime = timeSpan.textContent;
             shadow.style.visibility = "hidden";
 
-            el.style.zIndex = 1;
+            el.style.zIndex = 0;
             showHandles();
-            showPopupMenu(el, e);
         };
 
         el.addEventListener("pointerdown", onPointerDown);
