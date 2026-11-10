@@ -264,14 +264,14 @@ function closePopupMenu() {
 
 /**
  * Places the block into holding
- * @param {HTMLDivElement} block 
+ * @param {HTMLDivElement} block
  */
-function holdBlock(block=null) {
+function holdBlock(block = null) {
     const popupMenu = document.getElementById("popup-menu");
     const schedule = document.getElementById("tt-schedule");
     const holdingPen = document.getElementById("block-holding");
     if (!block) {
-        block = popupMenu._currentTarget
+        block = popupMenu._currentTarget;
     }
     if (block in schedule.childNodes) schedule.removeChild(block);
     holdingPen.append(block);
@@ -618,8 +618,6 @@ function splitBlock(block) {
 
             editing = true;
 
-            console.log(e.button);
-
             if (el.dataset.held == 0) {
                 if (selectedBlock) {
                     if (selectedBlock != el) {
@@ -656,8 +654,14 @@ function splitBlock(block) {
             startT = parseFloat(el.style.getPropertyValue("--top"));
             if (el.dataset.held == 1) {
                 const boundRect = el.getBoundingClientRect();
-                startL = scheduleContainer.scrollLeft + el.clientLeft;
-                startT = el.clientTop;
+                const holding = document.getElementById("block-holding");
+                startL =
+                    scheduleContainer.scrollLeft +
+                    holding.offsetLeft;
+                startT =
+                    scheduleContainer.scrollTop -
+                    scheduleContainer.offsetTop +
+                    holding.offsetTop;
                 el.style.setProperty("--left", `${startL}px`);
                 el.style.setProperty("--top", `${startT}px`);
                 el.classList.remove("held-block");
@@ -747,11 +751,11 @@ function splitBlock(block) {
 
             el.style.zIndex = 0;
 
-            const holding = document.getElementById('block-holding')
-            if (holding.classList.contains('hovered')){
-                holdBlock(el)
-                
-                return
+            const holding = document.getElementById("block-holding");
+            if (holding.classList.contains("hovered")) {
+                holdBlock(el);
+
+                return;
             }
 
             let snapL = parseFloat(el.style.getPropertyValue("--left"));
@@ -950,13 +954,13 @@ function initHolding() {
     window.addEventListener("pointermove", (e) => {
         if (
             e.pageX >= holding.offsetLeft &&
-            e.pageX <= (holding.offsetLeft + holding.offsetWidth) &&
+            e.pageX <= holding.offsetLeft + holding.offsetWidth &&
             e.pageY >= holding.offsetTop &&
-            e.pageY <= (holding.offsetTop + holding.offsetHeight)
+            e.pageY <= holding.offsetTop + holding.offsetHeight
         ) {
-            holding.classList.add('hovered')
+            holding.classList.add("hovered");
         } else {
-            holding.classList.remove('hovered')
+            holding.classList.remove("hovered");
         }
     });
 }
