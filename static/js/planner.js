@@ -219,13 +219,13 @@ function showPopupMenu(target, e) {
         popupMenu.classList.contains("open") &&
         target === popupMenu._currentTarget;
 
-    console.log(alreadyOpen)
+    console.log(alreadyOpen);
     if (alreadyOpen) {
         closePopupMenu();
         return;
     }
 
-    const elBound = target.getBoundingClientRect()
+    const elBound = target.getBoundingClientRect();
 
     if (
         elBound.top + elBound.height + popupMenu.clientHeight >=
@@ -238,7 +238,6 @@ function showPopupMenu(target, e) {
         popupMenu.style.top = `${elBound.top + elBound.height}px`;
     }
 
-
     if (
         e.pageX + popupMenu.clientWidth >=
         document.documentElement.clientWidth
@@ -249,7 +248,6 @@ function showPopupMenu(target, e) {
         popupMenu.style.right = "unset";
         popupMenu.style.left = `${e.pageX}px`;
     }
-
 
     popupMenu._currentTarget = target;
     popupMenu.classList.add("open");
@@ -264,27 +262,35 @@ function closePopupMenu() {
     }
 }
 
-function holdBlock() {
+/**
+ * Places the block into holding
+ * @param {HTMLDivElement} block 
+ */
+function holdBlock(block=null) {
     const popupMenu = document.getElementById("popup-menu");
-    const schedule = document.getElementById("tt-schedule")
-    const holdingPen = document.getElementById("block-holding")
-    schedule.removeChild(popupMenu._currentTarget)
-    holdingPen.append(popupMenu._currentTarget)
-    popupMenu._currentTarget.classList.remove('selected')
-    popupMenu._currentTarget.classList.add('held-block')
-    popupMenu._currentTarget.dataset.held = 1
+    const schedule = document.getElementById("tt-schedule");
+    const holdingPen = document.getElementById("block-holding");
+    if (!block) {
+        block = popupMenu._currentTarget
+    }
+    if (block in schedule.childNodes) schedule.removeChild(block);
+    holdingPen.append(block);
+    block.classList.remove("selected");
+    block.classList.add("held-block");
+    block.dataset.held = 1;
 
     const startHandle = document.getElementById("start-handle");
     const endHandle = document.getElementById("end-handle");
 
-    startHandle.style.visibility = 'hidden'
-    endHandle.style.visibility = 'hidden'
+    startHandle.style.visibility = "hidden";
+    endHandle.style.visibility = "hidden";
 
     closePopupMenu();
 }
 
 async function deleteBlock() {
-    if (!confirm(message='Are you sure you want to delete this block?')) return;
+    if (!confirm((message = "Are you sure you want to delete this block?")))
+        return;
 
     const popupMenu = document.getElementById("popup-menu");
     const blockId = popupMenu._currentTarget.dataset.blockId;
@@ -398,7 +404,7 @@ function spawnBlockHandles() {
 
         if (window.settings.timetable_view == "horizontal") {
             if (currentHandle == "start") {
-                newL = startL + dx
+                newL = startL + dx;
                 if (newL >= snapXpx) {
                     newW = Math.max(0, startW - dx + snapXpx);
                 }
@@ -411,7 +417,10 @@ function spawnBlockHandles() {
                 );
             }
             if (currentHandle == "end") {
-                newW = Math.max(0, Math.min(startW + dx, schedule.scrollWidth - newL));
+                newW = Math.max(
+                    0,
+                    Math.min(startW + dx, schedule.scrollWidth - newL),
+                );
                 let snapL = newW + startL;
                 let snappedL = snapL - (snapL % snapXpx);
                 endHandle.style.setProperty("--left", `${snappedL}px`);
@@ -474,7 +483,7 @@ function spawnBlockHandles() {
 
         selectedBlock.dataset.blockLength = lengthFullMins;
         selectedBlock.dataset.blockTime = displayTime;
-        selectedBlock.dataset.edited = true
+        selectedBlock.dataset.edited = true;
         timeSpan.textContent = displayTime;
     };
 
@@ -532,8 +541,8 @@ function splitBlock(block) {
         var displayTime = `${sTime}-${eTime}`;
 
         const el = document.createElement("div");
-        el.classList.add("timetable-block",`timetable-block-${block.id}`);
-        el.dataset.held = 0
+        el.classList.add("timetable-block", `timetable-block-${block.id}`);
+        el.dataset.held = 0;
         el.dataset.blockTitle = block.title;
         el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
@@ -609,36 +618,33 @@ function splitBlock(block) {
 
             editing = true;
 
-            console.log(e.button)
+            console.log(e.button);
 
             if (el.dataset.held == 0) {
-
                 if (selectedBlock) {
                     if (selectedBlock != el) {
                         selectedBlock.classList.remove("selected");
                         selectedBlock = el;
                         el.classList.add("selected");
-    
                     }
                     startHandle.style.visibility = "hidden";
                     endHandle.style.visibility = "hidden";
-                    closePopupMenu()
+                    closePopupMenu();
                 } else {
                     el.classList.add("selected");
                     selectedBlock = el;
                     showHandles();
-    
+
                     return;
                 }
             } else {
                 if (selectedBlock) {
-                        if (selectedBlock != el) {
-                            selectedBlock.classList.remove("selected");
-                        }
+                    if (selectedBlock != el) {
+                        selectedBlock.classList.remove("selected");
+                    }
                 }
-                selectedBlock = el
+                selectedBlock = el;
             }
-
 
             el.style.zIndex = 5;
 
@@ -649,29 +655,23 @@ function splitBlock(block) {
             startL = parseFloat(el.style.getPropertyValue("--left"));
             startT = parseFloat(el.style.getPropertyValue("--top"));
             if (el.dataset.held == 1) {
-                const boundRect = el.getBoundingClientRect()
-                startL = scheduleContainer.scrollLeft + boundRect.left
-                startT = boundRect.top
-                el.style.setProperty('--left',`${startL}px`)
-                el.style.setProperty('--top',`${startT}px`)
-                el.classList.remove('held-block')
+                const boundRect = el.getBoundingClientRect();
+                startL = scheduleContainer.scrollLeft + el.clientLeft;
+                startT = el.clientTop;
+                el.style.setProperty("--left", `${startL}px`);
+                el.style.setProperty("--top", `${startT}px`);
+                el.classList.remove("held-block");
             }
 
-            shadow.style.setProperty(
-                "--width",
-                startW,
-            );
-            shadow.style.setProperty(
-                "--height",
-                startH,
-            );
+            shadow.style.setProperty("--width", `${startW}px`);
+            shadow.style.setProperty("--height", `${startH}px`);
             shadow.style.setProperty(
                 "--bg-colour",
                 el.style.getPropertyValue("--bg-colour"),
             );
 
-            shadow.style.setProperty('--left',`${startL}px`)
-            shadow.style.setProperty('--top',`${startT}px`)
+            shadow.style.setProperty("--left", `${startL}px`);
+            shadow.style.setProperty("--top", `${startT}px`);
 
             window.addEventListener("pointermove", onPointerMove);
             window.addEventListener("pointerup", onPointerUp);
@@ -685,8 +685,8 @@ function splitBlock(block) {
             let newL = startL;
             let newT = startT;
 
-            newL = startL + dx
-            newT = startT + dy
+            newL = startL + dx;
+            newT = startT + dy;
             el.style.setProperty("--left", `${newL}px`);
             el.style.setProperty("--top", `${newT}px`);
 
@@ -698,7 +698,10 @@ function splitBlock(block) {
             shadow.style.setProperty("--left", `${snappedL}px`);
 
             let snapTpx = (1 / snapY) * schedule.scrollHeight;
-            let snappedT = Math.max(0, newT + startH/2 - ((newT + startH/2) % snapTpx));
+            let snappedT = Math.max(
+                0,
+                newT + startH / 2 - ((newT + startH / 2) % snapTpx),
+            );
             shadow.style.setProperty("--top", `${snappedT}px`);
 
             if (window.settings["timetable_view"] == "horizontal") {
@@ -730,15 +733,26 @@ function splitBlock(block) {
                 .getElementsByClassName("block-time")
                 .item(0);
 
-            el.dataset.edited = true
+            el.dataset.edited = true;
             el.dataset.blockLength = lengthFullMins;
             timeSpan.textContent = displayTime;
-
         };
 
         const onPointerUp = (e) => {
             window.removeEventListener("pointermove", onPointerMove);
             window.removeEventListener("pointerup", onPointerUp);
+
+            el.dataset.blockTime = timeSpan.textContent;
+            shadow.style.visibility = "hidden";
+
+            el.style.zIndex = 0;
+
+            const holding = document.getElementById('block-holding')
+            if (holding.classList.contains('hovered')){
+                holdBlock(el)
+                
+                return
+            }
 
             let snapL = parseFloat(el.style.getPropertyValue("--left"));
             let snapLpx = (1 / snapX) * schedule.scrollWidth;
@@ -747,20 +761,18 @@ function splitBlock(block) {
 
             let snapT = parseFloat(el.style.getPropertyValue("--top"));
             let snapTpx = (1 / snapY) * schedule.scrollHeight;
-            let snappedT = Math.max(0, snapT + startH/2 - ((snapT + startH/2) % snapTpx));
+            let snappedT = Math.max(
+                0,
+                snapT + startH / 2 - ((snapT + startH / 2) % snapTpx),
+            );
             el.style.setProperty("--top", `${snappedT}px`);
 
-            el.dataset.blockTime = timeSpan.textContent;
-            shadow.style.visibility = "hidden";
-
-            el.style.zIndex = 0;
-
             if (el.dataset.held == 1) {
-                el.dataset.held = 0
-    
-                const holdingPen = document.getElementById('block-holding')
-                holdingPen.removeChild(el)
-                schedule.append(el)
+                el.dataset.held = 0;
+
+                const holdingPen = document.getElementById("block-holding");
+                holdingPen.removeChild(el);
+                schedule.append(el);
             }
 
             showHandles();
@@ -823,14 +835,16 @@ function splitBlock(block) {
         pieces.push(el);
 
         if (end > endOfDay) {
-            blockCount ++;
+            blockCount++;
             const nextBlock = {
                 ...currentBlock,
                 start_datetime: endOfDay.toISOString(),
             };
             splitBlockRecursive(nextBlock, true);
         } else if (blockCount > 0) {
-            document.getElementById(`timetable-block-${block.id}-0`).dataset.lastBlockId = blockCount
+            document.getElementById(
+                `timetable-block-${block.id}-0`,
+            ).dataset.lastBlockId = blockCount;
         }
     }
 
@@ -859,29 +873,24 @@ async function clearTimetable() {
 }
 
 async function saveTimetable() {
-    const blocks = document.getElementsByClassName('timetable-blocks')
+    const blocks = document.getElementsByClassName("timetable-blocks");
 
     var editedBlocks = {};
 
     for (block of blocks) {
         if (!block.dataset.edited) return;
-        const bInfo = block.id.split('-')
+        const bInfo = block.id.split("-");
         if (bInfo != 0) return; // check if it is the starting block
-        const bId = bInfo[2]
+        const bId = bInfo[2];
 
-        editedBlocks[bId] = {}
+        editedBlocks[bId] = {};
 
-        const timeString = block.dataset.blockTime.split('-')
-        editedBlocks[bId]['start_time'] = timeString[0]
-        editedBlocks[bId]['end_time'] = timeString[1]
-
-
-
+        const timeString = block.dataset.blockTime.split("-");
+        editedBlocks[bId]["start_time"] = timeString[0];
+        editedBlocks[bId]["end_time"] = timeString[1];
 
         if (block.dataset.lastBlockId) {
-
         }
-        
     }
 }
 
@@ -936,6 +945,22 @@ function rebuildTimetable() {
     );
 }
 
+function initHolding() {
+    const holding = document.getElementById("block-holding");
+    window.addEventListener("pointermove", (e) => {
+        if (
+            e.pageX >= holding.offsetLeft &&
+            e.pageX <= (holding.offsetLeft + holding.offsetWidth) &&
+            e.pageY >= holding.offsetTop &&
+            e.pageY <= (holding.offsetTop + holding.offsetHeight)
+        ) {
+            holding.classList.add('hovered')
+        } else {
+            holding.classList.remove('hovered')
+        }
+    });
+}
+
 /**
  * Initialise the timetable
  */
@@ -952,6 +977,7 @@ async function initTimetable() {
         snapX = window.settings["days_per_view"];
     }
 
+    initHolding();
     buildTimetable();
 
     window.pageIntervals.temporary.push(
