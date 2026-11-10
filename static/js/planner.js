@@ -271,7 +271,8 @@ function holdBlock() {
     schedule.removeChild(popupMenu._currentTarget)
     holdingPen.append(popupMenu._currentTarget)
     popupMenu._currentTarget.classList.remove('selected')
-    
+    popupMenu._currentTarget.classList.add('held-block')
+    popupMenu._currentTarget.dataset.held = 1
 
     const startHandle = document.getElementById("start-handle");
     const endHandle = document.getElementById("end-handle");
@@ -532,6 +533,7 @@ function splitBlock(block) {
 
         const el = document.createElement("div");
         el.classList.add("timetable-block",`timetable-block-${block.id}`);
+        el.dataset.held = 0
         el.dataset.blockTitle = block.title;
         el.dataset.blockTime = displayTime;
         el.dataset.blockId = block.id;
@@ -609,36 +611,34 @@ function splitBlock(block) {
 
             console.log(e.button)
 
-            if (selectedBlock) {
-                if (selectedBlock != el) {
-                    selectedBlock.classList.remove("selected");
-                    selectedBlock = el;
+            if (el.dataset.held == 0) {
+
+                if (selectedBlock) {
+                    if (selectedBlock != el) {
+                        selectedBlock.classList.remove("selected");
+                        selectedBlock = el;
+                        el.classList.add("selected");
+    
+                    }
+                    startHandle.style.visibility = "hidden";
+                    endHandle.style.visibility = "hidden";
+                    closePopupMenu()
+                } else {
                     el.classList.add("selected");
-
+                    selectedBlock = el;
+                    showHandles();
+    
+                    return;
                 }
-                startHandle.style.visibility = "hidden";
-                endHandle.style.visibility = "hidden";
-                closePopupMenu()
             } else {
-                el.classList.add("selected");
-                selectedBlock = el;
-                showHandles();
-
-                return;
+                if (selectedBlock) {
+                        if (selectedBlock != el) {
+                            selectedBlock.classList.remove("selected");
+                        }
+                }
+                selectedBlock = el
             }
 
-            shadow.style.setProperty(
-                "--width",
-                el.style.getPropertyValue("--width"),
-            );
-            shadow.style.setProperty(
-                "--height",
-                el.style.getPropertyValue("--height"),
-            );
-            shadow.style.setProperty(
-                "--bg-colour",
-                el.style.getPropertyValue("--bg-colour"),
-            );
 
             el.style.zIndex = 5;
 
@@ -648,14 +648,38 @@ function splitBlock(block) {
             startH = parseFloat(el.style.getPropertyValue("--height"));
             startL = parseFloat(el.style.getPropertyValue("--left"));
             startT = parseFloat(el.style.getPropertyValue("--top"));
+            if (el.dataset.held == 1) {
+                const boundRect = el.getBoundingClientRect()
+                startL = scheduleContainer.scrollLeft + boundRect.left
+                startT = boundRect.top
+                el.style.setProperty('--left',`${startL}px`)
+                el.style.setProperty('--top',`${startT}px`)
+                el.classList.remove('held-block')
+            }
+
+            shadow.style.setProperty(
+                "--width",
+                startW,
+            );
+            shadow.style.setProperty(
+                "--height",
+                startH,
+            );
+            shadow.style.setProperty(
+                "--bg-colour",
+                el.style.getPropertyValue("--bg-colour"),
+            );
+
+            shadow.style.setProperty('--left',`${startL}px`)
+            shadow.style.setProperty('--top',`${startT}px`)
 
             window.addEventListener("pointermove", onPointerMove);
             window.addEventListener("pointerup", onPointerUp);
+            shadow.style.visibility = "visible";
             e.preventDefault();
         };
 
         const onPointerMove = (e) => {
-            shadow.style.visibility = "visible";
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
             let newL = startL;
@@ -730,6 +754,15 @@ function splitBlock(block) {
             shadow.style.visibility = "hidden";
 
             el.style.zIndex = 0;
+
+            if (el.dataset.held == 1) {
+                el.dataset.held = 0
+    
+                const holdingPen = document.getElementById('block-holding')
+                holdingPen.removeChild(el)
+                schedule.append(el)
+            }
+
             showHandles();
         };
 

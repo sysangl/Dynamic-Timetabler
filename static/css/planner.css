@@ -21,7 +21,7 @@
     /* flex:1; */
     /* display: flex; */
     background: beige;
-    margin: 50px;
+    /* margin: 50px; */
     /* overflow: hidden; */
     /* border-radius: 5px; */
     /* flex-direction: row; */
@@ -156,6 +156,7 @@
     border-width: 1px;
     border-color: rgba(255, 255, 255, 0.6);
     user-select: none;
+
 
 }
 
@@ -312,7 +313,7 @@
     z-index: 8;
 }
 
-#block-holding .timetable-block {
+.timetable-block.held-block {
     position: relative !important;
     --left: 0px !important;
     --right: 0px !important;
