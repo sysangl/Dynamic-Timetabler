@@ -1,4 +1,4 @@
-from ..models import Schedule
+from ..models import Block, Schedule
 from .classes import (
     ATB,
     OverlapTable,
@@ -66,8 +66,9 @@ def initial_table(db_schedule: Schedule):
     return dbb_list
 
 
-def anneal_table(db_schedule: Schedule):
+def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
     from .classes import (
+        db_blocks_to_engine_initial,
         db_to_engine_activities,
         db_to_engine_schedule,
         engine_to_db_blocks,
@@ -77,32 +78,45 @@ def anneal_table(db_schedule: Schedule):
     engine_schedule = db_to_engine_schedule(db_schedule)
 
     db_activities = db_schedule.activities
-    activities = db_to_engine_activities(engine_schedule, db_activities)
 
     dba_map = {a.id: a for a in db_activities}
-    blocks, table, atb, day_load = greedy_initial(engine_schedule, activities)
+    activities = db_to_engine_activities(engine_schedule, db_activities)
+    if not existing_blocks:
+        blocks, table, atb, day_load = greedy_initial(engine_schedule, activities)
+    else:
+        blocks, table, atb, day_load, _activities = db_blocks_to_engine_initial(engine_schedule, existing_blocks)
+        for _a in _activities:
+            activities.append(_a)
+        print(blocks)
+        print(table)
+        print(atb)
+        print(day_load)
+        print(activities)
+        blocks, table, atb, day_load = greedy_initial(engine_schedule, activities, table,blocks,atb,day_load)
 
-    print("\n\nINITIAL =======================================")
-    for day in range(engine_schedule.SIZE):
-        print(f"----- day {day}-------------------")
-        day_blocks = [b for b in blocks.values() if b.day == day]
-        day_blocks.sort(key=lambda b: b.start)
 
-        for block in day_blocks:
-            activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * engine_schedule.SLOT_SIZE
-            end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
-            start_hours = start_mins // 60
-            start_mins = start_mins % 60
-            end_hours = end_mins // 60
-            end_mins = end_mins % 60
-            print(
-                f"  {activity.name:12s}  [{block.id:02d}]  "
-                f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
-                f"(len={block.length} slots)"
-            )
 
-    print("\n\nOptimised ======================================")
+    # print("\n\nINITIAL =======================================")
+    # for day in range(engine_schedule.SIZE):
+    #     print(f"----- day {day}-------------------")
+    #     day_blocks = [b for b in blocks.values() if b.day == day]
+    #     day_blocks.sort(key=lambda b: b.start)
+
+    #     for block in day_blocks:
+    #         activity = next(a for a in activities if a.id == block.activity_id)
+    #         start_mins = block.start * engine_schedule.SLOT_SIZE
+    #         end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
+    #         start_hours = start_mins // 60
+    #         start_mins = start_mins % 60
+    #         end_hours = end_mins // 60
+    #         end_mins = end_mins % 60
+    #         print(
+    #             f"  {activity.name:12s}  [{block.id:02d}]  "
+    #             f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
+    #             f"(len={block.length} slots)"
+    #         )
+
+    # print("\n\nOptimised ======================================")
 
     from app.engine.annealer import Annealer
 
@@ -126,24 +140,24 @@ def anneal_table(db_schedule: Schedule):
 
     best_table, best_blocks = reset_ids(best_table, new_atb, best_blocks)
 
-    for day in range(engine_schedule.SIZE):
-        print(f"----- day {day}-------------------")
-        day_blocks = [b for b in best_blocks.values() if b.day == day]
-        day_blocks.sort(key=lambda b: b.start)
+    # for day in range(engine_schedule.SIZE):
+    #     print(f"----- day {day}-------------------")
+    #     day_blocks = [b for b in best_blocks.values() if b.day == day]
+    #     day_blocks.sort(key=lambda b: b.start)
 
-        for block in day_blocks:
-            activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * engine_schedule.SLOT_SIZE
-            end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
-            start_hours = start_mins // 60
-            start_mins = start_mins % 60
-            end_hours = end_mins // 60
-            end_mins = end_mins % 60
-            print(
-                f"  {activity.name:12s}  [{block.id:02d}]  "
-                f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
-                f"(len={block.length} slots)"
-            )
+    #     for block in day_blocks:
+    #         activity = next(a for a in activities if a.id == block.activity_id)
+    #         start_mins = block.start * engine_schedule.SLOT_SIZE
+    #         end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
+    #         start_hours = start_mins // 60
+    #         start_mins = start_mins % 60
+    #         end_hours = end_mins // 60
+    #         end_mins = end_mins % 60
+    #         print(
+    #             f"  {activity.name:12s}  [{block.id:02d}]  "
+    #             f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
+    #             f"(len={block.length} slots)"
+    #         )
 
     print("INFO ====================================")
     print(f"Init Cost:  {initial_cost}")
@@ -151,10 +165,11 @@ def anneal_table(db_schedule: Schedule):
 
     dbb_list = engine_to_db_blocks(engine_schedule, blocks, atb, activities)
     for dbb in dbb_list:
-        dbb.activity = dba_map[dbb.activity_id]
-        dbb.group_name = dba_map[dbb.activity_id].group_name
-        dbb.activity.blocks.add(dbb)
-        dbb.colour = dba_map[dbb.activity_id].colour
+        if dbb.source == 'engine':
+            dbb.activity = dba_map[dbb.activity_id]
+            dbb.group_name = dba_map[dbb.activity_id].group_name
+            dbb.activity.blocks.add(dbb)
+            dbb.colour = dba_map[dbb.activity_id].colour
 
     return dbb_list
 

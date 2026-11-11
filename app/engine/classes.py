@@ -253,8 +253,8 @@ def db_to_engine_block(
     return _Block(
         activity_id=activity_id,
         day=(block.start_datetime.date() - schedule.start_date).days,
-        start=parse_iso_time_to_mins(block.start_time),
-        length=parse_iso_time_to_mins(block.end_time)-parse_iso_time_to_mins(block.start_time),
+        start=parse_iso_time_to_mins(block.start_time)//schedule.SLOT_SIZE,
+        length=(parse_iso_time_to_mins(block.end_time)-parse_iso_time_to_mins(block.start_time))//schedule.SLOT_SIZE,
         fixed=(block.source=="user")
     )
 
@@ -262,13 +262,13 @@ def db_to_engine_block(
 def db_blocks_to_engine_initial(
     schedule: _Schedule,
     blocks: list[Block]
-) -> tuple[dict[int,_Block], OverlapTable, ATB, list[int]]:
+) -> tuple[dict[int,_Block], OverlapTable, ATB, list[int], list[_Activity]]:
     table: OverlapTable = [
         [set() for _ in range(schedule.SLOTS_PER_DAY)] for _ in range(schedule.SIZE)
     ]
     eblocks: dict[int, _Block] = {}
 
-    day_load: list[int] = [0] * schedule.SLOTS_PER_DAY
+    day_load: list[int] = [0] * schedule.SIZE
 
     activities:list[_Activity] = []
     dbbid_to_ea:dict[int, _Activity] = {}
@@ -282,6 +282,7 @@ def db_blocks_to_engine_initial(
             )
             activities.append(ea)
             dbbid_to_ea[dbb.id]=ea
+            atb[ea.id] = set()
         elif dbb.id not in dbbid_to_ea:
             ea = db_to_engine_activity(schedule,dbb.activity)
             activities.append(ea)
@@ -289,7 +290,7 @@ def db_blocks_to_engine_initial(
             atb[ea.id] = set()
         else:
             ea = dbbid_to_ea[dbb.id]
-        eb = db_to_engine_block(schedule,dbb)
+        eb = db_to_engine_block(schedule,dbb, ea.id)
         eblocks[eb.id] = eb
         atb[ea.id].add(eb.id)
         ea.fixed.append((eb.day, eb.start, eb.length))
@@ -299,10 +300,12 @@ def db_blocks_to_engine_initial(
         for bid in ablocks:
             b = eblocks[bid]
             for slot in range(b.start, b.start + b.length):
+                if slot >= schedule.SLOTS_PER_DAY:
+                    break
                 table[b.day][slot].add(b.id)
             day_load[b.day] += 1
     
-    return eblocks, table, atb, day_load
+    return eblocks, table, atb, day_load, activities
 
 
 def db_to_engine_activity(

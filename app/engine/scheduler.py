@@ -8,7 +8,7 @@ def clamp(value, min_value, max_value):
 
 
 def clear_block(table: OverlapTable, b: _Block):
-    for slot in range(b.start, b.start + b.length):
+    for slot in range(b.start,min( b.start + b.length, len(table[b.day]))):
         table[b.day][slot].remove(b.id)
 
 
@@ -60,7 +60,7 @@ def can_place(schedule: _Schedule, table: OverlapTable, b: _Block):
 
 
 def place_block(table: OverlapTable, b: _Block):
-    for slot in range(b.start, b.start + b.length):
+    for slot in range(b.start,min( b.start + b.length, len(table[b.day]))):
         table[b.day][slot].add(b.id)
 
 
@@ -277,14 +277,25 @@ def place_fixed_blocks(
             day_load[day] += 1
 
 
-def greedy_initial(schedule: _Schedule, activities: list[_Activity]):
-    table: OverlapTable = [
-        [set() for _ in range(schedule.SLOTS_PER_DAY)] for _ in range(schedule.SIZE)
-    ]
-    blocks: dict[int, _Block] = {}
-    activity_to_blocks: ATB = {}
-    activity_to_blocks = {a.id: set() for a in activities}
-    day_load: list[int] = [0] * schedule.SLOTS_PER_DAY
+def greedy_initial(
+    schedule: _Schedule,
+    activities: list[_Activity],
+    table: OverlapTable|None = None,
+    blocks: dict[int, _Block] | None = None,
+    activity_to_blocks: ATB | None = None,
+    day_load:list[int]|None = None
+
+):
+    if table is None:
+        table = [
+            [set() for _ in range(schedule.SLOTS_PER_DAY)] for _ in range(schedule.SIZE)
+        ]
+    if activity_to_blocks is None:
+        activity_to_blocks = {a.id: set() for a in activities}
+    if blocks is None:
+        blocks = {}
+    if day_load is None:
+        day_load = [0] * schedule.SIZE
 
     place_fixed_blocks(table, activities, blocks, activity_to_blocks, day_load)
 

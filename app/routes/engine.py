@@ -1,5 +1,6 @@
 import logging
 import uuid
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint
 from flask_login import current_user, login_required
@@ -9,7 +10,7 @@ from helpers.server import _json_error, _json_success
 
 from ..engine import anneal_table, initial_table
 from ..extensions import db
-from ..models import Schedule
+from ..models import Block, Schedule
 
 bp = Blueprint("engine", __name__)
 
@@ -56,13 +57,23 @@ def generate_schedule(sid):
 def anneal_activity_group(sid):
     suuid = uuid.UUID(sid)
 
-    schedule = Schedule.query.filter(
+    schedule:Schedule|None = Schedule.query.filter(
         Schedule.owner == current_user, Schedule.id == suuid
     ).first()
 
     if not schedule:
         return _json_error("Schedule (id:{" + sid + "}) does not exist")
-    blocks = anneal_table(schedule)
+    assert type(schedule) is Schedule
+
+    s_start_date = schedule.start_date
+    s_end_date = schedule.start_date + timedelta(days=schedule.length)
+
+    db_blocks:list[Block] = Block.query.filter(
+        Block.start_datetime >= s_start_date ,
+        Block.end_datetime <= s_end_date
+    ).all()
+    
+    blocks = anneal_table(schedule, db_blocks)
 
     try:
         for block in blocks:
