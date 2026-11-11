@@ -306,6 +306,7 @@
     z-index: 2;
     box-sizing: border-box;
     margin-top: -moz-available;
+    overflow-y: auto;
 }
 
 #block-holding.hovered {
@@ -319,4 +320,5 @@
     --top: 0px !important;
     --bottom: 0px !important;
     --width: auto !important;
+    --height: 5rem !important;
 }

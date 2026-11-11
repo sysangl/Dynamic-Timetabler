@@ -657,11 +657,11 @@ function splitBlock(block) {
                 const holding = document.getElementById("block-holding");
                 startL =
                     scheduleContainer.scrollLeft +
-                    holding.offsetLeft;
+                    holding.offsetLeft + e.pageX;
                 startT =
                     scheduleContainer.scrollTop -
-                    scheduleContainer.offsetTop +
-                    holding.offsetTop;
+                    holding.offsetTop +
+                    e.pageY;
                 el.style.setProperty("--left", `${startL}px`);
                 el.style.setProperty("--top", `${startT}px`);
                 el.classList.remove("held-block");
@@ -894,7 +894,12 @@ async function saveTimetable() {
         editedBlocks[bId]["end_time"] = timeString[1];
 
         if (block.dataset.lastBlockId) {
+            const lastBlock = document.getElementById(`timetable-block-${bId}-${lastBlockId}`)
+            const lastTimeString = lastBlock.dataset.blockTime.split("-");
+            editedBlocks[bId]["end_time"] = lastTimeString[1];
         }
+
+
     }
 }
 
