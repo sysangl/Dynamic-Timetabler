@@ -105,6 +105,8 @@ class Block(db.Model):
     end_date: Mapped[str] = mapped_column(default="")
     end_time: Mapped[str] = mapped_column(default="")
 
+    source: Mapped[str] = mapped_column(default="unknown")
+
     activity_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid,
         ForeignKey("activities.id", ondelete="CASCADE"),
@@ -121,6 +123,7 @@ class Block(db.Model):
 
     schedule: Mapped[Schedule] = relationship("Schedule", back_populates="blocks")
 
+
     def __init__(
         self,
         title: str,
@@ -133,6 +136,7 @@ class Block(db.Model):
         start_time: str = "",
         end_date: str = "",
         end_time: str = "",
+        source: str = "unknown",
         **extra,
     ) -> None:
         try:
@@ -147,6 +151,7 @@ class Block(db.Model):
             self.start_time = start_time
             self.end_date = end_date
             self.end_time = end_time
+            self.source = source
         except Exception:
             db_logger.exception("Failed to create Block instance")
             raise
@@ -170,6 +175,7 @@ class Block(db.Model):
             "end_time": self.end_time,
             "colour": self.colour,
             "owner": self.owner.id,
+            "source": self.source
         }
 
 

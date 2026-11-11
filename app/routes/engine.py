@@ -32,6 +32,7 @@ def generate_schedule(sid):
 
     try:
         for block in blocks:
+            block.source = "engine"
             db.session.add(block)
         db.session.commit()
 
@@ -65,6 +66,7 @@ def anneal_activity_group(sid):
 
     try:
         for block in blocks:
+            block.source = "engine"
             db.session.add(block)
         db.session.commit()
 

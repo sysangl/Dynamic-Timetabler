@@ -197,6 +197,7 @@ def create_item(item: str):
     created_item = item_class(
         **data,
         owner=current_user,  # type: ignore
+        source="user"
     )
     created_item.owner_id = current_user.id
     try:
@@ -249,6 +250,7 @@ def update_item(item, id):
             f"Database error while updating {item} (id:{id}) for user {current_user.username}"
         )
         return _json_error(f"Failed to update {item}.", 500)
+
 
 
 @bp.route("/<string:item>/<int:id>", methods=["DELETE"])
