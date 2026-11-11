@@ -270,7 +270,7 @@ def db_blocks_to_engine_initial(
 
     day_load: list[int] = [0] * schedule.SLOTS_PER_DAY
 
-    activities = []
+    activities:list[_Activity] = []
     dbbid_to_ea:dict[int, _Activity] = {}
     atb: ATB = {}
     for dbb in blocks:
@@ -290,10 +290,17 @@ def db_blocks_to_engine_initial(
         else:
             ea = dbbid_to_ea[dbb.id]
         eb = db_to_engine_block(schedule,dbb)
+        eblocks[eb.id] = eb
         atb[ea.id].add(eb.id)
         ea.fixed.append((eb.day, eb.start, eb.length))
 
-
+    for a in activities:
+        ablocks = atb[a.id]
+        for bid in ablocks:
+            b = eblocks[bid]
+            for slot in range(b.start, b.start + b.length):
+                table[b.day][slot].add(b.id)
+            day_load[b.day] += 1
     
     return eblocks, table, atb, day_load
 
