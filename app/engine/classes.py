@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 from typing import Any
 
 from helpers.config import get_config
+from helpers.datetime import parse_iso_time_to_mins
 
 from ..models import Activity, Block, Schedule, User
 
@@ -161,7 +162,7 @@ class _Activity:
             length = max(1, length_mins // self.schedule.SLOT_SIZE)
             output.append((day, start_slot, length))
         return output
-
+    
     @classmethod
     def generate_id(cls) -> int:
         cls.id_registry = cls.id_registry + 1
@@ -243,6 +244,72 @@ def engine_to_db_blocks(
             db_blocks.append(dbb)
     return db_blocks
 
+
+def db_to_engine_block(
+    schedule: _Schedule,
+    block: Block,
+    activity_id:int = -1
+)->_Block:
+    return _Block(
+        activity_id=activity_id,
+        day=(block.start_datetime.date() - schedule.start_date).days,
+        start=parse_iso_time_to_mins(block.start_time),
+        length=parse_iso_time_to_mins(block.end_time)-parse_iso_time_to_mins(block.start_time),
+        fixed=(block.source=="user")
+    )
+
+
+def db_blocks_to_engine_initial(
+    schedule: _Schedule,
+    blocks: list[Block]
+) -> tuple[dict[int,_Block], OverlapTable, ATB, list[int]]:
+    table: OverlapTable = [
+        [set() for _ in range(schedule.SLOTS_PER_DAY)] for _ in range(schedule.SIZE)
+    ]
+    eblocks: dict[int, _Block] = {}
+
+    day_load: list[int] = [0] * schedule.SLOTS_PER_DAY
+
+    activities = []
+    seen_activity_ids = set()
+    atb: ATB = {}
+    for dbb in blocks:
+        if not dbb.activity_id:
+            ea = _Activity(
+                name=dbb.title,
+                db_id=None,
+                
+            )
+        elif dbb.activity_id not in seen_activity_ids:
+            a = db_to_engine_activity(schedule,dbb.activity)
+            activities.append(a)
+            seen_activity_ids.add(dbb.activity_id)
+            atb[a.id] = set()
+        eb = db_to_engine_activity()
+        atb[a.id].add()
+    
+    return eblocks, table, atb, day_load
+
+
+def db_to_engine_activity(
+    schedule: _Schedule,
+    activity:Activity
+)->_Activity:
+    a = activity
+    return _Activity(
+        name=a.name,
+        frequency=a.frequency,
+        even_spacing=a.even_frequency_spacing,
+        min_weekly_minutes=a.min_time,
+        min_block_minutes=a.min_length,
+        max_block_minutes=a.max_length,
+        min_start_minutes=a.min_start_time,
+        fixed=a.fixed,
+        preferred_days=a.preferred_days,
+        priority=a.priority,
+        schedule=schedule,
+        db_id=a.id,
+    )
 
 def db_to_engine_activities(
     schedule: _Schedule, activities: list[Activity]
