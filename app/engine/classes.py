@@ -271,22 +271,29 @@ def db_blocks_to_engine_initial(
     day_load: list[int] = [0] * schedule.SLOTS_PER_DAY
 
     activities = []
-    seen_activity_ids = set()
+    dbbid_to_ea:dict[int, _Activity] = {}
     atb: ATB = {}
     for dbb in blocks:
         if not dbb.activity_id:
             ea = _Activity(
                 name=dbb.title,
                 db_id=None,
-                
+                schedule=schedule
             )
-        elif dbb.activity_id not in seen_activity_ids:
-            a = db_to_engine_activity(schedule,dbb.activity)
-            activities.append(a)
-            seen_activity_ids.add(dbb.activity_id)
-            atb[a.id] = set()
-        eb = db_to_engine_activity()
-        atb[a.id].add()
+            activities.append(ea)
+            dbbid_to_ea[dbb.id]=ea
+        elif dbb.id not in dbbid_to_ea:
+            ea = db_to_engine_activity(schedule,dbb.activity)
+            activities.append(ea)
+            dbbid_to_ea[dbb.id] = ea
+            atb[ea.id] = set()
+        else:
+            ea = dbbid_to_ea[dbb.id]
+        eb = db_to_engine_block(schedule,dbb)
+        atb[ea.id].add(eb.id)
+        ea.fixed.append((eb.day, eb.start, eb.length))
+
+
     
     return eblocks, table, atb, day_load
 
