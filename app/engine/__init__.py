@@ -94,15 +94,8 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
             activities.append(_a)
         for _aid, _ab in eatb.items():
             atb[_aid] = _ab 
-        for _a in activities:
-            print(_a.id, _a.name)
         
         blocks, table, atb, day_load = greedy_initial(engine_schedule, activities, table,blocks,atb,day_load)
-
-        print(blocks)
-        print(table)
-        print(atb)
-        print(day_load)
 
     from app.engine.annealer import Annealer
 

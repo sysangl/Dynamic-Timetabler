@@ -4,6 +4,9 @@ import math
 import random
 import sys
 from collections.abc import Callable, Iterable
+import logging
+
+log = logging.getLogger('engine')
 
 from app.engine.classes import (
     ATB,

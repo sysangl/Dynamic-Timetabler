@@ -257,6 +257,8 @@ def place_fixed_blocks(
     day_load: list[int],
 ):
     for activity in activities:
+        if activity.source !="engine":
+            continue
         for day, start, length in activity.fixed_blocks:
             if length > activity.max_block_slots:
                 raise ValueError(

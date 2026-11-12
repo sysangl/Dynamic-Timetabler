@@ -50,6 +50,7 @@ def initialise_logging():
                 "server_file": _rotating_handler("server"),
                 "database_file": _rotating_handler("database"),
                 "app_file": _rotating_handler("app"),
+                "engine_file" : _rotating_handler("engine"),
             },
             "loggers": {
                 "server": {
@@ -65,6 +66,11 @@ def initialise_logging():
                 "app": {
                     "level": "DEBUG",
                     "handlers": ["app_file"],
+                    "propagate": False,
+                },
+                "engine": {
+                    "level": "DEBUG",
+                    "handlers": ["engine_file"],
                     "propagate": False,
                 },
             },
