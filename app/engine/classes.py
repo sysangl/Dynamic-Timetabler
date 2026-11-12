@@ -20,6 +20,7 @@ type OverlapTable = list[list[set]]
 class ChangeResult:
     delta: float
     undo: Callable
+    accept: Callable
 
 
 @dataclass

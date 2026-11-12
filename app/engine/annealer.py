@@ -188,9 +188,8 @@ def shift_move(
     # shift a block one day before or after, and shift it by k hours (random)
     movable = [b for b in blocks.values() if not b.fixed]
     if not movable:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
-    log.info(f'Attempting SHIFT with {[(b.id, activities[b.activity_id]) for b in movable]}')
 
     block = random.choice(movable)
     activity = activities[block.activity_id]
@@ -211,13 +210,13 @@ def shift_move(
     new_start = clamp(old_start + start_offset, 0, activity.schedule.SLOTS_PER_DAY - 1)
 
     # if new_start < activity.min_start_slot:
-    #     return ChangeResult(LIMIT.HARD, undo=lambda: None) # maybe make the penalty scale with prio? or use the soft hard hybrid
+    #     return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None) # maybe make the penalty scale with prio? or use the soft hard hybrid
 
     test_block = _Block(
         activity_id=activity.id, day=new_day, start=new_start, length=block.length
     )
     if not can_place(activity.schedule, table, test_block):
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
     clear_block(table, block)
     day_load[old_day] -= 1
@@ -238,7 +237,10 @@ def shift_move(
         day_load[old_day] += 1
         evaluator.update_activities(affected)
 
-    return ChangeResult(delta=delta_cost, undo=undo)
+    def accept():
+        log.info(f'Accepted SHIFT of {activity.name}[{activity.id}]:{block.id} ')
+
+    return ChangeResult(delta=delta_cost, undo=undo,accept=accept)
 
 
 def swap_blocks(
@@ -256,15 +258,14 @@ def swap_blocks(
     b2 = random.choice([b for b in blocks.values() if not b.fixed])
 
     if b1 == b2:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
     a1 = activities[b1.activity_id]
     a2 = activities[b2.activity_id]
 
     if a1 == a2:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
-    log.info(f'Attempting SWAP with {a1.name} [{b1.id}] & {a2.name} [{b2.id}]')
 
     old1 = (b1.day, b1.start)
     old2 = (b2.day, b2.start)
@@ -288,7 +289,7 @@ def swap_blocks(
     if not (
         can_place(a1.schedule, table, test1) and can_place(a2.schedule, table, test2)
     ):
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
     clear_block(table, b1)
     clear_block(table, b2)
@@ -326,7 +327,10 @@ def swap_blocks(
 
         evaluator.update_activities(affected)
 
-    return ChangeResult(delta_cost, undo=undo)
+    def accept():
+        log.info(f'Accepted SWAP of {a1.name}[{a1.id}]:{b1.id} & {a2.name}[{a2.id}]:{b2.id}')
+
+    return ChangeResult(delta=delta_cost, undo=undo,accept=accept)
 
 
 def resize_block(
@@ -341,9 +345,8 @@ def resize_block(
 
     movable = [b for b in blocks.values() if not b.fixed]
     if not movable:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
     
-    log.info(f'Attempting RESIZE with {[(b.id, activities[b.activity_id]) for b in movable]}')
 
 
     block = random.choice(movable)
@@ -354,23 +357,26 @@ def resize_block(
 
     direction = random.choice([-1, 1])
 
+    def accept():
+        log.info(f'Accepted RESIZE for {activity.name}[{activity.id}]:{block.id}')
+
     if direction == -1:
         if block.length == 1:
-            return ChangeResult(LIMIT.HARD, undo=lambda: None)
+            return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
         clear_block(table, block)
         block.length -= 1
         place_block(table, block)
         delta_cost = evaluator.update_activities(affected)
-        return ChangeResult(delta_cost, undo=lambda: None)
+        return ChangeResult(delta_cost, undo=lambda: None, accept=lambda: accept)
 
     if block.length + 1 > activity.max_block_slots:
-        return ChangeResult(LIMIT.SOFT, undo=lambda: None)
+        return ChangeResult(LIMIT.SOFT, undo=lambda: None, accept=lambda: None)
 
     next_slot = block.start + block.length
     if next_slot >= activity.schedule.SLOTS_PER_DAY:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
     if len(table[block.day][next_slot])!=0:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
     clear_block(table, block)
     block.length += 1
@@ -383,7 +389,7 @@ def resize_block(
         place_block(table, block)
         evaluator.update_activities(affected)
 
-    return ChangeResult(delta=delta_cost, undo=undo)
+    return ChangeResult(delta=delta_cost, undo=undo, accept=accept)
 
 
 def split_block(
@@ -404,9 +410,8 @@ def split_block(
     ]
 
     if not oversized:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
-    log.info(f'Attempting SPLIT with {[(b.id, activities[b.activity_id]) for b in oversized]}')
 
 
     parent = random.choice(oversized)
@@ -443,7 +448,7 @@ def split_block(
     if not (can_place(schedule, table, child1) and can_place(schedule, table, child2)):
         place_block(table, parent)
         day_load[parent.day] += 1
-        return ChangeResult(delta=LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(delta=LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
     place_block(table, child1)
     place_block(table, child2)
@@ -473,7 +478,10 @@ def split_block(
 
         evaluator.update_activities({activity.id})
 
-    return ChangeResult(delta_cost, undo=undo)
+    def accept():
+        log.info(f'Accepted SPLIT for {activity.name}[{activity.id}]:{parent.id}')
+
+    return ChangeResult(delta_cost, undo=undo, accept=accept)
 
 
 def merge_blocks(
@@ -505,9 +513,8 @@ def merge_blocks(
                     candidates.append((a, b1, b2))
 
     if not candidates:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
-    log.info(f'Attempting MERGE with {[(a.name, b1.id, b2.id) for a, b1, b2 in candidates]}')
 
 
     activity, b1, b2 = random.choice(candidates)
@@ -564,7 +571,10 @@ def merge_blocks(
 
         evaluator.update_activities(affected)
 
-    return ChangeResult(delta_cost, undo=undo)
+    def accept():
+        log.info(f'Accepted MERGE for {activity.name}[{activity.id}]:{b1.id} & {b2.id}')
+
+    return ChangeResult(delta_cost, undo=undo, accept=accept)
 
 
 def random_reschedule(
@@ -585,9 +595,8 @@ def random_reschedule(
         if a.priority <= max_priority_allowed and not a.fixed
     ]
     if not low_prio_activities:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
-    log.info(f'Attempting RESCHEDULE with {[(a.name, a.id) for a in low_prio_activities]}')
 
 
     activity = random.choice(low_prio_activities)
@@ -613,7 +622,7 @@ def random_reschedule(
             day_load[block.day] += 1
         evaluator.activity_cost[activity.id] = old_cost
         evaluator.recompute_all()
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
     new_cost = evaluator.calculate_cost(activity.id)
     evaluator.activity_cost[activity.id] = new_cost
@@ -637,7 +646,10 @@ def random_reschedule(
         evaluator.total_cost -= delta_cost
         evaluator.recompute_all()
 
-    return ChangeResult(delta_cost, undo=undo)
+    def accept():
+        log.info(f'Accepted RESCHEDULE for {activity.name}[{activity.id}]')
+
+    return ChangeResult(delta_cost, undo=undo,accept=accept)
 
 
 class Annealer:
@@ -757,6 +769,7 @@ class Annealer:
                 delta_cost = change.delta                
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
                     accepted += 1
+                    change.accept()
                     if self.evaluator.total_cost < best_cost:
                         best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
