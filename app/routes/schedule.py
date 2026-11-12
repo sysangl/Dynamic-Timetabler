@@ -242,7 +242,8 @@ def delete_schedule_blocks(sid: str):
     if not s:
         return _json_error(f'"Schedule" with id "{sid}" does not exist', 404)
     for b in s.blocks:
-        b.activity.blocks.remove(b)
+        if b.activity:
+                b.activity.blocks.remove(b)
         b.schedule.blocks.remove(b)
         db.session.delete(b)
     try:

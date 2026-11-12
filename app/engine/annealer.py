@@ -564,7 +564,7 @@ def random_reschedule(
     low_prio_activities = [
         a
         for a in activities.values()
-        if a.priority <= max_priority_allowed and not a.fixed_blocks
+        if a.priority <= max_priority_allowed and not a.fixed
     ]
     if not low_prio_activities:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)

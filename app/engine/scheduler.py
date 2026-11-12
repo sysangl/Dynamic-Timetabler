@@ -266,10 +266,10 @@ def place_fixed_blocks(
             b = _Block(
                 activity_id=activity.id, day=day, start=start, length=length, fixed=True
             )
-            if not can_place(activity.schedule, table, b):
-                raise ValueError(
-                    f"fixed block for activity {activity.id} overlaps another block"
-                )
+            # if not can_place(activity.schedule, table, b):
+            #     raise ValueError(
+            #         f"fixed block for activity {activity.id} overlaps another block"
+            #     )
 
             place_block(table, b)
             blocks[b.id] = b
