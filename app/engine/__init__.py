@@ -104,29 +104,6 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
         print(atb)
         print(day_load)
 
-
-    # print("\n\nINITIAL =======================================")
-    # for day in range(engine_schedule.SIZE):
-    #     print(f"----- day {day}-------------------")
-    #     day_blocks = [b for b in blocks.values() if b.day == day]
-    #     day_blocks.sort(key=lambda b: b.start)
-
-    #     for block in day_blocks:
-    #         activity = next(a for a in activities if a.id == block.activity_id)
-    #         start_mins = block.start * engine_schedule.SLOT_SIZE
-    #         end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
-    #         start_hours = start_mins // 60
-    #         start_mins = start_mins % 60
-    #         end_hours = end_mins // 60
-    #         end_mins = end_mins % 60
-    #         print(
-    #             f"  {activity.name:12s}  [{block.id:02d}]  "
-    #             f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
-    #             f"(len={block.length} slots)"
-    #         )
-
-    # print("\n\nOptimised ======================================")
-
     from app.engine.annealer import Annealer
 
     annealer = Annealer(
@@ -148,25 +125,6 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
         new_atb.setdefault(block.activity_id, set()).add(id)
 
     best_table, best_blocks = reset_ids(best_table, new_atb, best_blocks)
-
-    # for day in range(engine_schedule.SIZE):
-    #     print(f"----- day {day}-------------------")
-    #     day_blocks = [b for b in best_blocks.values() if b.day == day]
-    #     day_blocks.sort(key=lambda b: b.start)
-
-    #     for block in day_blocks:
-    #         activity = next(a for a in activities if a.id == block.activity_id)
-    #         start_mins = block.start * engine_schedule.SLOT_SIZE
-    #         end_mins = (block.start + block.length) * engine_schedule.SLOT_SIZE
-    #         start_hours = start_mins // 60
-    #         start_mins = start_mins % 60
-    #         end_hours = end_mins // 60
-    #         end_mins = end_mins % 60
-    #         print(
-    #             f"  {activity.name:12s}  [{block.id:02d}]  "
-    #             f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
-    #             f"(len={block.length} slots)"
-    #         )
 
     print("INFO ====================================")
     print(f"Init Cost:  {initial_cost}")

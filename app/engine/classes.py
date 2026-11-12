@@ -285,10 +285,15 @@ def db_blocks_to_engine_initial(
     atb: ATB = {}
     for dbb in blocks:
         if not dbb.activity_id:
+            day=(dbb.start_datetime.date() - schedule.start_date).days
+            start=parse_iso_time_to_mins(dbb.start_time)//schedule.SLOT_SIZE
+            length=(parse_iso_time_to_mins(dbb.end_time)-parse_iso_time_to_mins(dbb.start_time))//schedule.SLOT_SIZE
+
             ea = _Activity(
                 name=dbb.title,
                 db_id=None,
-                schedule=schedule
+                schedule=schedule,
+                fixed=[(day,start,length)]
             )
             activities.append(ea)
             dbbid_to_ea[dbb.id]=ea

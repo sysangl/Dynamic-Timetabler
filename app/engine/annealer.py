@@ -245,8 +245,8 @@ def swap_blocks(
     # swap two blocks of different activities
     delta_cost = 0
 
-    b1 = random.choice(list(blocks.values()))
-    b2 = random.choice(list(blocks.values()))
+    b1 = random.choice([b for b in blocks.values() if not b.fixed])
+    b2 = random.choice([b for b in blocks.values() if not b.fixed])
 
     if b1 == b2:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
@@ -255,11 +255,6 @@ def swap_blocks(
     a2 = activities[b2.activity_id]
 
     if a1 == a2:
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
-
-    if any((b1.day, b1.start, b1.length) == fixed for fixed in a1.fixed_blocks):
-        return ChangeResult(LIMIT.HARD, undo=lambda: None)
-    if any((b2.day, b2.start, b2.length) == fixed for fixed in a2.fixed_blocks):
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
     old1 = (b1.day, b1.start)
@@ -393,6 +388,7 @@ def split_block(
         b
         for b in blocks.values()
         if b.length > activities[b.activity_id].max_block_slots
+        and not b.fixed
     ]
 
     if not oversized:
@@ -482,7 +478,8 @@ def merge_blocks(
         blocks_in_day: dict[int, list[_Block]] = {}
         for bid in atb[aid]:
             b = blocks[bid]
-            blocks_in_day.setdefault(b.day, []).append(b)
+            if not b.fixed:
+                blocks_in_day.setdefault(b.day, []).append(b)
 
         for block_list in blocks_in_day.values():
             block_list.sort(key=lambda b: b.start)
