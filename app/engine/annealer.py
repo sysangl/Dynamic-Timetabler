@@ -52,6 +52,7 @@ class CostEvaluator:
 
     def calculate_cost(self, a_id: int):
         activity = self.activities[a_id]
+        log.info(f'Calculating cost for Activity {activity.name} [{a_id}]')
         block_list = [self.blocks[bid] for bid in self.atb[a_id]]
 
         # cost for min time
@@ -167,6 +168,7 @@ class CostEvaluator:
         return delta
 
     def recompute_all(self):
+        log.info("Recomputing all costs")
         self.activity_cost = {aid: self.calculate_cost(aid) for aid in self.activities}
         self.total_cost = sum(self.activity_cost.values())
         self.idle = 0
@@ -187,6 +189,8 @@ def shift_move(
     movable = [b for b in blocks.values() if not b.fixed]
     if not movable:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+    log.info(f'Attempting SHIFT with {[(b.id, activities[b.activity_id]) for b in movable]}')
 
     block = random.choice(movable)
     activity = activities[block.activity_id]
@@ -259,6 +263,8 @@ def swap_blocks(
 
     if a1 == a2:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+    log.info(f'Attempting SWAP with {a1.name} [{b1.id}] & {a2.name} [{b2.id}]')
 
     old1 = (b1.day, b1.start)
     old2 = (b2.day, b2.start)
@@ -336,6 +342,9 @@ def resize_block(
     movable = [b for b in blocks.values() if not b.fixed]
     if not movable:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
+    
+    log.info(f'Attempting RESIZE with {[(b.id, activities[b.activity_id]) for b in movable]}')
+
 
     block = random.choice(movable)
     activity = activities[block.activity_id]
@@ -396,6 +405,9 @@ def split_block(
 
     if not oversized:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+    log.info(f'Attempting SPLIT with {[(b.id, activities[b.activity_id]) for b in oversized]}')
+
 
     parent = random.choice(oversized)
     activity = activities[parent.activity_id]
@@ -495,6 +507,9 @@ def merge_blocks(
     if not candidates:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
 
+    log.info(f'Attempting MERGE with {[(a.name, b1.id, b2.id) for a, b1, b2 in candidates]}')
+
+
     activity, b1, b2 = random.choice(candidates)
 
     old_b1 = _Block(
@@ -571,6 +586,9 @@ def random_reschedule(
     ]
     if not low_prio_activities:
         return ChangeResult(LIMIT.HARD, undo=lambda: None)
+
+    log.info(f'Attempting RESCHEDULE with {[(a.name, a.id) for a in low_prio_activities]}')
+
 
     activity = random.choice(low_prio_activities)
 
