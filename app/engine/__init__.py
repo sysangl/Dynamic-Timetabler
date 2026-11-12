@@ -81,19 +81,28 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
 
     dba_map = {a.id: a for a in db_activities}
     activities = db_to_engine_activities(engine_schedule, db_activities)
-    if not existing_blocks:
-        blocks, table, atb, day_load = greedy_initial(engine_schedule, activities)
-    else:
-        blocks, table, atb, day_load, _activities = db_blocks_to_engine_initial(engine_schedule, existing_blocks)
-        for _a in _activities:
+    blocks, table, atb, day_load = greedy_initial(engine_schedule, activities)
+    if existing_blocks:
+    
+        eblocks, etable, eatb, day_load, eactivities = db_blocks_to_engine_initial(engine_schedule, existing_blocks)
+        for _bid, _b in eblocks.items():
+            blocks[_bid] = _b
+        for day in range(engine_schedule.SIZE):
+            for row in range(engine_schedule.SLOTS_PER_DAY):
+                table[day][row] = table[day][row].union(etable[day][row])
+        for _a in eactivities:
             activities.append(_a)
+        for _aid, _ab in eatb.items():
+            atb[_aid] = _ab 
+        for _a in activities:
+            print(_a.id, _a.name)
+        
+        blocks, table, atb, day_load = greedy_initial(engine_schedule, activities, table,blocks,atb,day_load)
+
         print(blocks)
         print(table)
         print(atb)
         print(day_load)
-        print(activities)
-        blocks, table, atb, day_load = greedy_initial(engine_schedule, activities, table,blocks,atb,day_load)
-
 
 
     # print("\n\nINITIAL =======================================")
@@ -165,7 +174,9 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
 
     dbb_list = engine_to_db_blocks(engine_schedule, blocks, atb, activities)
     for dbb in dbb_list:
-        if dbb.source == 'engine':
+        if dbb.source != 'engine':
+            continue
+        if dbb.activity_id:
             dbb.activity = dba_map[dbb.activity_id]
             dbb.group_name = dba_map[dbb.activity_id].group_name
             dbb.activity.blocks.add(dbb)

@@ -107,6 +107,7 @@ class _Activity:
         fixed: list[tuple[int, int, int]] | None = None,
         preferred_days: list[int] | None = None,
         priority: int = 1,
+        source: str = 'engine'
     ) -> None:
 
         if preferred_days is None:
@@ -136,6 +137,7 @@ class _Activity:
         self.priority = priority
         self.schedule = schedule
         self.db_id = db_id
+        self.source = source
 
     @property
     def min_weekly_slots(self) -> int:
@@ -183,6 +185,7 @@ class _Block:
         length: int,
         fixed: bool = False,
         id: int = -1,
+        source:str='engine'
     ) -> None:
         if id < 0:
             self.id: int = self.generate_id()
@@ -195,6 +198,7 @@ class _Block:
         self.length: int = length
         self.day: int = day
         self.fixed: bool = fixed
+        self.source:str = source
 
     @classmethod
     def generate_id(cls) -> int:
@@ -215,6 +219,9 @@ def engine_to_db_blocks(
     for a in activities:
         for bid in atb[a.id]:
             b = blocks[bid]
+            if b.source != 'engine':
+                print(f'Skipping _Block {bid}')
+                continue
             tz = get_config()["general"]["timezone"]
             start_hours = math.floor(b.start * schedule.SLOT_SIZE / 60)
             start_time = (b.start * schedule.SLOT_SIZE) % 60
@@ -236,6 +243,7 @@ def engine_to_db_blocks(
                 owner=schedule.owner,
                 start_datetime=start_datetime,
                 end_datetime=end_datetime,
+                source=b.source
                 # start_date=start_datetime.date().isoformat(),
                 # start_time=start_datetime.time().isoformat()[0:4]
             )
@@ -250,12 +258,14 @@ def db_to_engine_block(
     block: Block,
     activity_id:int = -1
 )->_Block:
+    print(block.serialise())
     return _Block(
         activity_id=activity_id,
         day=(block.start_datetime.date() - schedule.start_date).days,
         start=parse_iso_time_to_mins(block.start_time)//schedule.SLOT_SIZE,
         length=(parse_iso_time_to_mins(block.end_time)-parse_iso_time_to_mins(block.start_time))//schedule.SLOT_SIZE,
-        fixed=(block.source=="user")
+        fixed=True,
+        source='user'
     )
 
 

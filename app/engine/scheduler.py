@@ -180,10 +180,10 @@ def greedy_schedule(
                 if placed:
                     break
 
-        if not placed:
-            raise RuntimeError(
-                f"Unable to place a block for activity {activity.id} with a length of {block_length}"
-            )
+        # if not placed:
+        #     raise RuntimeError(
+        #         f"Unable to place a block for activity {activity.id} with a length of {block_length}"
+        #     )
 
 
 def random_schedule(
@@ -296,6 +296,8 @@ def greedy_initial(
         blocks = {}
     if day_load is None:
         day_load = [0] * schedule.SIZE
+
+    print(activity_to_blocks)
 
     place_fixed_blocks(table, activities, blocks, activity_to_blocks, day_load)
 
