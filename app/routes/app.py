@@ -69,6 +69,14 @@ def serve_timetable():
         view=current_user.settings.timetable_view,
     )
 
+@bp.route("/pomodoro")
+@login_required
+def serve_pomodoro():
+    return _render(
+        "pomodoro",
+        display_name=current_user.display_name,
+    )
+
 
 @bp.route("/planner")
 @login_required

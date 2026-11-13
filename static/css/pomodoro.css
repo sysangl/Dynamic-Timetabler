@@ -1,0 +1,52 @@
+#pomo-container {
+    display: grid;
+    grid-template-rows: 1fr 3fr;
+    position: relative;
+    width: 300px;
+    height: 400px;
+}
+
+.pomo-controls {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+}
+
+.pomo-controls div {
+    display: flex;
+    flex-direction: row;
+}
+
+.pomo-controls div span {
+    align-content: center;
+    text-align: center;
+    margin: 10px;
+    font-size: 3rem;
+}
+
+.pomo-controls div button {
+    height: 20px;
+    width: 20px;
+    align-self: center;
+    border-radius: 100%;
+    font-weight: bolder;
+}
+
+#pomo-timer {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#pomo-timer span#mins {
+    font-size: 5rem;
+    align-content: center;
+    text-align: center;
+}
+
+#pomo-timer span#state {
+    font-size: 0.8rem;
+    align-content: center;
+    text-align: center;
+}

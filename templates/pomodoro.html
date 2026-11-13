@@ -1,20 +1,24 @@
 <link rel="stylesheet" href="{{url_for('static', filename='css/pomodoro.css')}}">
 </link>
 
-<div>
-    <div>
-        <button>-</button>
-        <div>num</div>
-        <button>+</button>
-    </div>
-    <div>
-        <button>-</button>
-        <div>num</div>
-        <button>+</button>
+<div id="pomo-container">
+    <div class="pomo-controls">
+        <div>
+            <button type="button" onclick="decSession()">-</button>
+            <span>60</span>
+            <button type="button" onclick="incSession()">+</button>
+        </div>
+        <div></div>
+        <div>
+            <button type="button" onclick="decBreak()">-</button>
+            <span>60</span>
+            <button type="button" onclick="incBreak()">+</button>
+        </div>
     </div>
     
-    <div>
-        <div>rmem</div>
+    <div id="pomo-timer">
+        <span id="mins">120</span>
+        <span id="state">Break</span>
     </div>
 
 </div>
