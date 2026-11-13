@@ -20,6 +20,9 @@ class Settings(db.Model):
     timetable_view: Mapped[str] = mapped_column(default="horizontal")
     days_per_view: Mapped[int] = mapped_column(default=7)
 
+    pomo_default_session: Mapped[int] = mapped_column(default=45)
+    pomo_default_break: Mapped[int] = mapped_column(default=15)
+
     user: Mapped[User] = relationship(
         "User",
         back_populates="settings",
@@ -51,6 +54,8 @@ class Settings(db.Model):
             "start_hour": self.start_hour,
             "timetable_view": self.timetable_view,
             "days_per_view": self.days_per_view,
+            "pomo_default_session" : self.pomo_default_session,
+            "pomo_default_break" : self.pomo_default_break,
         }
 
 
