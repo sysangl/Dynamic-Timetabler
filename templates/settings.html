@@ -56,6 +56,22 @@
         </div>
     </fieldset>
 
+    <fieldset class="card-section">
+        <legend class="section-title">Pomodoro</legend>
+
+        <div class="field-group">
+            <label for="pomo_default_session">Default session length (minutes)</label>
+            <input id="pomo_default_session" name="pomo_default_session" type="number" min="1" max="999"
+                placeholder="45" class="field-input" />
+        </div>
+
+        <div class="field-group">
+            <label for="pomo_default_break">Default break length (minutes)</label>
+            <input id="pomo_default_break" name="pomo_default_break" type="number" min="1" max="999"
+                placeholder="15" class="field-input" />
+        </div>
+    </fieldset>
+
     <div class="form-actions">
         <button id="settings-save-button" class="submit-button" type="submit">SAVE</button>
     </div>
