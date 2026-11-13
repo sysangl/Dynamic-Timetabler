@@ -595,7 +595,7 @@ function splitBlock(block) {
         timeSpan.textContent = displayTime;
         infoDiv.append(titleSpan, document.createElement("br"), timeSpan);
         el.appendChild(infoDiv);
-        el.dataset.date = start.toDateString().slice(3);
+        el.dataset.date = start.toISOString().slice(0,10)
 
         const scheduleContainer = document.getElementById(
             "tt-schedule-container",
@@ -771,6 +771,16 @@ function splitBlock(block) {
             );
             el.style.setProperty("--top", `${snappedT}px`);
 
+            var oldDayIdx = startT / snapTpx
+            var newDayIdx = snappedT / snapTpx
+            var dDayIdx = newDayIdx - oldDayIdx
+            const curDay = new Date(el.dataset.date)
+            const newDay = new Date(
+                curDay.getTime() + minsInDay*60*1000 * (dDayIdx),
+            );
+            el.dataset.date = newDay.toISOString().slice(0,10)
+
+
             if (el.dataset.held == 1) {
                 el.dataset.held = 0;
 
@@ -877,30 +887,57 @@ async function clearTimetable() {
 }
 
 async function saveTimetable() {
-    const blocks = document.getElementsByClassName("timetable-blocks");
+    const blocks = document.getElementsByClassName("timetable-block");
+
+    console.log(blocks)
 
     var editedBlocks = {};
 
     for (block of blocks) {
-        if (!block.dataset.edited) return;
+        if (!block.dataset.edited) continue;
         const bInfo = block.id.split("-");
-        if (bInfo != 0) return; // check if it is the starting block
+        if (bInfo[3] != 0) continue; // check if it is the starting block
         const bId = bInfo[2];
 
         editedBlocks[bId] = {};
 
-        const timeString = block.dataset.blockTime.split("-");
+        const timeString = block.dataset.blockTime.split(" - ");
         editedBlocks[bId]["start_time"] = timeString[0];
         editedBlocks[bId]["end_time"] = timeString[1];
+        editedBlocks[bId]["start_date"] = block.dataset.date
+        editedBlocks[bId]["end_date"] = block.dataset.date
 
         if (block.dataset.lastBlockId) {
             const lastBlock = document.getElementById(`timetable-block-${bId}-${lastBlockId}`)
             const lastTimeString = lastBlock.dataset.blockTime.split("-");
             editedBlocks[bId]["end_time"] = lastTimeString[1];
+            editedBlocks[bId]["end_date"] = block.dataset.date
         }
 
-
     }
+    console.log(editedBlocks)
+
+    const response = await fetch(
+        `/api/timetable/blocks`,
+        {
+            method: "PUT",
+            body: JSON.stringify({'blocks':editedBlocks}),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        },
+
+    );
+
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+    }
+    for (block of blocks) {
+        block.dataset.edited = false
+    }
+    editing = false
+    return response.json();
+
 }
 
 function prevDate() {

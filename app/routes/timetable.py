@@ -251,7 +251,41 @@ def update_item(item, id):
         )
         return _json_error(f"Failed to update {item}.", 500)
 
+@bp.route("/blocks", methods=["PUT"])
+@login_required
+def update_blocks():
+    data = request.get_json()
 
+    print(f'Update with {data}')
+    updated_blocks = data['blocks']
+
+    tz = get_config()["general"]["timezone"]
+    for ubid, ubdata in updated_blocks.items():
+        cb = Block.query.filter(
+            Block.id == ubid,
+            Block.owner == current_user
+            ).first()
+        if not cb:
+            continue
+        assert type(cb) is Block
+        cb.start_datetime = combine_date_time(
+            ubdata.get("start_date"), ubdata.get("start_time"), tz=tz
+        )  # type: ignore
+        cb.end_datetime = combine_date_time(
+            ubdata.get("end_date"), ubdata.get("end_time"), tz=tz
+        )  # type: ignore
+
+
+    try:
+        db.session.commit()
+        log.info(f"Updated {len(updated_blocks)} Blocks for user {current_user.username}")
+        return _json_success({"msg":f"Updated {len(updated_blocks)} Blocks"})
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception(
+            f"Database error while mass updating Blocks for user {current_user.username}"
+        )
+        return _json_error("Failed to update Blocks.", 500)
 
 @bp.route("/<string:item>/<int:id>", methods=["DELETE"])
 @login_required
