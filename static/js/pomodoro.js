@@ -32,12 +32,16 @@ function updateTime(id) {
 
 function newPomo(id) {
     window.currentPomos[id] = {}
-    window.currentPomos[id].sessionSeconds = 1*60
+    window.currentPomos[id].sessionSeconds = 30*60
     window.currentPomos[id].breakSeconds = 15*60
     window.currentPomos[id].currentSeconds = window.currentPomos[id].sessionSeconds
     window.currentPomos[id].running = false
     window.currentPomos[id].intervalId = null
     window.currentPomos[id].state = 'Session'
+
+    document.getElementById('session-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
+    document.getElementById('break-mins').textContent = Math.floor(window.currentPomos[id].breakSeconds/60)
+    document.getElementById('remaining-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
 }
 
 function togglePomo(id) {
