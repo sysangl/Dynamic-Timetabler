@@ -18,6 +18,7 @@ ALLOWED_PAGES = [
     "settings",
     "planner",
     "scheduler",
+    "pomodoro",
     "info",
 ]
 
