@@ -94,8 +94,13 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
             activities.append(_a)
         for _aid, _ab in eatb.items():
             atb[_aid] = _ab 
+            print(f'{_aid} = {_ab}')
         
         blocks, table, atb, day_load = greedy_initial(engine_schedule, activities, table,blocks,atb,day_load)
+
+    for _aid, _ab in atb.items():
+        atb[_aid] = _ab 
+        print(f'{_aid} = {_ab}')
 
     from app.engine.annealer import Annealer
 
@@ -113,6 +118,10 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
 
     best_table, best_blocks, best_cost = annealer.run()
 
+    print('best blocks after annealer ---------------')
+    for bid, b in best_blocks.items():
+        print(f'{bid}:{b.activity_id}')
+
     new_atb: dict[int, set[int]] = {}
     for id, block in best_blocks.items():
         new_atb.setdefault(block.activity_id, set()).add(id)
@@ -123,7 +132,7 @@ def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
     print(f"Init Cost:  {initial_cost}")
     print(f"Final Cost: {best_cost}")
 
-    dbb_list = engine_to_db_blocks(engine_schedule, blocks, atb, activities)
+    dbb_list = engine_to_db_blocks(engine_schedule, best_blocks, new_atb, activities)
     for dbb in dbb_list:
         if dbb.source != 'engine':
             continue

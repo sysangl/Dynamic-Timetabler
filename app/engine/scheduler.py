@@ -1,7 +1,9 @@
+import logging
 import random
 
 from .classes import ATB, OverlapTable, _Activity, _Block, _Schedule
 
+log = logging.getLogger('engine')
 
 def clamp(value, min_value, max_value):
     return max(min_value, min(value, max_value))
@@ -54,7 +56,7 @@ def can_place(schedule: _Schedule, table: OverlapTable, b: _Block):
             if not table[b.day][slot].issubset({b.id}):
                 return False
         except IndexError:
-            print(f"can_place failed : slot {slot}")
+            log.error(f'CAN_PLACE failed to place block at slot {slot}')
             return False
     return True
 
@@ -206,7 +208,7 @@ def random_schedule(
         placed = False
         for day in days:
             free_slots_start = find_free_slots(
-                day, block_length, table, start_from=random.randint(0, 23)
+                day, block_length, table, start_from=random.randint(0, activity.schedule.SLOTS_PER_DAY//8)
             )
             if free_slots_start is not None:
                 b = _Block(
@@ -225,7 +227,7 @@ def random_schedule(
             for reduced_length in range(block_length - 1, 0, -1):
                 for day in days:
                     free_slots_start = find_free_slots(
-                        day, reduced_length, table, start_from=random.randint(0, 24)
+                        day, reduced_length, table, start_from=random.randint(0, activity.schedule.SLOTS_PER_DAY//8)
                     )
                     if free_slots_start is not None:
                         b = _Block(
@@ -293,7 +295,7 @@ def greedy_initial(
             [set() for _ in range(schedule.SLOTS_PER_DAY)] for _ in range(schedule.SIZE)
         ]
     if activity_to_blocks is None:
-        activity_to_blocks = {a.id: set() for a in activities}
+        activity_to_blocks = {a.id: set() for a in activities if a.source == 'engine'}
     if blocks is None:
         blocks = {}
     if day_load is None:

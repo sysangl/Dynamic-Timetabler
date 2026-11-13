@@ -217,11 +217,13 @@ def engine_to_db_blocks(
     activities: list[_Activity],
 ) -> list[Block]:
     db_blocks: list[Block] = []
+    print('engine to db list ---------------')
     for a in activities:
         for bid in atb[a.id]:
             b = blocks[bid]
+            print(f'{a.name}[{bid}]')
             if b.source != 'engine':
-                print(f'Skipping _Block {bid}')
+                print(f'Skipping _Block {a.name}[{bid}]')
                 continue
             tz = get_config()["general"]["timezone"]
             start_hours = math.floor(b.start * schedule.SLOT_SIZE / 60)
@@ -259,7 +261,6 @@ def db_to_engine_block(
     block: Block,
     activity_id:int = -1
 )->_Block:
-    print(block.serialise())
     return _Block(
         activity_id=activity_id,
         day=(block.start_datetime.date() - schedule.start_date).days,
@@ -285,25 +286,27 @@ def db_blocks_to_engine_initial(
     dbbid_to_ea:dict[int, _Activity] = {}
     atb: ATB = {}
     for dbb in blocks:
-        if not dbb.activity_id:
-            day=(dbb.start_datetime.date() - schedule.start_date).days
-            start=parse_iso_time_to_mins(dbb.start_time)//schedule.SLOT_SIZE
-            length=(parse_iso_time_to_mins(dbb.end_time)-parse_iso_time_to_mins(dbb.start_time))//schedule.SLOT_SIZE
+        if dbb.id not in dbbid_to_ea:
+            if not dbb.activity_id:
+                day=(dbb.start_datetime.date() - schedule.start_date).days
+                start=math.floor(parse_iso_time_to_mins(dbb.start_time)/schedule.SLOT_SIZE)
+                length=math.floor((parse_iso_time_to_mins(dbb.end_time)-parse_iso_time_to_mins(dbb.start_time))/schedule.SLOT_SIZE)
 
-            ea = _Activity(
-                name=dbb.title,
-                db_id=None,
-                schedule=schedule,
-                fixed=[(day,start,length)]
-            )
-            activities.append(ea)
-            dbbid_to_ea[dbb.id]=ea
-            atb[ea.id] = set()
-        elif dbb.id not in dbbid_to_ea:
-            ea = db_to_engine_activity(schedule,dbb.activity)
-            activities.append(ea)
-            dbbid_to_ea[dbb.id] = ea
-            atb[ea.id] = set()
+                ea = _Activity(
+                    name=dbb.title,
+                    db_id=None,
+                    schedule=schedule,
+                    fixed=[(day,start,length)],
+                    source=dbb.source
+                )
+                activities.append(ea)
+                dbbid_to_ea[dbb.id]=ea
+                atb[ea.id] = set()
+            else:
+                ea = db_to_engine_activity(schedule,dbb.activity)
+                activities.append(ea)
+                dbbid_to_ea[dbb.id] = ea
+                atb[ea.id] = set()
         else:
             ea = dbbid_to_ea[dbb.id]
         eb = db_to_engine_block(schedule,dbb, ea.id)
@@ -320,7 +323,6 @@ def db_blocks_to_engine_initial(
                     break
                 table[b.day][slot].add(b.id)
             day_load[b.day] += 1
-    
     return eblocks, table, atb, day_load, activities
 
 

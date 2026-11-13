@@ -7,9 +7,10 @@ import logging.config
 
 from helpers.config import _get_data_dir
 
+
 _LOG_PATH = _get_data_dir() / "logs"
 _LOG_FMT = (
-    "%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
+    "%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)-15s:%(lineno)d | %(message)s"
 )
 _DATE_FMT = "%Y-%m-%d %H:%M:%S"
 
@@ -31,6 +32,7 @@ def initialise_logging():
     _LOG_PATH.mkdir(parents=True, exist_ok=True)
     print("Activating Loggers")
 
+
     logging.config.dictConfig(
         {
             "version": 1,
@@ -50,7 +52,17 @@ def initialise_logging():
                 "server_file": _rotating_handler("server"),
                 "database_file": _rotating_handler("database"),
                 "app_file": _rotating_handler("app"),
-                "engine_file" : _rotating_handler("engine"),
+                "engine_file" : {
+                                "class": "logging.handlers.RotatingFileHandler",
+                                "level": "DEBUG",
+                                "formatter": "standard",
+                                "filename": str(_LOG_PATH / "engine.log"),
+                                "mode": "a",
+                                "maxBytes": 8000000,  # 2 MiB
+                                "backupCount": 5,
+                                "encoding": "utf-8",
+                                "delay":True,
+                            },
             },
             "loggers": {
                 "server": {

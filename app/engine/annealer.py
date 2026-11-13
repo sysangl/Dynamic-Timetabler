@@ -359,6 +359,12 @@ def resize_block(
 
     def accept():
         log.info(f'Accepted RESIZE for {activity.name}[{activity.id}]:{block.id}')
+    
+    def undo():
+        clear_block(table, block)
+        block.length = old_length
+        place_block(table, block)
+        evaluator.update_activities(affected)
 
     if direction == -1:
         if block.length == 1:
@@ -367,7 +373,7 @@ def resize_block(
         block.length -= 1
         place_block(table, block)
         delta_cost = evaluator.update_activities(affected)
-        return ChangeResult(delta_cost, undo=lambda: None, accept=lambda: accept)
+        return ChangeResult(delta_cost, undo=undo, accept=lambda: accept)
 
     if block.length + 1 > activity.max_block_slots:
         return ChangeResult(LIMIT.SOFT, undo=lambda: None, accept=lambda: None)
@@ -383,11 +389,6 @@ def resize_block(
     place_block(table, block)
     delta_cost = evaluator.update_activities(affected)
 
-    def undo():
-        clear_block(table, block)
-        block.length = old_length
-        place_block(table, block)
-        evaluator.update_activities(affected)
 
     return ChangeResult(delta=delta_cost, undo=undo, accept=accept)
 
@@ -685,6 +686,8 @@ class Annealer:
         self.target_acceptance = 0.3
         self.adjust_factor = 0.95
 
+        self.schedule = schedule
+
         self.change_factories = [
             lambda: shift_move(
                 self.table,
@@ -751,6 +754,7 @@ class Annealer:
         return self.T * (self.cooling ** iteration)
 
     def run(self):
+        log.info(f'Starting ANNEAL for {self.schedule.db_id}')
         best_cost = self.evaluator.total_cost
         best_table = copy.deepcopy(self.table)
         best_blocks = copy.deepcopy(self.blocks)
