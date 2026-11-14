@@ -683,54 +683,55 @@ class Annealer:
         self.T_MIN = 1e-3
         self.cooling = 0.995
         self.cycles = 500
-        self.adjust_interval = 100
-        self.target_acceptance = 0.2
-        self.adjust_factor = 0.95
+        self.adjust_interval = 200
+        self.target_acceptance = 0.18
+        self.adjust_factor = 0.85
+        self.change_success_rate = 0.4
 
         self.schedule = schedule
 
         self.change_factories = [
-            lambda: shift_move(
+            ('shift', lambda: shift_move(
                 self.table,
                 self.activities,
                 self.atb,
                 self.blocks,
                 self.day_load,
                 self.evaluator,
-            ),
-            lambda: resize_block(
+            )),
+            ('resize',lambda: resize_block(
                 self.table,
                 self.activities,
                 self.atb,
                 self.blocks,
                 self.day_load,
                 self.evaluator,
-            ),
-            lambda: merge_blocks(
+            )),
+            ('merge',lambda: merge_blocks(
                 self.table,
                 self.activities,
                 self.atb,
                 self.blocks,
                 self.day_load,
                 self.evaluator,
-            ),
-            lambda: split_block(
+            )),
+            ('split',lambda: split_block(
                 self.table,
                 self.activities,
                 self.atb,
                 self.blocks,
                 self.day_load,
                 self.evaluator,
-            ),
-            lambda: swap_blocks(
+            )),
+            ('swap',lambda: swap_blocks(
                 self.table,
                 self.activities,
                 self.atb,
                 self.blocks,
                 self.day_load,
                 self.evaluator,
-            ),
-            lambda: random_reschedule(
+            )),
+            ('random',lambda: random_reschedule(
                 self.table,
                 self.activities,
                 self.atb,
@@ -739,13 +740,27 @@ class Annealer:
                 self.evaluator,
                 self.scheduler,
                 max_priority_allowed=5,
-            ),
+            )),
         ]
+
+        self.change_stats = {
+            'shift':0.0,
+            'resize':0.0,
+            'merge':0.0,
+            'swap':0.0,
+            'split':0.0,
+            'random':0.0,
+        }
 
     def _weighted_change_factory(self,T): # type: ignore
         base = [0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
-        if T < 1e3:
-            base[0] += 0.30
+
+        for c in self.change_stats:
+            self.change_stats[c] *= 0.9
+
+        for i, (c, success_rate) in enumerate(self.change_stats.items()):
+            if success_rate > self.change_success_rate:
+                base[i] *= 1.5
         return random.choices(self.change_factories, weights=base)[0]
 
     def log_cool(self, T, iteration):
@@ -770,11 +785,13 @@ class Annealer:
         while T > self.T_MIN:
             for _ in range(self.cycles):
                 attempted += 1
-                change = self._weighted_change_factory(T)()
+                change_name, change_fn = self._weighted_change_factory(T)
+                change = change_fn()
                 delta_cost = change.delta                
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
                     accepted += 1
                     change.accept()
+                    self.change_stats[change_name] += 0.1
                     if self.evaluator.total_cost < best_cost:
                         best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
