@@ -1,10 +1,10 @@
 import collections
 import copy
+import logging
 import math
 import random
 import sys
 from collections.abc import Callable, Iterable
-import logging
 
 log = logging.getLogger('engine')
 
@@ -665,6 +665,7 @@ class Annealer:
         scheduler: Callable[
             [_Activity, OverlapTable, dict[int, _Block], ATB, list[int]], None
         ],
+        mode:str='normal',
     ) -> None:
         self.activities = {a.id: a for a in activities}
         self.scheduler = scheduler
@@ -681,9 +682,9 @@ class Annealer:
         self.T = 1e26
         self.T_MIN = 1e-3
         self.cooling = 0.995
-        self.cycles = 300
+        self.cycles = 500
         self.adjust_interval = 100
-        self.target_acceptance = 0.3
+        self.target_acceptance = 0.2
         self.adjust_factor = 0.95
 
         self.schedule = schedule

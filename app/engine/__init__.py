@@ -39,8 +39,9 @@ def reset_ids(table: OverlapTable, atb: ATB, blocks: dict[int, _Block], start_fr
     return table, blocks
 
 
-def initial_table(db_schedule: Schedule):
+def initial_table(db_schedule: Schedule, existing_blocks: list[Block]| None=None):
     from .classes import (
+        db_blocks_to_engine_initial,
         db_to_engine_activities,
         db_to_engine_schedule,
         engine_to_db_blocks,
@@ -50,21 +51,37 @@ def initial_table(db_schedule: Schedule):
     engine_schedule = db_to_engine_schedule(db_schedule)
 
     db_activities = db_schedule.activities
-    activities = db_to_engine_activities(engine_schedule, db_activities)
 
     dba_map = {a.id: a for a in db_activities}
-
-    blocks, _, atb, _ = greedy_initial(engine_schedule, activities)
+    activities = db_to_engine_activities(engine_schedule, db_activities)
+    blocks, table, atb, day_load = greedy_initial(engine_schedule, activities)
+    if existing_blocks:
+    
+        eblocks, etable, eatb, day_load, eactivities = db_blocks_to_engine_initial(engine_schedule, existing_blocks)
+        for _bid, _b in eblocks.items():
+            blocks[_bid] = _b
+        for day in range(engine_schedule.SIZE):
+            for row in range(engine_schedule.SLOTS_PER_DAY):
+                table[day][row] = table[day][row].union(etable[day][row])
+        for _a in eactivities:
+            activities.append(_a)
+        for _aid, _ab in eatb.items():
+            atb[_aid] = _ab 
+            print(f'{_aid} = {_ab}')
+        
+        blocks, table, atb, day_load = greedy_initial(engine_schedule, activities, table,blocks,atb,day_load)
 
     dbb_list = engine_to_db_blocks(engine_schedule, blocks, atb, activities)
     for dbb in dbb_list:
-        dbb.activity = dba_map[dbb.activity_id]
-        dbb.group_name = dba_map[dbb.activity_id].group_name
-        dbb.activity.blocks.add(dbb)
-        dbb.colour = dba_map[dbb.activity_id].colour
+        if dbb.source != 'engine':
+            continue
+        if dbb.activity_id:
+            dbb.activity = dba_map[dbb.activity_id]
+            dbb.group_name = dba_map[dbb.activity_id].group_name
+            dbb.activity.blocks.add(dbb)
+            dbb.colour = dba_map[dbb.activity_id].colour
 
     return dbb_list
-
 
 def anneal_table(db_schedule: Schedule, existing_blocks:list[Block]|None=None):
     from .classes import (

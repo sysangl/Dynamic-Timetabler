@@ -22,14 +22,23 @@ log = logging.getLogger("app")
 def generate_schedule(sid):
     suuid = uuid.UUID(sid)
 
-    schedule = Schedule.query.filter(
+    schedule:Schedule|None = Schedule.query.filter(
         Schedule.owner == current_user, Schedule.id == suuid
     ).first()
 
     if not schedule:
         return _json_error("Schedule (id:{" + sid + "}) does not exist")
+    assert type(schedule) is Schedule
 
-    blocks = initial_table(schedule)
+    s_start_date = schedule.start_date
+    s_end_date = schedule.start_date + timedelta(days=schedule.length)
+
+    db_blocks:list[Block] = Block.query.filter(
+        Block.start_datetime >= s_start_date ,
+        Block.end_datetime <= s_end_date
+    ).all()
+
+    blocks = initial_table(schedule, db_blocks)
 
     try:
         for block in blocks:

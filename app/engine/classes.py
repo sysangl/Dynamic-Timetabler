@@ -261,6 +261,7 @@ def db_to_engine_block(
     block: Block,
     activity_id:int = -1
 )->_Block:
+    print(block.title)
     return _Block(
         activity_id=activity_id,
         day=(block.start_datetime.date() - schedule.start_date).days,
