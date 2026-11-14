@@ -991,6 +991,67 @@ function rebuildTimetable() {
     );
 }
 
+
+function openNewBlockForm() {
+    const iFormsCont = document.getElementById('item-forms');
+    const backdrop = document.getElementById('backdrop')
+    if (!iFormsCont || !backdrop) return;
+    iFormsCont.classList.remove('hidden')
+    backdrop.classList.add('active')
+}
+
+function closeItemForms() {
+    const iFormsCont = document.getElementById('item-forms');
+    const backdrop = document.getElementById('backdrop')
+    if (!iFormsCont || !backdrop) return;
+
+    iFormsCont.classList.add('hidden')
+    backdrop.classList.remove('active')
+}
+
+bform = document.getElementById('blocks-form')
+bform.addEventListener('submit',async (e)=>{
+    e.preventDefault();
+
+    const formData = new FormData(bform)
+    var object = {}
+    formData.forEach((value, key)=>{
+        object[key] = value;
+    })
+    fetch(`/api/schedules/create`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(object),
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            console.log("Success:", data);
+            sform.reset();
+            const pieces = splitBlock(data);
+            for (const el of pieces) {
+                schedule.append(el);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            document.getElementById("form-error-messages").textContent =
+                "Schedule creation failed. Please try again.";
+            document
+                .getElementById("form-error-messages")
+                .classList.remove("hidden");
+        });
+
+})
+
+
+
 function initHolding() {
     const holding = document.getElementById("block-holding");
     window.addEventListener("pointermove", (e) => {
@@ -1051,7 +1112,7 @@ async function initTimetable() {
 
     document
         .getElementById("backdrop")
-        .addEventListener("click", closePopupMenu);
+        .addEventListener("click", () => {closePopupMenu(); closeItemForms()});
     document.addEventListener("keydown", (e) => {
         const popupMenu = document.getElementById("popup-menu");
         if (!popupMenu) return;

@@ -1,6 +1,10 @@
 <!-- base timetable css -->
 <link rel="stylesheet" href="{{url_for('static', filename='css/planner.css')}}">
 </link>
+<!-- <link rel="stylesheet" href="{{url_for('static', filename='css/management.css')}}">
+</link> -->
+<link rel="stylesheet" href="{{url_for('static', filename='css/forms.css')}}">
+</link>
 <!-- horizontal/vertical view -->
 {% if current_user.settings.timetable_view == 'horizontal' %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/horizontal-planner.css')}}">
@@ -22,7 +26,9 @@
     <button class="timetable-date-btn" type="button" onclick="nextDate()"><span
             class="fa-solid fa-chevron-right"></span></button>
     <button class="submit-button" type="button" onclick="saveTimetable()">Save</button>
-    
+    <button class="other-button" type="button" onclick="openNewBlockForm()">New Block</button>
+
+
 </div>
 
 <!-- main timetable screen -->
@@ -58,6 +64,70 @@
 
 <div id="block-holding">
 
+</div>
+
+
+<div id="item-forms" class="hidden">
+    <div id="form-error-messages"></div>
+    <div id="blocks-form-container" class="form-container">
+        <form id="blocks-form" class="item-form form-body" method="post"
+            action="{{ url_for('timetable.create_item', item='block') }}">
+
+            <fieldset class="card-section">
+                <legend class="section-title">General information</legend>
+
+                <div class="field-group">
+                    <label for="title">Title</label>
+                    <input id="title" name="title" type="text" maxlength="30" required class="field-input"
+                        placeholder="Short title">
+                </div>
+
+                <div class="field-group">
+                    <label for="description">Description</label>
+                    <input id="description" name="description" type="text" maxlength="300" class="field-input"
+                        placeholder="Optional longer description">
+                </div>
+            </fieldset>
+
+            <fieldset class="card-section">
+                <legend class="section-title">When does it happen?</legend>
+
+                <div class="field-group">
+                    <label for="sdate">Start date</label>
+                    <input id="sdate" name="start_date" type="date" required class="field-input">
+                </div>
+
+                <div class="field-group">
+                    <label for="stime">Start time</label>
+                    <input id="stime" name="start_time" type="time" required class="field-input">
+                </div>
+
+                <div class="field-group">
+                    <label for="edate">End date</label>
+                    <input id="edate" name="end_date" type="date" required class="field-input">
+                </div>
+
+                <div class="field-group">
+                    <label for="etime">End time</label>
+                    <input id="etime" name="end_time" type="time" required class="field-input">
+                </div>
+            </fieldset>
+
+            <fieldset class="card-section">
+                <legend class="section-title">Appearance</legend>
+
+                <div class="field-group">
+                    <label for="colour">Colour</label>
+                    <input id="colour" name="colour" type="color" value="#155764" class="field-input colour-input">
+                </div>
+            </fieldset>
+
+            <div class="form-actions">
+                <button id="form-cancel-button" class="cancel-button form-btn" type="reset">Clear</button>
+                <button id="form-submit-button" class="submit-button form-btn" type="submit">Create</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div id="backdrop"></div>

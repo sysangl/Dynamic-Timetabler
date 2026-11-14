@@ -50,6 +50,7 @@ class PENALTY_WEIGHTS:
     IDLE = 1.0
     BALANCE = 2.0
     FRAGMENT = 4.0
+    
 
 
 class _Schedule:

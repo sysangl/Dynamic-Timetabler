@@ -277,20 +277,32 @@
     margin: 0.2rem;
     padding: 0.4rem;
 }
-
 #backdrop {
+    position: absolute;
+    backdrop-filter: brightness(0.6) blur(8px);
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
     display: none;
 }
 
 #backdrop.active {
     display: block;
-    background: transparent;
+}
+#item-forms.hidden {
+    display: none !important;
+}
+
+.form-container.hidden {
+    display: none !important;
+}
+
+#item-forms {
+    z-index: 1000 !important;
     position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 999;
-    width: 100%;
-    height: 100%;
 }
 
 #block-holding {
