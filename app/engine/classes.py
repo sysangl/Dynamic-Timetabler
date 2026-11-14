@@ -84,6 +84,10 @@ class _Schedule:
         }
         self.OVERLAP_PRIORITIES = {6, 7, 8, 9, 10}
 
+        self.user_defined_bounds : dict[str,tuple[float,int,int]] = {
+            'lunch_break':(1.5, (13*60)//self.SLOT_SIZE, (1*60)//self.SLOT_SIZE) # lunch break increases costs of activities by 1.5. it starts at 13:00 and is 1 hour long
+        }
+
     def __call__(self, *args: Any, **kwds: Any) -> OverlapTable:
         return self.table
 

@@ -121,6 +121,10 @@ class CostEvaluator:
             if b.day not in activity.preferred_days:
                 preferred_day_count += 1
 
+            for bound in self.schedule.user_defined_bounds.values():
+                if len(set(range(b.start, b.start + b.length)).intersection(set(range(bound[1],bound[1]+bound[2])))) != 0:
+                    cost *= bound[1]
+
             # cost for minimum start
             if b.start < activity.min_start_slot:
                 cost += (b.start - activity.min_start_slot) ** 2 * PENALTY_WEIGHTS.MIN_START
@@ -791,7 +795,7 @@ class Annealer:
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
                     accepted += 1
                     change.accept()
-                    self.change_stats[change_name] += 0.1
+                    self.change_stats[change_name] += 0.5
                     if self.evaluator.total_cost < best_cost:
                         best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
@@ -817,4 +821,5 @@ class Annealer:
             # T = self.exp_cool(T,iteration_count)
                 T *= self.cooling
 
+        print(self.change_stats)
         return best_table, best_blocks, best_cost
