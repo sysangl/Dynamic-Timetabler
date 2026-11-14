@@ -126,6 +126,12 @@ function setActiveSchedule(id) {
     generateActivityTable(id);
 
     document.getElementById(`schedule-${id}`).classList.add("selected");
+
+    if (document.getElementById('block-table-body').childElementCount != 0) {
+        document.getElementById('generate-timetable-btn').disabled = true
+        document.getElementById('anneal-timetable-btn').disabled = true
+    }
+
 }
 
 function setActiveActivity(id) {
@@ -347,6 +353,13 @@ async function generateBlockTable(sid, aid = null) {
     }
 
     document.getElementById("block-counter").textContent = blockCount;
+    if (document.getElementById('block-table-body').childElementCount != 0) {
+        document.getElementById('generate-timetable-btn').disabled = true
+        document.getElementById('anneal-timetable-btn').disabled = true
+    } else {
+        document.getElementById('generate-timetable-btn').disabled = false
+        document.getElementById('anneal-timetable-btn').disabled = false
+    }
 }
 
 function addNewFixedBlock() {
@@ -409,7 +422,7 @@ async function deleteScheduleBlocks() {
         throw new Error(`${response.status} ${response.statusText}`);
     }
 
-    generateBlockTable(currentScheduleId);
+    await generateBlockTable(currentScheduleId);
 }
 
 /**
@@ -474,6 +487,13 @@ function sortTable(column, item = "block") {
 }
 
 async function generateSchedule() {
+    const atb = document.getElementById('anneal-timetable-btn');
+    if (!atb) return;
+    atb.disabled = true
+    const gtb = document.getElementById('generate-timetable-btn');
+    if (!gtb) return;
+    gtb.disabled = true
+
     deleteScheduleBlocks();
 
     var url = `/api/engine/generate/${currentScheduleId}`;
@@ -493,6 +513,15 @@ async function generateSchedule() {
 }
 
 async function annealSchedule() {
+
+    const atb = document.getElementById('anneal-timetable-btn');
+    if (!atb) return;
+    atb.disabled = true
+    const gtb = document.getElementById('generate-timetable-btn');
+    if (!gtb) return;
+    gtb.disabled = true
+
+
     deleteScheduleBlocks();
     const backdrop = document.getElementById("loading-backdrop");
 
@@ -506,7 +535,7 @@ async function annealSchedule() {
         backdrop.innerHTML +=
             "SOMETHING WENT WRONG, PLEASE CHECK CANOPY CONSOLE";
         throw new Error(`${response.status} ${response.statusText}`);
-    }
+    } 
 
     blocks = await response.json();
     backdrop.classList.add("hidden");
