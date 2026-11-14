@@ -1018,7 +1018,7 @@ bform.addEventListener('submit',async (e)=>{
     formData.forEach((value, key)=>{
         object[key] = value;
     })
-    fetch(`/api/schedules/create`, {
+    fetch(bform.action, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -1033,10 +1033,10 @@ bform.addEventListener('submit',async (e)=>{
         })
         .then((data) => {
             console.log("Success:", data);
-            sform.reset();
+            bform.reset();
             const pieces = splitBlock(data);
             for (const el of pieces) {
-                schedule.append(el);
+                document.getElementById('tt-schedule').append(el);
             }
         })
         .catch((error) => {
