@@ -12,8 +12,8 @@ from .schedule import Activity, Schedule
 from .user import User
 
 
-class Block(db.Model):
-
+class Pomo(db.Model):
+    __tablename__ = "pomos"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     group_name: Mapped[str] = mapped_column(nullable=False, default="default")
 
@@ -29,25 +29,25 @@ class Block(db.Model):
         nullable=False,
         index=True,
     )
-    owner: Mapped[User] = relationship("User", back_populates="blocks")
+    owner: Mapped[User] = relationship("User", back_populates="pomos")
 
     source: Mapped[str] = mapped_column(default="unknown")
 
-    activity_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid,
-        ForeignKey("activities.id", ondelete="CASCADE"),
-        index=True,
-    )
+    # activity_id: Mapped[uuid.UUID | None] = mapped_column(
+    #     Uuid,
+    #     ForeignKey("activities.id", ondelete="CASCADE"),
+    #     index=True,
+    # )
 
-    activity: Mapped[Activity] = relationship("Activity", back_populates="blocks")
+    # activity: Mapped[Activity] = relationship("Activity", back_populates="blocks")
 
-    schedule_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid,
-        ForeignKey("schedules.id", ondelete="CASCADE"),
-        index=True,
-    )
+    # schedule_id: Mapped[uuid.UUID | None] = mapped_column(
+    #     Uuid,
+    #     ForeignKey("schedules.id", ondelete="CASCADE"),
+    #     index=True,
+    # )
 
-    schedule: Mapped[Schedule] = relationship("Schedule", back_populates="blocks")
+    # schedule: Mapped[Schedule] = relationship("Schedule", back_populates="blocks")
 
 
     def __init__(

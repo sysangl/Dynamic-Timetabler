@@ -38,6 +38,8 @@ def update_settings():
         "start_hour": int,
         "timetable_view": str,
         "days_per_view": int,
+        "pomo_default_session": int,
+        "pomo_default_break": int,
     }
 
     settings: Settings = current_user.settings  # type: ignore

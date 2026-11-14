@@ -95,6 +95,13 @@ class User(db.Model):
         lazy="dynamic",
     )
 
+    pomos = relationship(
+        "Pomo",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+
     activities = relationship(
         "Activity",
         back_populates="owner",
