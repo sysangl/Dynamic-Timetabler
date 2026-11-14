@@ -5,7 +5,7 @@ function decSession(id) {
     document.getElementById('session-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
 
     if (window.currentPomos[id].running) return;
-    document.getElementById('remaining-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
+    document.getElementById(`remaining-mins-${id}`).textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
 }
 
 function incSession(id) {
@@ -13,7 +13,7 @@ function incSession(id) {
     document.getElementById('session-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
 
     if (window.currentPomos[id].running) return;
-    document.getElementById('remaining-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
+    document.getElementById(`remaining-mins-${id}`).textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
 }
 
 function decBreak(id) {
@@ -27,10 +27,16 @@ function incBreak(id) {
 }
 
 function updateTime(id) {
-    document.getElementById('remaining-mins').textContent = `${Math.floor(window.currentPomos[id].currentSeconds/60)}:${formatTime(Math.floor(window.currentPomos[id].currentSeconds%60))}`
+    document.getElementById(`remaining-mins-${id}`).textContent = `${Math.floor(window.currentPomos[id].currentSeconds/60)}:${formatTime(Math.floor(window.currentPomos[id].currentSeconds%60))}`
 }
 
 function newPomo(id) {
+    if (window.currentPomos[id]) {
+        document.getElementById(`session-mins`).textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
+        document.getElementById('break-mins').textContent = Math.floor(window.currentPomos[id].breakSeconds/60)
+        return
+    }
+
     window.currentPomos[id] = {}
     window.currentPomos[id].sessionSeconds = 30*60
     window.currentPomos[id].breakSeconds = 15*60
@@ -39,9 +45,11 @@ function newPomo(id) {
     window.currentPomos[id].intervalId = null
     window.currentPomos[id].state = 'Session'
 
-    document.getElementById('session-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
+    document.getElementById(`session-mins`).textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
     document.getElementById('break-mins').textContent = Math.floor(window.currentPomos[id].breakSeconds/60)
-    document.getElementById('remaining-mins').textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
+    document.getElementById(`remaining-mins-${id}`).textContent = Math.floor(window.currentPomos[id].sessionSeconds/60)
+
+    document.getElementById(`pomo-timer-${id}`).onclick = () => {togglePomo(id)}
 }
 
 function togglePomo(id) {
@@ -70,7 +78,7 @@ function togglePomo(id) {
                     pomoEnded(id)
                     window.clearInterval(window.currentPomos[id].intervalId)
                 }
-                document.getElementById('pomo-state').textContent = window.currentPomos[id].state
+                document.getElementById(`pomo-state-${id}`).textContent = window.currentPomos[id].state
             }
 
 
@@ -89,7 +97,7 @@ async function initPomo() {
     window.currentPomos = window.currentPomos || {}
     newPomo(1)
 
-    document.getElementById('pomo-timer').onclick = () => {togglePomo(1)}
+
 }
 
 initPomo();
