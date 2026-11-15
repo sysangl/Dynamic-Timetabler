@@ -769,11 +769,11 @@ class Annealer:
 
         self.T = 1e26
         self.T_MIN = 1e-3
-        self.cooling = 0.995
+        self.cooling = 0.999
         self.cycles = 500
         self.adjust_interval = 200
         self.target_acceptance = 0.18
-        self.adjust_factor = 0.85
+        self.adjust_factor = 0.99
         self.change_success_rate = 0.4
 
         self.schedule = schedule
@@ -867,7 +867,7 @@ class Annealer:
         return T * (self.cooling ** iteration)
 
     def dynamic_cool(self, T, iteration):
-        if T > 1e10:
+        if T > self.T * 0.2:
             return self.exp_cool(T, iteration)
         else:
             return self.log_cool(T, iteration)
@@ -895,7 +895,7 @@ class Annealer:
                 if delta_cost <= 0 or (random.random() < math.exp(-delta_cost / T)):
                     accepted += 1
                     change.accept()
-                    self.change_stats[change_name] += 0.5
+                    self.change_stats[change_name] += 1
                     if self.evaluator.total_cost < best_cost:
                         best_cost = self.evaluator.total_cost
                         best_table = copy.deepcopy(self.table)
