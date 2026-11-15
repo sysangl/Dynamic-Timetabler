@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable
 log = logging.getLogger('engine')
 
 from app.engine.classes import (
+    AnnealResult,
     ATB,
     LIMIT,
     PENALTY_WEIGHTS,
@@ -753,6 +754,7 @@ class Annealer:
             [_Activity, OverlapTable, dict[int, _Block], ATB, list[int]], None
         ],
         mode:str='normal',
+        log:bool=False
     ) -> None:
         self.activities = {a.id: a for a in activities}
         self.scheduler = scheduler
@@ -777,6 +779,8 @@ class Annealer:
         self.change_success_rate = 0.4
 
         self.schedule = schedule
+
+        self.log = log
 
         self.change_factories = [
             # ('shift', lambda: shift_move(
@@ -873,7 +877,7 @@ class Annealer:
             return self.log_cool(T, iteration)
 
 
-    def run(self):
+    def run(self)->AnnealResult:
         log.info(f'Starting ANNEAL for {self.schedule.db_id}')
         best_cost = self.evaluator.total_cost
         best_table = copy.deepcopy(self.table)
@@ -901,10 +905,11 @@ class Annealer:
                         best_table = copy.deepcopy(self.table)
                         best_blocks = copy.deepcopy(self.blocks)
                         cost_updates += 1
-                        sys.stdout.write(
-                            f"\r<T{round(T,4)!s:15s}> [{cost_updates!s:8s}] {best_cost:8.4f}"
-                        )
-                        sys.stdout.flush()
+                        if self.log:
+                            sys.stdout.write(
+                                f"\r<T{round(T,4)!s:15s}> [{cost_updates!s:8s}] {best_cost:8.4f}"
+                            )
+                            sys.stdout.flush()
                 else:
                     change.undo()
 
@@ -921,6 +926,7 @@ class Annealer:
                 T = self.dynamic_cool(self.T,iteration_count)
                 #T *= self.cooling
 
-        print('\n')
-        print(self.change_stats)
-        return best_table, best_blocks, best_cost
+        if self.log:
+            print('\n')
+            print(self.change_stats)
+        return AnnealResult(best_table, best_blocks, best_cost)

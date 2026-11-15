@@ -31,6 +31,7 @@ class LIMIT:
     NORMAL = 1.0
 
 
+
 @dataclass
 class PENALTY_WEIGHTS:
     # User defined
@@ -213,6 +214,24 @@ class _Block:
 
     def __str__(self) -> str:
         return f"<Block {self.id}: _Activity {self.activity_id}>"
+
+
+@dataclass
+class ScheduleData:
+    table: OverlapTable
+    blocks: list[_Block]
+    atb: ATB
+    day_load : list[int]
+
+@dataclass
+class AnnealResult:
+    table: OverlapTable
+    blocks: dict[int, _Block]
+    cost: float
+
+    def __str__(self) -> str:
+        return f"<AnnealResult #blocks={len(self.blocks.values())} cost={self.cost}>"
+
 
 
 def engine_to_db_blocks(

@@ -1,5 +1,5 @@
 from ..models import Block, Schedule
-from .classes import ATB, OverlapTable, _Activity, _Block, _Schedule
+from .classes import AnnealResult, ATB, OverlapTable, _Activity, _Block, _Schedule
 
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
@@ -152,41 +152,55 @@ def anneal_table(schedule: Schedule | _Schedule, existing_blocks:list[Block]|Non
 
 
     
+    annealer = Annealer(
+        engine_schedule,
+        table=table,
+        activities=activities,
+        blocks=blocks,
+        atb=atb,
+        day_load=day_load,
+        scheduler=greedy_schedule,
+        log=True
+    )
+    initial_cost = annealer.evaluator.total_cost
     if parallel_count == 0:
-        annealer = Annealer(
-            engine_schedule,
-            table=table,
-            activities=activities,
-            blocks=blocks,
-            atb=atb,
-            day_load=day_load,
-            scheduler=greedy_schedule,
-        )
-        initial_cost = annealer.evaluator.total_cost
-        best_table, best_blocks, best_cost = annealer.run()
+        result = annealer.run()
 
     else:
-
+        import copy
         def parallel_anneal(run_id):
             print(f'Anneal {run_id}')
+            ptable = copy.deepcopy(table)
+            pblocks = copy.deepcopy(blocks)
+            patb = copy.deepcopy(atb)
+            pday_load = copy.deepcopy(day_load)
             annealer = Annealer(
                 engine_schedule,
-                table=table,
+                table=ptable,
                 activities=activities,
-                blocks=blocks,
-                atb=atb,
-                day_load=day_load,
-                scheduler=greedy_schedule,
+                blocks=pblocks,
+                atb=patb,
+                day_load=pday_load,
+                scheduler=greedy_schedule
             )
-            annealer.run()
+            return annealer.run()
 
         with ThreadPoolExecutor() as executor:
             results = executor.map(parallel_anneal, range(parallel_count))
 
-        for result in results:
-            print(results)
-        return []
+        import math
+        best_result = AnnealResult([],{},math.inf)
 
+        for result in results:
+            print(result)
+            if result.cost < best_result.cost:
+                best_result = result
+
+        result = best_result
+
+    best_blocks = result.blocks
+    best_table = result.table
+    best_cost = result.cost
 
 
     print('best blocks after annealer ---------------')
