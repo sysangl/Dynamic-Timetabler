@@ -611,4 +611,4 @@ def test(max_iter=None):
     ]
 
 
-    anneal_table(schedule, activities=activities, parallel_count = 5)
+    anneal_table(schedule, activities=activities)#, parallel_count = 8)

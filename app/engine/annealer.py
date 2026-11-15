@@ -151,13 +151,13 @@ class CostEvaluator:
 
     def _balance_delta(self) -> float:
         delta = 0.0
-        blocks_per_day = collections.Counter(
-            [b.day for b in self.blocks.values()]
+        slots_per_day = collections.Counter(
+            [b.day for b in self.blocks.values() for _ in range(b.start, b.start+b.length)]
         )
-        total_blocks = sum(blocks_per_day.values())
+        total_slots = sum(slots_per_day.values())
         balance_current = sum(
-            (count - total_blocks / self.schedule.SIZE) ** 2
-            for count in blocks_per_day.values()
+            (count - total_slots / self.schedule.SIZE) ** 2
+            for count in slots_per_day.values()
         ) * PENALTY_WEIGHTS.BALANCE
         delta += balance_current - self._balance
         self._balance = balance_current
@@ -171,15 +171,14 @@ class CostEvaluator:
         return (empty_slots * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
 
     def _compute_balance_penalty(self):
-        blocks_per_day = collections.Counter(
-            [b.day for b in self.blocks.values()]
+        slots_per_day = collections.Counter(
+            [b.day for b in self.blocks.values() for _ in range(b.start, b.start+b.length)]
         )
-        total_blocks = sum(blocks_per_day.values())
+        total_slots = sum(slots_per_day.values())
         return sum(
-            (count - total_blocks / self.schedule.SIZE) ** 2
-            for count in blocks_per_day.values()
+            (count - total_slots / self.schedule.SIZE) ** 2
+            for count in slots_per_day.values()
         ) * PENALTY_WEIGHTS.BALANCE
-
     def update_activities(self, activity_ids:Iterable[int]):
         delta = 0
         for a_id in activity_ids:

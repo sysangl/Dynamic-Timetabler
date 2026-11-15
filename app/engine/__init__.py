@@ -218,6 +218,7 @@ def anneal_table(schedule: Schedule | _Schedule, existing_blocks:list[Block]|Non
         print(f"----- day {day}-------------------")
         day_blocks = [b for b in best_blocks.values() if b.day == day]
         day_blocks.sort(key=lambda b: b.start)
+        total_slots = 0
 
         for block in day_blocks:
             activity = next(a for a in activities if a.id == block.activity_id)
@@ -232,6 +233,8 @@ def anneal_table(schedule: Schedule | _Schedule, existing_blocks:list[Block]|Non
                 f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
                 f"(len={block.length} slots)"
             )
+            total_slots += block.length
+        print(f"Total Slots : {total_slots} ({total_slots * engine_schedule.SLOT_SIZE} minutes)")
 
 
 
