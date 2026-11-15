@@ -37,63 +37,63 @@ class CostEvaluator:
         table: OverlapTable,
     ) -> None:
 
-        self.activities = activities
-        self.blocks = blocks
-        self.atb = atb
-        self.schedule = schedule
-        self.day_load = day_load
-        self.activity_cost = {
-            a_id: self.calculate_cost(a_id) for a_id in self.activities
-        }
-        self.total_cost = sum(self.activity_cost.values())
-        self.idle = 0
-        self.balance = 0
+        self.activities:dict[int,_Activity] = activities
+        self.blocks:dict[int, _Block] = blocks
+        self._blocks_per_day={}
+        self.atb:ATB = atb
+        self.schedule:_Schedule = schedule
+        self.day_load:list[int] = day_load
+        self._activity_cost: dict[int, float] = {}
+        
+        self._idle = 0
+        self._balance = 0
         self.table = table
 
-    def calculate_cost(self, a_id: int):
+    def _calculate_activity_cost(self, a_id: int)->float:
         activity = self.activities[a_id]
-        log.info(f'Calculating cost for Activity {activity.name} [{a_id}]')
+        log.info(f'CE : Calc. Cost {activity.name} [{a_id}]')
         block_list = [self.blocks[bid] for bid in self.atb[a_id]]
 
-        # cost for min time
+        if not block_list:
+            return 0.0
+
+        cost = 0
+        
+        # min time
         total_slots = sum(b.length for b in block_list)
         missing_time = max(0, activity.min_weekly_slots - total_slots)
-        cost = missing_time * PENALTY_WEIGHTS.MIN_TIME
+        cost += missing_time * PENALTY_WEIGHTS.MIN_TIME
 
-        # cost for frequency
+        # frequency
         missing_freq = abs(len(block_list) - activity.frequency)
         cost += missing_freq * PENALTY_WEIGHTS.FREQ
 
-        # cost for even spacing
+        # even spacing
         if activity.even_spacing and len(block_list) > 1:
             days = sorted(b.day for b in block_list)
             ideal = self.schedule.SIZE / activity.frequency
-            # calcultaing standard error, spesh coming in clutch
             standard_err = sum(
                 (days[day + 1] - days[day] - ideal) for day in range(len(days) - 1)
             )
             cost += standard_err**2 * PENALTY_WEIGHTS.EVEN_SPACING
 
-        # cost for over load
+        # over load
         blocks_per_day = collections.Counter(b.day for b in block_list)
         target = math.ceil(activity.frequency / self.schedule.SIZE)
         for count in blocks_per_day.values():
             if count > target:
                 cost += (count - target) * PENALTY_WEIGHTS.OVERLOAD
 
-        preferred_day_count = 0
-
         for b in block_list:
-            # cost for block size
+            # block length
             if b.length > activity.max_block_slots:
                 cost += LIMIT.HARD_SOFT
-
             if b.length < activity.min_block_slots:
                 cost += (
                     activity.min_block_slots - b.length
                 )**2 * PENALTY_WEIGHTS.MIN_LENGTH
 
-            # cost for bounds
+            # bounds
             early_oob = sum(
                 1
                 for slot in range(b.start, b.start + b.length)
@@ -109,6 +109,7 @@ class CostEvaluator:
                 + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND
             )
 
+            # high cost bounds / user defined
             bounds = self.schedule.HIGH_COST_BOUNDS.get(b.day, [])
             for bound in bounds:
                 hcb = sum(
@@ -118,18 +119,18 @@ class CostEvaluator:
                 )
                 cost += hcb * PENALTY_WEIGHTS.HIGH_COST_BOUND
 
+            # preferred days
             if b.day not in activity.preferred_days:
-                preferred_day_count += 1
+                cost += PENALTY_WEIGHTS.PREFERRED_DAYS
 
+            # user defined
             for bound in self.schedule.user_defined_bounds.values():
                 if len(set(range(b.start, b.start + b.length)).intersection(set(range(bound[1],bound[1]+bound[2])))) != 0:
-                    cost *= bound[1]
+                    cost += bound[1] * PENALTY_WEIGHTS.HIGH_COST_BOUND
 
-            # cost for minimum start
+            # minimum start
             if b.start < activity.min_start_slot:
                 cost += (b.start - activity.min_start_slot) ** 2 * PENALTY_WEIGHTS.MIN_START
-
-        cost += preferred_day_count**2 * PENALTY_WEIGHTS.PREFERRED_DAYS
 
         # fragmentation (minimise # of blocks)
         if len(block_list) > activity.frequency:
@@ -137,48 +138,73 @@ class CostEvaluator:
 
         return cost
 
-    def _idle_penalty(self):
-        # cost for not using time
-        empty = sum(1 for day in self.table for slot in day if len(slot)==0)
-        idle_prev = self.idle
-        idle_current = (empty * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
-        self.idle = idle_current
-        return idle_current - idle_prev
+    def _idle_delta(self) -> float:
+        delta = 0.0
 
-    def _balance_penalty(self):
-        # penalise for heaping everything into one day
-        blocks_per_day = collections.Counter(b.day for b in self.blocks.values())
-        total = sum(blocks_per_day)
-        balance_prev = self.balance
-        balance_current = sum((
-            count - (total / self.schedule.SIZE)
-        ) for count in blocks_per_day) ** 2 * PENALTY_WEIGHTS.BALANCE
-        self.balance = balance_current
-        return balance_current - balance_prev
+        empty_slots = sum(1 for day in self.table for slot in day if len(slot) == 0)
+        idle_current = (empty_slots * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
+        delta += idle_current - self._idle
+        self._idle = idle_current
+
+        return delta
+
+    def _balance_delta(self) -> float:
+        delta = 0.0
+
+        total_blocks = sum(self._blocks_per_day.values())
+        balance_current = sum(
+            (count - total_blocks / self.schedule.SIZE) ** 2
+            for count in self._blocks_per_day.values()
+        ) * PENALTY_WEIGHTS.BALANCE
+        delta += balance_current - self._balance
+        self._balance = balance_current
+        return delta
+
+    def _compute_idle_penalty(self):
+        empty_slots = sum(
+            1 for day in self.table
+            for slot in day if len(slot) == 0
+        )
+        return (empty_slots * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
+
+    def _compute_balance_penalty(self):
+        total_blocks = sum(self._blocks_per_day.values())
+        return sum(
+            (count - total_blocks / self.schedule.SIZE) ** 2
+            for count in self._blocks_per_day.values()
+        ) * PENALTY_WEIGHTS.BALANCE
 
     def update_activities(self, activity_ids:Iterable[int]):
         delta = 0
         for a_id in activity_ids:
-            old = self.activity_cost[a_id]
-            new = self.calculate_cost(a_id)
-            self.activity_cost[a_id] = new
+            old = self._activity_cost[a_id]
+            new = self._calculate_activity_cost(a_id)
+            self._activity_cost[a_id] = new
             delta += new - old
 
         ## whole table penalties
-        delta += self._idle_penalty()
-        delta += self._balance_penalty()
+        delta += self._idle_delta()
+        delta += self._balance_delta()
 
-        self.total_cost += delta
         return delta
 
     def recompute_all(self):
-        log.info("Recomputing all costs")
-        self.activity_cost = {aid: self.calculate_cost(aid) for aid in self.activities}
-        self.total_cost = sum(self.activity_cost.values())
-        self.idle = 0
-        self.balance = 0
-        self._idle_penalty()
-        self._balance_penalty()
+        log.info("CE : Recomputing all")
+        self._activity_cost = {aid: self._calculate_activity_cost(aid) for aid in self.activities}
+
+        for aid in self.activities:
+            self._blocks_per_day[aid] = collections.Counter(self.blocks[bid].day for bid in self.atb.get(aid, set()))
+
+
+        self.idle = self._compute_idle_penalty()
+        self.balance = self._compute_balance_penalty()
+
+    @property
+    def total_cost(self)->float:
+        return sum(self._activity_cost.values())
+
+    def activity_cost(self, aid:int) -> float:
+        return self._activity_cost.get(aid,0.0)
 
 # different changes
 def shift_move(
