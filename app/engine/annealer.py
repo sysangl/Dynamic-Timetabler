@@ -96,12 +96,12 @@ class CostEvaluator:
 
             # bounds
             early_oob = sum(
-                1
+                abs(slot-self.schedule.EARLY_SLOTS)
                 for slot in range(b.start, b.start + b.length)
                 if self.schedule.EARLY_SLOTS > slot
             )
             late_oob = sum(
-                1
+                abs(self.schedule.LATE_SLOTS  < slot)
                 for slot in range(b.start, b.start + b.length)
                 if self.schedule.LATE_SLOTS < slot
             )
@@ -676,7 +676,7 @@ def random_reschedule(
     max_priority_allowed: int = 5,
 ) -> ChangeResult:
 
-    return  # type: ignore
+    # return  # type: ignore
     
     # completely delete an activity's blocks and re-insert using greedy (lowest priority)
 
@@ -714,10 +714,9 @@ def random_reschedule(
         evaluator.recompute_all()
         return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
 
-    new_cost = evaluator.calculate_cost(activity.id)
-    evaluator.activity_cost[activity.id] = new_cost
+    new_cost = evaluator._calculate_activity_cost(activity.id)
+    evaluator._activity_cost[activity.id] = new_cost
     delta_cost = new_cost - old_cost
-    evaluator.total_cost += delta_cost
 
     def undo():
         for block_id in list(atb[activity.id]):
@@ -732,8 +731,7 @@ def random_reschedule(
             blocks[block_id] = block
             atb[activity.id].add(block_id)
 
-        evaluator.activity_cost[activity.id] = old_cost
-        evaluator.total_cost -= delta_cost
+        evaluator._activity_cost[activity.id] = old_cost
         evaluator.recompute_all()
 
     def accept():
@@ -781,14 +779,14 @@ class Annealer:
         self.schedule = schedule
 
         self.change_factories = [
-            ('shift', lambda: shift_move(
-                self.table,
-                self.activities,
-                self.atb,
-                self.blocks,
-                self.day_load,
-                self.evaluator,
-            )),
+            # ('shift', lambda: shift_move(
+            #     self.table,
+            #     self.activities,
+            #     self.atb,
+            #     self.blocks,
+            #     self.day_load,
+            #     self.evaluator,
+            # )),
             ('slide', lambda: slide_move(
                 self.table,
                 self.activities,
@@ -829,26 +827,26 @@ class Annealer:
                 self.day_load,
                 self.evaluator,
             )),
-            # ('random',lambda: random_reschedule(
-            #     self.table,
-            #     self.activities,
-            #     self.atb,
-            #     self.blocks,
-            #     self.day_load,
-            #     self.evaluator,
-            #     self.scheduler,
-            #     max_priority_allowed=5,
-            # )),
+            ('random',lambda: random_reschedule(
+                self.table,
+                self.activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+                self.scheduler,
+                max_priority_allowed=5,
+            )),
         ]
 
         self.change_stats = {
-            'shift':0.0,
+            # 'shift':0.0,
             'slide':0.0,
             'resize':0.0,
             'merge':0.0,
             'swap':0.0,
             'split':0.0,
-            # 'random':0.0,
+            'random':0.0,
         }
 
     def _weighted_change_factory(self,T): # type: ignore

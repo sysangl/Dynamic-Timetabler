@@ -34,8 +34,8 @@ class LIMIT:
 @dataclass
 class PENALTY_WEIGHTS:
     # User defined
-    LATE_BOUND = 50.0
-    EARLY_BOUND = 10.0
+    LATE_BOUND = 18.0
+    EARLY_BOUND = 36.0
     MIN_TIME = 8.0
     FREQ = 7.0
     EVEN_SPACING = 9.0
