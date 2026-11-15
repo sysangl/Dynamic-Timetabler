@@ -46,6 +46,7 @@ class PENALTY_WEIGHTS:
     PREFERRED_DAYS = 8.0
     MIN_LENGTH = 18.0
     MIN_START = 14.0
+    FLEXIBILITY = 10.0
 
     # Timetable
     IDLE = 1.0
@@ -114,7 +115,8 @@ class _Activity:
         fixed: list[tuple[int, int, int]] | None = None,
         preferred_days: list[int] | None = None,
         priority: int = 1,
-        source: str = 'engine'
+        source: str = 'engine',
+        flexibility: float = 0.8,
     ) -> None:
 
         if preferred_days is None:
@@ -142,6 +144,7 @@ class _Activity:
         self.preferred_days: list[int] = preferred_days
         # activity priority, affects penalty calculations
         self.priority = priority
+        self.flexibility = flexibility
         self.schedule = schedule
         self.db_id = db_id
         self.source = source

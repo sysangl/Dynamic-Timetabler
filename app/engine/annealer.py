@@ -59,16 +59,17 @@ class CostEvaluator:
         if not block_list:
             return 0.0
 
-        cost = 0
+        move_cost = 0.0
+        qol_cost = 0.0
         
         # min time
         total_slots = sum(b.length for b in block_list)
         missing_time = max(0, activity.min_weekly_slots - total_slots)
-        cost += missing_time * PENALTY_WEIGHTS.MIN_TIME
+        move_cost += missing_time * PENALTY_WEIGHTS.MIN_TIME
 
         # frequency
         missing_freq = abs(len(block_list) - activity.frequency)
-        cost += missing_freq * PENALTY_WEIGHTS.FREQ
+        qol_cost += missing_freq * PENALTY_WEIGHTS.FREQ
 
         # even spacing
         if activity.even_spacing and len(block_list) > 1:
@@ -77,21 +78,21 @@ class CostEvaluator:
             standard_err = sum(
                 (days[day + 1] - days[day] - ideal) for day in range(len(days) - 1)
             )
-            cost += standard_err**2 * PENALTY_WEIGHTS.EVEN_SPACING
+            qol_cost += standard_err**2 * PENALTY_WEIGHTS.EVEN_SPACING
 
         # over load
         blocks_per_day = collections.Counter(b.day for b in block_list)
         target = math.floor(activity.frequency / self.schedule.SIZE)
         for count in blocks_per_day.values():
             if count > target:
-                cost += (count - target) * PENALTY_WEIGHTS.OVERLOAD
+                qol_cost += (count - target) * PENALTY_WEIGHTS.OVERLOAD
 
         for b in block_list:
             # block length
             if b.length > activity.max_block_slots:
-                cost += LIMIT.HARD_SOFT
+                qol_cost += LIMIT.HARD_SOFT
             if b.length < activity.min_block_slots:
-                cost += (
+                qol_cost += (
                     activity.min_block_slots - b.length
                 )**2 * PENALTY_WEIGHTS.MIN_LENGTH
 
@@ -106,7 +107,7 @@ class CostEvaluator:
                 for slot in range(b.start, b.start + b.length)
                 if self.schedule.LATE_SLOTS < slot
             )
-            cost += (
+            qol_cost += (
                 early_oob**2 * PENALTY_WEIGHTS.EARLY_BOUND
                 + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND
             )
@@ -123,21 +124,21 @@ class CostEvaluator:
 
             # preferred days
             if b.day not in activity.preferred_days:
-                cost += PENALTY_WEIGHTS.PREFERRED_DAYS
+                qol_cost += PENALTY_WEIGHTS.PREFERRED_DAYS
 
             # user defined
             for bound in self.schedule.user_defined_bounds.values():
                 if len(set(range(b.start, b.start + b.length)).intersection(set(range(bound[1],bound[1]+bound[2])))) != 0:
-                    cost += bound[1] * PENALTY_WEIGHTS.HIGH_COST_BOUND
+                    qol_cost += bound[1] * PENALTY_WEIGHTS.HIGH_COST_BOUND
 
             # minimum start
             if b.start < activity.min_start_slot:
-                cost += (b.start - activity.min_start_slot) ** 2 * PENALTY_WEIGHTS.MIN_START
+                qol_cost += (b.start - activity.min_start_slot) ** 2 * PENALTY_WEIGHTS.MIN_START
 
         # fragmentation (minimise # of blocks)
-        cost += len(block_list)/activity.schedule.SIZE * PENALTY_WEIGHTS.FRAGMENT
+        qol_cost += len(block_list)/activity.schedule.SIZE * PENALTY_WEIGHTS.FRAGMENT
 
-        return cost
+        return (move_cost + qol_cost) * PENALTY_WEIGHTS.FLEXIBILITY * activity.flexibility
 
     def _idle_delta(self) -> float:
         delta = 0.0
