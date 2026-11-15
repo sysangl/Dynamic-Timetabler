@@ -246,6 +246,58 @@ def shift_move(
 
     return ChangeResult(delta=delta_cost, undo=undo,accept=accept)
 
+def slide_move(
+    table: OverlapTable,
+    activities: dict[int, _Activity],
+    atb: ATB,
+    blocks: dict[int, _Block],
+    day_load: list[int],
+    evaluator: CostEvaluator,
+) -> ChangeResult:
+    # shift a block one day before or after, and shift it by k hours (random)
+    movable = [b for b in blocks.values() if not b.fixed]
+    if not movable:
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
+
+
+    block = random.choice(movable)
+    activity = activities[block.activity_id]
+
+    old_start = block.start
+    start = block.start
+    affected = {activity.id}
+
+
+    while start < activity.schedule.SLOTS_PER_DAY - block.length:
+        test_block = _Block(
+            activity_id=activity.id,
+            day=block.day,
+            start=start,
+            length=block.length
+        )
+        if can_place(activity.schedule, table, test_block):
+            break
+        start += 1
+
+    if start < activity.schedule.SLOTS_PER_DAY - block.length:
+        return ChangeResult(LIMIT.HARD, undo=lambda: None, accept=lambda: None)
+
+    clear_block(table, block)
+    block.start = start
+    place_block(table, block)
+    delta_cost = evaluator.update_activities(affected)
+
+
+    def undo():
+        clear_block(table, block)
+        block.start = old_start
+        place_block(table, block)
+        evaluator.update_activities(affected)
+
+    def accept():
+        log.info(f'Accepted SLIDE of {activity.name}[{activity.id}]:{block.id} ')
+
+    return ChangeResult(delta=delta_cost, undo=undo,accept=accept)
 
 def swap_blocks(
     table: OverlapTable,
@@ -703,6 +755,14 @@ class Annealer:
                 self.day_load,
                 self.evaluator,
             )),
+            ('slide', lambda: slide_move(
+                self.table,
+                self.activities,
+                self.atb,
+                self.blocks,
+                self.day_load,
+                self.evaluator,
+            )),
             ('resize',lambda: resize_block(
                 self.table,
                 self.activities,
@@ -749,6 +809,7 @@ class Annealer:
 
         self.change_stats = {
             'shift':0.0,
+            'slide':0.0,
             'resize':0.0,
             'merge':0.0,
             'swap':0.0,
@@ -757,7 +818,7 @@ class Annealer:
         }
 
     def _weighted_change_factory(self,T): # type: ignore
-        base = [0.15, 0.15, 0.15, 0.15, 0.15, 0.15]
+        base = [0.15] * len(self.change_stats)
 
         for c in self.change_stats:
             self.change_stats[c] *= 0.9
