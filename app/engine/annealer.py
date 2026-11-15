@@ -134,8 +134,7 @@ class CostEvaluator:
                 cost += (b.start - activity.min_start_slot) ** 2 * PENALTY_WEIGHTS.MIN_START
 
         # fragmentation (minimise # of blocks)
-        if len(block_list) > activity.frequency:
-            cost += (len(block_list) - activity.frequency) * PENALTY_WEIGHTS.FRAGMENT
+        cost += len(block_list)/activity.schedule.SIZE * PENALTY_WEIGHTS.FRAGMENT
 
         return cost
 
