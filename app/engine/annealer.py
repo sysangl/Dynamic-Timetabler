@@ -9,10 +9,10 @@ from collections.abc import Callable, Iterable
 log = logging.getLogger('engine')
 
 from app.engine.classes import (
-    AnnealResult,
     ATB,
     LIMIT,
     PENALTY_WEIGHTS,
+    AnnealResult,
     ChangeResult,
     OverlapTable,
     _Activity,
@@ -81,7 +81,7 @@ class CostEvaluator:
 
         # over load
         blocks_per_day = collections.Counter(b.day for b in block_list)
-        target = math.ceil(activity.frequency / self.schedule.SIZE)
+        target = math.floor(activity.frequency / self.schedule.SIZE)
         for count in blocks_per_day.values():
             if count > target:
                 cost += (count - target) * PENALTY_WEIGHTS.OVERLOAD
@@ -111,15 +111,15 @@ class CostEvaluator:
                 + late_oob**2 * PENALTY_WEIGHTS.LATE_BOUND
             )
 
-            # high cost bounds / user defined
-            bounds = self.schedule.HIGH_COST_BOUNDS.get(b.day, [])
-            for bound in bounds:
-                hcb = sum(
-                    1
-                    for slot in range(b.start, b.start + b.length)
-                    if bound[0] <= slot <= bound[1]
-                )
-                cost += hcb * PENALTY_WEIGHTS.HIGH_COST_BOUND
+            # # high cost bounds / user defined
+            # bounds = self.schedule.HIGH_COST_BOUNDS.get(b.day, [])
+            # for bound in bounds:
+            #     hcb = sum(
+            #         1
+            #         for slot in range(b.start, b.start + b.length)
+            #         if bound[0] <= slot <= bound[1]
+            #     )
+            #     cost += hcb * PENALTY_WEIGHTS.HIGH_COST_BOUND
 
             # preferred days
             if b.day not in activity.preferred_days:
