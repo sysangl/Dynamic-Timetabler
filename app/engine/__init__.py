@@ -1,6 +1,8 @@
 from ..models import Block, Schedule
 from .classes import ATB, OverlapTable, _Activity, _Block, _Schedule
 
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
 MAX_PRIORITY = 10
 
 
@@ -79,7 +81,7 @@ def initial_table(schedule: Schedule, existing_blocks: list[Block]| None=None):
 
     return dbb_list
 
-def anneal_table(schedule: Schedule | _Schedule, existing_blocks:list[Block]|None=None, activities:list[_Activity]|None=None) -> list[Block]:
+def anneal_table(schedule: Schedule | _Schedule, existing_blocks:list[Block]|None=None, activities:list[_Activity]|None=None, parallel_count = 0) -> list[Block]:
     from .classes import (
         db_blocks_to_engine_initial,
         db_to_engine_activities,
@@ -147,19 +149,45 @@ def anneal_table(schedule: Schedule | _Schedule, existing_blocks:list[Block]|Non
 
     from app.engine.annealer import Annealer
 
-    annealer = Annealer(
-        engine_schedule,
-        table=table,
-        activities=activities,
-        blocks=blocks,
-        atb=atb,
-        day_load=day_load,
-        scheduler=greedy_schedule,
-    )
 
-    initial_cost = annealer.evaluator.total_cost
 
-    best_table, best_blocks, best_cost = annealer.run()
+    
+    if parallel_count == 0:
+        annealer = Annealer(
+            engine_schedule,
+            table=table,
+            activities=activities,
+            blocks=blocks,
+            atb=atb,
+            day_load=day_load,
+            scheduler=greedy_schedule,
+        )
+        initial_cost = annealer.evaluator.total_cost
+        best_table, best_blocks, best_cost = annealer.run()
+
+    else:
+
+        def parallel_anneal(run_id):
+            print(f'Anneal {run_id}')
+            annealer = Annealer(
+                engine_schedule,
+                table=table,
+                activities=activities,
+                blocks=blocks,
+                atb=atb,
+                day_load=day_load,
+                scheduler=greedy_schedule,
+            )
+            annealer.run()
+
+        with ThreadPoolExecutor() as executor:
+            results = executor.map(parallel_anneal, range(parallel_count))
+
+        for result in results:
+            print(results)
+        return []
+
+
 
     print('best blocks after annealer ---------------')
     for bid, b in best_blocks.items():
