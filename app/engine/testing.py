@@ -2,7 +2,7 @@ import datetime
 import random
 import uuid
 
-from ..engine import reset_ids
+from ..engine import anneal_table
 from ..models.user import User
 from .classes import _Activity, _Schedule
 
@@ -17,7 +17,6 @@ def random_preferred_days(n):
     return random.choices([0,1,2,3,4,5,6],k=2)
 
 def test(max_iter=None):
-    from .scheduler import greedy_initial, greedy_schedule
 
     schedule = _Schedule(
         uuid.UUID('75bab872-2284-41ec-bbdc-baeabea8921a'),
@@ -611,70 +610,4 @@ def test(max_iter=None):
     ]
 
 
-    blocks, table, atb, day_load = greedy_initial(schedule,activities)
-
-    print("\n\nINITIAL =======================================")
-    for day in range(schedule.SIZE):
-        print(f"----- day {day}-------------------")
-        day_blocks = [b for b in blocks.values() if b.day == day]
-        day_blocks.sort(key=lambda b: b.start)
-
-        for block in day_blocks:
-            activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * schedule.SLOT_SIZE
-            end_mins = (block.start + block.length) * schedule.SLOT_SIZE
-            start_hours = start_mins // 60
-            start_mins = start_mins % 60
-            end_hours = end_mins // 60
-            end_mins = end_mins % 60
-            print(
-                f"  {activity.name:12s}  [{block.id:02d}]  "
-                f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
-                f"(len={block.length} slots)"
-            )
-
-    print("\n\nOptimised ======================================")
-
-    from app.engine.annealer import Annealer
-
-    annealer = Annealer(
-        schedule=schedule,
-        table=table,
-        activities=activities,
-        blocks=blocks,
-        atb=atb,
-        day_load=day_load,
-        scheduler=greedy_schedule,
-    )
-
-    initial_cost = annealer.evaluator.total_cost
-    best_table, best_blocks, best_cost = annealer.run()
-
-    new_atb: dict[int, set[int]] = {}
-    for id, block in best_blocks.items():
-        new_atb.setdefault(block.activity_id, set()).add(id)
-
-    best_table, best_blocks = reset_ids(best_table, new_atb, best_blocks)
-
-    for day in range(schedule.SIZE):
-        print(f"----- day {day}-------------------")
-        day_blocks = [b for b in best_blocks.values() if b.day == day]
-        day_blocks.sort(key=lambda b: b.start)
-
-        for block in day_blocks:
-            activity = next(a for a in activities if a.id == block.activity_id)
-            start_mins = block.start * schedule.SLOT_SIZE
-            end_mins = (block.start + block.length) * schedule.SLOT_SIZE
-            start_hours = start_mins // 60
-            start_mins = start_mins % 60
-            end_hours = end_mins // 60
-            end_mins = end_mins % 60
-            print(
-                f"  {activity.name:12s}  [{block.id:02d}]  "
-                f"{start_hours:02d}:{start_mins:02d} - {end_hours:02d}:{end_mins:02d}  "
-                f"(len={block.length} slots)"
-            )
-
-    print("INFO ====================================")
-    print(f"Init Cost:  {initial_cost}")
-    print(f"Final Cost: {best_cost}")
+    anneal_table(schedule, activities=activities)

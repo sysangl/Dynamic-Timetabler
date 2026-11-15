@@ -866,7 +866,14 @@ class Annealer:
         return T / math.log(1+iteration)
 
     def exp_cool(self, T, iteration):
-        return self.T * (self.cooling ** iteration)
+        return T * (self.cooling ** iteration)
+
+    def dynamic_cool(self, T, iteration):
+        if T > 1e10:
+            return self.exp_cool(T, iteration)
+        else:
+            return self.log_cool(T, iteration)
+
 
     def run(self):
         log.info(f'Starting ANNEAL for {self.schedule.db_id}')
@@ -903,18 +910,19 @@ class Annealer:
                 else:
                     change.undo()
 
-                if iteration_count % self.adjust_interval == 0:
-                    accept_ratio = accepted/attempted
-                    if accept_ratio > self.target_acceptance:
-                        T *= self.adjust_factor
-                    else:
-                        T /= self.adjust_factor
-                    accepted = 0
-                    attempted = 0
+                # if iteration_count % self.adjust_interval == 0:
+                #     accept_ratio = accepted/attempted
+                #     if accept_ratio > self.target_acceptance:
+                #         T *= self.adjust_factor
+                #     else:
+                #         T /= self.adjust_factor
+                #     accepted = 0
+                #     attempted = 0
 
                 iteration_count += 1
-                T = self.exp_cool(T,iteration_count)
+                T = self.dynamic_cool(self.T,iteration_count)
                 #T *= self.cooling
 
+        print('\n')
         print(self.change_stats)
         return best_table, best_blocks, best_cost

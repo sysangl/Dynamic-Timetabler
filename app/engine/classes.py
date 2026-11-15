@@ -34,17 +34,17 @@ class LIMIT:
 @dataclass
 class PENALTY_WEIGHTS:
     # User defined
-    LATE_BOUND = 60.0
-    EARLY_BOUND = 20.0
+    LATE_BOUND = 50.0
+    EARLY_BOUND = 10.0
     MIN_TIME = 8.0
     FREQ = 7.0
     EVEN_SPACING = 9.0
     OVERLOAD = 4.0
     PRIORITY = 8.0
-    HIGH_COST_BOUND = 18.0
-    PREFERRED_DAYS = 14.0
-    MIN_LENGTH = 30.0
-    MIN_START = 25.0
+    HIGH_COST_BOUND = 12.0
+    PREFERRED_DAYS = 8.0
+    MIN_LENGTH = 18.0
+    MIN_START = 14.0
 
     # Timetable
     IDLE = 1.0
@@ -222,13 +222,13 @@ def engine_to_db_blocks(
     activities: list[_Activity],
 ) -> list[Block]:
     db_blocks: list[Block] = []
-    print('engine to db list ---------------')
+    # print('engine to db list ---------------')
     for a in activities:
         for bid in atb[a.id]:
             b = blocks[bid]
-            print(f'{a.name}[{bid}]')
+            # print(f'{a.name}[{bid}]')
             if b.source != 'engine':
-                print(f'Skipping _Block {a.name}[{bid}]')
+                # print(f'Skipping _Block {a.name}[{bid}]')
                 continue
             tz = get_config()["general"]["timezone"]
             start_hours = math.floor(b.start * schedule.SLOT_SIZE / 60)
