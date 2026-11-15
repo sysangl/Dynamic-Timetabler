@@ -151,11 +151,13 @@ class CostEvaluator:
 
     def _balance_delta(self) -> float:
         delta = 0.0
-
-        total_blocks = sum(self._blocks_per_day.values())
+        blocks_per_day = collections.Counter(
+            [b.day for b in self.blocks.values()]
+        )
+        total_blocks = sum(blocks_per_day.values())
         balance_current = sum(
             (count - total_blocks / self.schedule.SIZE) ** 2
-            for count in self._blocks_per_day.values()
+            for count in blocks_per_day.values()
         ) * PENALTY_WEIGHTS.BALANCE
         delta += balance_current - self._balance
         self._balance = balance_current
@@ -169,10 +171,13 @@ class CostEvaluator:
         return (empty_slots * PENALTY_WEIGHTS.IDLE) / self.schedule.SLOTS_PER_DAY
 
     def _compute_balance_penalty(self):
-        total_blocks = sum(self._blocks_per_day.values())
+        blocks_per_day = collections.Counter(
+            [b.day for b in self.blocks.values()]
+        )
+        total_blocks = sum(blocks_per_day.values())
         return sum(
             (count - total_blocks / self.schedule.SIZE) ** 2
-            for count in self._blocks_per_day.values()
+            for count in blocks_per_day.values()
         ) * PENALTY_WEIGHTS.BALANCE
 
     def update_activities(self, activity_ids:Iterable[int]):
@@ -763,6 +768,7 @@ class Annealer:
         self.evaluator = CostEvaluator(
             schedule, self.activities, self.blocks, self.atb, self.day_load, self.table
         )
+        self.evaluator.recompute_all()
 
         self.T = 1e26
         self.T_MIN = 1e-3
@@ -904,12 +910,12 @@ class Annealer:
                         T *= self.adjust_factor
                     else:
                         T /= self.adjust_factor
-                    accepted = attempted = 0
+                    accepted = 0
+                    attempted = 0
 
                 iteration_count += 1
-
-            # T = self.exp_cool(T,iteration_count)
-                T *= self.cooling
+                T = self.exp_cool(T,iteration_count)
+                #T *= self.cooling
 
         print(self.change_stats)
         return best_table, best_blocks, best_cost
