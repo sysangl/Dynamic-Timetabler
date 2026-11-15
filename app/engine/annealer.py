@@ -236,8 +236,8 @@ def shift_move(
     day_offset = random.choice([-1, 0, 1])
     start_offset = random.choice(
         range(
-            -int(activity.schedule.SLOTS_PER_DAY // 12),
-            int(activity.schedule.SLOTS_PER_DAY // 12),
+            -int(activity.schedule.SLOTS_PER_DAY // 24),
+            int(activity.schedule.SLOTS_PER_DAY // 24),
         )
     )
 
@@ -768,14 +768,15 @@ class Annealer:
         )
         self.evaluator.recompute_all()
 
-        self.T = 1e26
-        self.T_MIN = 1e-3
+        self.T = 1e32
+        self.T_MIN = 1e-4
         self.cooling = 0.999
         self.cycles = 500
         self.adjust_interval = 200
-        self.target_acceptance = 0.18
-        self.adjust_factor = 0.99
+        self.target_acceptance = 0.5
+        self.adjust_factor = 0.8
         self.change_success_rate = 0.4
+
 
         self.schedule = schedule
 
@@ -860,7 +861,7 @@ class Annealer:
 
         for i, (c, success_rate) in enumerate(self.change_stats.items()):
             if success_rate > self.change_success_rate:
-                base[i] *= 1.5
+                base[i] *= 2
         return random.choices(self.change_factories, weights=base)[0]
 
     def log_cool(self, T, iteration):
@@ -904,11 +905,11 @@ class Annealer:
                         best_table = copy.deepcopy(self.table)
                         best_blocks = copy.deepcopy(self.blocks)
                         cost_updates += 1
-                        if self.log:
-                            sys.stdout.write(
-                                f"\r<T{round(T,4)!s:15s}> [{cost_updates!s:8s}] {best_cost:8.4f}"
-                            )
-                            sys.stdout.flush()
+                if self.log:
+                    sys.stdout.write(
+                        f"\r<T{round(T,4)!s:15s}> [{cost_updates!s:8s}] {best_cost:8.4f}"
+                    )
+                    sys.stdout.flush()
                 else:
                     change.undo()
 
@@ -923,7 +924,7 @@ class Annealer:
 
                 iteration_count += 1
                 T = self.dynamic_cool(self.T,iteration_count)
-                #T *= self.cooling
+                # T = T * self.cooling
 
         if self.log:
             print('\n')
