@@ -21,7 +21,8 @@ def test(max_iter=None):
     schedule = _Schedule(
         uuid.UUID('75bab872-2284-41ec-bbdc-baeabea8921a'),
         owner=User('Testing'),
-        start_date=datetime.datetime.now().date()
+        start_date=datetime.datetime.now().date(),
+        slot_size=5
         )
 
     activities = [
@@ -602,7 +603,7 @@ def test(max_iter=None):
             min_weekly_minutes=30,
             min_block_minutes=5,
             max_block_minutes=10,
-            min_start_minutes=0,
+            min_start_minutes=360,
             fixed=None,
             preferred_days=None,
             priority=8,
